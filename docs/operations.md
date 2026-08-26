@@ -1,0 +1,100 @@
+# FossilHub production operations
+
+Deployment verified: 2026-08-27
+
+## Current production
+
+- Site: `http://192.168.1.162:6080/`
+- Health: `http://192.168.1.162:6080/healthz`
+- Container: `fossilhub`
+- Image: `fossilhub:0.1.2`
+- Source revision label: `8c9726d`
+- Host/container port: `6080:8080`
+- Persistent data: `/vol1/1000/fossilhub:/data`
+- Restart policy: `unless-stopped`
+
+The container runs as UID/GID `10001:10001` with a read-only root filesystem,
+a 16 MB `/tmp` tmpfs, all Linux capabilities dropped, `no-new-privileges`, and
+a 128-process limit. It does not use host networking, the Docker socket, or an
+fnOS system path.
+
+## Routes
+
+| Route | Expected result |
+| --- | --- |
+| `/` | FossilHub landing page |
+| `/explore` | Repository catalogue |
+| `/repo/dig.fossil` | Repository specimen and timeline |
+| `/fh.css` | Shared stylesheet |
+| `/healthz` | HTTP 200 with `ok` |
+
+Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
+
+## Read-only checks
+
+Run these commands through the documented fnOS SSH connection. They do not
+contain or require embedding the SSH/sudo password in this repository.
+
+```sh
+sudo docker ps --filter name='^fossilhub$'
+sudo docker inspect --format '{{.State.Status}} {{.State.Health.Status}} {{.Config.Image}}' fossilhub
+curl --fail --silent --show-error http://127.0.0.1:6080/healthz
+sudo docker logs --tail 100 fossilhub
+```
+
+Althttpd request logs are persisted as
+`/vol1/1000/fossilhub/althttpd-YYYYMMDD.csv`.
+
+## Lifecycle
+
+```sh
+sudo docker stop fossilhub
+sudo docker start fossilhub
+sudo docker restart fossilhub
+```
+
+These commands affect only the dedicated FossilHub container. Do not substitute
+fnOS application-center commands and do not change any existing production
+container.
+
+## Rollback
+
+Two stopped rollback containers were intentionally retained after deployment:
+
+- `fossilhub-rollback-94f8097` — image `fossilhub:0.1.1`
+- `fossilhub-rollback-348f399` — image `fossilhub:0.1.0`
+
+The preferred rollback target is 0.1.1. Preserve the failed 0.1.2 container for
+diagnosis rather than deleting it:
+
+```sh
+sudo docker stop fossilhub
+sudo docker rename fossilhub fossilhub-failed-8c9726d
+sudo docker rename fossilhub-rollback-94f8097 fossilhub
+sudo docker start fossilhub
+curl --fail --silent --show-error http://127.0.0.1:6080/healthz
+```
+
+Before running this sequence, confirm that the rollback container still exists
+and that no container already has the proposed `fossilhub-failed-8c9726d` name.
+Reversing a rollback follows the same stop-and-rename pattern.
+
+## Upgrade procedure
+
+1. Commit the complete release in this repository and record the revision.
+2. Re-check that host port 6080 is owned only by the current FossilHub container.
+3. Transfer a `git archive` of that revision to a new `/tmp/fossilhub-build-*`
+   directory on the NAS; do not build from a dirty working tree.
+4. Build a uniquely versioned image from `Dockerfile` on the x86_64 NAS.
+5. Smoke-test all routes in a temporary container on a different unused port.
+6. Stop and rename the current container as a rollback point, then create the
+   replacement with the same restrictions and persistent volume.
+7. Verify health, UTF-8 content, routes, logs, desktop/mobile layout, and restart
+   behaviour before considering the deployment complete.
+
+## fnOS boundaries
+
+No fnOS system file, systemd unit, PostgreSQL schema, or application-center
+state was changed for this deployment. The protected containers listed in
+`docs/nas-audit.md` remain out of scope and must not be modified by FossilHub
+operations.

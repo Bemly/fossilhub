@@ -16,14 +16,14 @@ browser
   -> fossilhub Ubuntu container
   -> althttpd :8080
   -> executable Wapp CGI
-  -> Tcl page/view procedures
-  -> SQLite catalogue
+  -> Tcl routing and trusted UTF-8 templates
 ```
 
 Althttpd serves fingerprintable static assets directly and treats the executable
-Wapp entry point as CGI. Wapp owns application routes, input validation, HTML
-escaping, and database reads. Runtime database state is mounted separately from
-the immutable application image.
+Wapp entry point as CGI. Wapp owns application routes and response handling. The
+runtime data directory is mounted separately from the immutable application
+image and currently stores request logs. SQLite is bundled for a future dynamic
+catalogue phase; it is not part of the 0.1.2 request path.
 
 ## Route map
 
@@ -36,16 +36,20 @@ the immutable application image.
 
 ## Milestones
 
-1. Create the Git repository and record this plan.
-2. Audit NAS Docker networking, ports, storage, and architecture read-only.
-3. Add the vendored reference snapshot and a deterministic comparison manifest.
-4. Scaffold Wapp routing, static asset delivery, and health checks.
-5. Port the three reference pages into Tcl views without visual changes.
-6. Add SQLite schema, seed data, search/filter behaviour, and tests.
-7. Build the Ubuntu/althttpd/Wapp image locally and verify HTTP behaviour.
-8. Compare reference and implementation screenshots at desktop and mobile sizes.
-9. Deploy as a new NAS container with a dedicated volume and unused host port.
-10. Verify health, routes, logs, restart behaviour, and document operations.
+- [x] Create the Git repository and record this plan.
+- [x] Audit NAS Docker networking, ports, storage, and architecture read-only.
+- [x] Add the vendored reference snapshot and deterministic source records.
+- [x] Scaffold Wapp routing, static asset delivery, and health checks.
+- [x] Port the three reference pages into Tcl templates without redesigning them.
+- [x] Build the Ubuntu/althttpd/Wapp image on the x86_64 NAS and verify HTTP
+  behaviour. The local macOS Docker client had no active engine, so the target
+  host performed the authoritative build.
+- [x] Compare the implementation at desktop and mobile sizes in the browser.
+- [x] Deploy as a new NAS container with a dedicated volume and unused host port.
+- [x] Verify health, routes, logs, restart behaviour, and document operations.
+- [ ] Optional future phase: replace the static reference catalogue with a
+  SQLite schema, live search/filter behaviour, and data-layer tests. This was
+  not required to reproduce the supplied UI and is deliberately outside 0.1.2.
 
 ## Visual acceptance
 
@@ -55,3 +59,7 @@ the immutable application image.
 - Typography, spacing, colours, borders, responsive breakpoints, and motion follow
   the reference files; reduced-motion mode remains functional.
 
+Acceptance completed against production release 0.1.2. The one intentional
+deviation from the immutable reference snapshot is a mobile-only wrapping rule
+for the Explore language filters below 640 px; it removes prototype-originated
+horizontal overflow without changing the desktop composition.
