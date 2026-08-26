@@ -28,7 +28,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 fossilhub \
     && useradd --uid 10001 --gid fossilhub --home-dir /nonexistent \
-      --shell /usr/sbin/nologin fossilhub
+      --shell /usr/sbin/nologin fossilhub \
+    && ln -s /usr/bin/tclsh8.6 /usr/local/bin/tclsh
 
 COPY --from=althttpd-builder /build/althttpd/althttpd /usr/local/bin/althttpd
 COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
@@ -44,7 +45,8 @@ RUN chmod 0555 /usr/local/bin/althttpd /srv/www/default.website/index \
       /srv/www/default.website/templates/*.html \
     && ln /srv/www/default.website/index \
       /srv/www/default.website/not-found.html \
-    && install -d -o fossilhub -g fossilhub -m 0750 /data
+    && install -d -o fossilhub -g fossilhub -m 0750 /data \
+    && /usr/local/bin/tclsh /srv/www/default.website/index --lint
 
 USER fossilhub:fossilhub
 WORKDIR /srv/www
@@ -56,4 +58,3 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl --fail --silent --show-error http://127.0.0.1:8080/healthz || exit 1
 
 CMD ["/usr/local/bin/althttpd", "--root", "/srv/www", "--port", "8080", "--logfile", "/data/althttpd-%Y%m%d.csv", "--max-child", "64", "--max-age", "3600"]
-
