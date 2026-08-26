@@ -346,7 +346,7 @@ proc wapp-content-security-policy {val} {
 #
 proc wapp-safety-check {} {
   set res {}
-  foreach p [info command] {
+  foreach p [info procs] {
     set ln 0
     foreach x [split [info body $p] \n] {
       incr ln

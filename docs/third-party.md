@@ -13,6 +13,11 @@ moving branch or a successful connection to an external source host.
 - License: Simplified BSD / 2-Clause BSD
 - Vendored runtime: `vendor/wapp/wapp.tcl`
 
+Downstream compatibility patch: `wapp-safety-check` enumerates Tcl procedures
+with `info procs` instead of all commands. The upstream `info command` spelling
+also returns built-in commands under Tcl 8.6, causing `info body` to fail before
+the safety scan can run.
+
 ## Althttpd
 
 - Project: Althttpd
@@ -25,4 +30,3 @@ moving branch or a successful connection to an external source host.
 
 The snapshot hashes identify the downloaded official tarballs. The repository
 contains only the source and license files required to build and run FossilHub.
-
