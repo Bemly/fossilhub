@@ -35,7 +35,8 @@ proc ::fossilhub::routeForPath {path} {
   variable mountName
   set clean [string trim $path /]
 
-  if {$clean eq "" || $clean eq $mountName || $clean eq "index"} {
+  if {$clean eq "" || $clean eq $mountName || $clean eq "index" ||
+      [regexp {(^|/)index\.html$} $clean]} {
     return home
   }
   if {[regexp {(^|/)healthz$} $clean]} {
@@ -44,8 +45,11 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)fh\.css$} $clean]} {
     return stylesheet
   }
-  if {[regexp {(^|/)explore/?$} $clean]} {
+  if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
+  }
+  if {[regexp {(^|/)repo\.html$} $clean]} {
+    return [list repository dig.fossil]
   }
   if {[regexp {(^|/)repo/([^/]+)/?$} $clean -> _ repository]} {
     return [list repository $repository]
@@ -76,6 +80,15 @@ proc ::fossilhub::htmlPolicy {} {
   wapp-content-security-policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; frame-ancestors 'self'"
 }
 
+proc ::fossilhub::templatePage {filename} {
+  variable root
+  ::fossilhub::htmlPolicy
+  ::fossilhub::trustedFile \
+    [file join $root templates $filename] \
+    text/html \
+    no-cache
+}
+
 proc ::fossilhub::placeholder {title message} {
   ::fossilhub::htmlPolicy
   wapp-mimetype text/html
@@ -98,13 +111,20 @@ proc wapp-default {} {
       wapp-subst {ok\n}
     }
     home {
-      ::fossilhub::placeholder FossilHub "Landing page port in progress."
+      ::fossilhub::templatePage fossilhub.html
     }
     explore {
-      ::fossilhub::placeholder "Explore digs — FossilHub" "Catalogue port in progress."
+      ::fossilhub::templatePage explore.html
     }
     repository {
-      ::fossilhub::placeholder "Repository — FossilHub" "Repository view port in progress."
+      if {[lindex $route 1] ne "dig.fossil"} {
+        wapp-reply-code "404 Not Found"
+        ::fossilhub::placeholder \
+          "Repository not found — FossilHub" \
+          "That repository is not in this dig."
+      } else {
+        ::fossilhub::templatePage repo.html
+      }
     }
     stylesheet {
       variable ::fossilhub::root
@@ -123,4 +143,3 @@ proc wapp-default {} {
 if {[file normalize [info script]] eq [file normalize $::argv0]} {
   wapp-start $::argv
 }
-

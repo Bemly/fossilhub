@@ -10,8 +10,11 @@ proc assertEqual {actual expected label} {
 
 assertEqual [::fossilhub::routeForPath /] home "root route"
 assertEqual [::fossilhub::routeForPath /explore] explore "explore route"
+assertEqual [::fossilhub::routeForPath /explore.html] explore "legacy explore route"
 assertEqual [::fossilhub::routeForPath /repo/dig.fossil] \
   {repository dig.fossil} "repository route"
+assertEqual [::fossilhub::routeForPath /repo.html] \
+  {repository dig.fossil} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /healthz] health "health route"
 assertEqual [::fossilhub::routeForPath /fh.css] stylesheet "stylesheet route"
 assertEqual [::fossilhub::routeForPath /missing] not-found "not-found route"
@@ -19,4 +22,3 @@ assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/explore] \
   explore "mounted explore route"
 
 puts "route tests passed"
-
