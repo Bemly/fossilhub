@@ -1,8 +1,8 @@
 .DS_Store
+.commandcode/
 *.log
 *.pid
 *.sqlite-shm
 *.sqlite-wal
 .runtime/
 dist/
-
