@@ -30,3 +30,9 @@ the safety scan can run.
 
 The snapshot hashes identify the downloaded official tarballs. The repository
 contains only the source and license files required to build and run FossilHub.
+
+## Reference UI deviations
+
+The reference snapshot is preserved unchanged in `reference/`. The production
+explore template adds one narrow-screen rule (`.fgroup { flex-wrap: wrap; }`)
+below 640 px so the language filter does not widen the document viewport.

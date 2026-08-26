@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: fossilhub:0.1.1
+    image: fossilhub:0.1.2
     container_name: fossilhub
     restart: unless-stopped
     ports:
