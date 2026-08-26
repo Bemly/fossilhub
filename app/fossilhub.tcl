@@ -13,7 +13,7 @@ proc ::fossilhub::loadWapp {} {
 
   foreach candidate $candidates {
     if {[file isfile $candidate]} {
-      source $candidate
+      uplevel #0 [list source $candidate]
       return
     }
   }
