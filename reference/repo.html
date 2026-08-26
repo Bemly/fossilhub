@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dig.fossil — FossilHub</title>
+<meta name="description" content="dig.fossil on FossilHub — timeline, wiki, tickets and forum inside one artifact.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>document.documentElement.dataset.theme=localStorage.getItem("fh-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script>
+<link rel="stylesheet" href="fh.css">
+<style>
+.chip-plain{color:var(--ink-2);border-color:var(--line);background:transparent}
+.crumb-row{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-top:28px;
+}
+.crumb{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--ink-2)}
+.crumb b{color:var(--ink);font-weight:500}
+.mast-grid{
+  display:grid;grid-template-columns:minmax(0,1fr) 300px;
+  gap:clamp(28px,4vw,56px);align-items:start;
+  padding-block:26px 40px;
+}
+.repo-title h1{
+  font-family:var(--font-display);font-weight:700;text-transform:uppercase;
+  font-size:clamp(2.6rem,4.5vw,3.8rem);line-height:.95;letter-spacing:.01em;
+}
+.repo-title .desc{margin-top:12px;color:var(--ink-2);max-width:56ch;font-size:15.5px}
+.chip-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.clone-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;align-items:center}
+.clone-row .cmd-chip{max-width:100%;overflow:hidden}
+.btn-sm{padding:9px 16px;font-size:13px}
+.label-card{
+  background:var(--card);border:1.5px solid var(--ink);border-radius:5px;
+  padding:34px 20px 14px;position:relative;transform:rotate(-.8deg);
+  box-shadow:4px 5px 0 rgba(28,35,44,.14);
+}
+.label-card::before{
+  content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:11px;height:11px;border-radius:50%;
+  border:1.5px solid var(--ink);background:var(--paper);
+}
+.lab-tag{
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  background:var(--iron);color:var(--paper);
+  font-family:var(--font-mono);font-size:8.5px;letter-spacing:.22em;
+  padding:3px 10px 2px;border-radius:2px;
+}
+.lab-row{
+  display:flex;justify-content:space-between;gap:12px;
+  font-family:var(--font-mono);font-size:10.5px;padding:7px 0;
+  border-top:1px dashed var(--line);
+}
+.lab-row:first-of-type{border-top:none}
+.lab-k{color:var(--ink-2);letter-spacing:.08em;flex:none}
+.lab-v{color:var(--ink);text-align:right}
+.mast-stats{border-top:1px solid var(--line);padding-block:24px 30px}
+
+.repo-body{padding-block:0 100px}
+.tabbar{
+  position:sticky;top:60px;z-index:30;background:var(--paper);
+  border-bottom:1px solid var(--line);
+  display:flex;gap:26px;overflow-x:auto;
+}
+.tab{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-2);
+  padding:16px 2px 13px;border-bottom:2px solid transparent;white-space:nowrap;
+}
+.tab:hover{color:var(--ink);text-decoration:none}
+.tab.active{color:var(--ink);border-color:var(--azurite)}
+.tab .n{color:rgba(28,35,44,.42)}
+.body-grid{
+  display:grid;grid-template-columns:minmax(0,1fr) 320px;
+  gap:clamp(32px,4vw,56px);align-items:start;padding-top:0;
+}
+.filters{
+  display:flex;align-items:center;gap:8px;margin:22px 0 14px;flex-wrap:wrap;
+}
+.fchip{
+  font-family:var(--font-mono);font-size:11px;padding:6px 13px;
+  border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:transparent;
+}
+.fchip.sel{border-color:var(--azurite);color:var(--azurite-deep);background:rgba(32,82,151,.08)}
+.tl-legend{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap}
+.tl-legend span{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.rv-panel .panel-body{padding:0}
+.day-h{
+  height:40px;display:flex;align-items:center;padding:0 18px;
+  background:var(--paper-2);border-bottom:1px solid var(--line);
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;color:var(--ink-2);
+}
+.rv-list{position:relative}
+.rv-svg{position:absolute;left:0;top:0;width:56px;height:600px;pointer-events:none}
+.rv-row{
+  position:relative;height:52px;display:grid;
+  grid-template-columns:56px 48px minmax(0,1fr) auto;
+  align-items:center;padding-right:18px;
+  border-bottom:1px dashed rgba(28,35,44,.09);
+}
+.rv-time{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2)}
+.rv-title{font-size:13.5px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:14px}
+.rv-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2);margin-top:2px}
+.rv-end{display:flex;align-items:center;gap:10px}
+.rv-hash{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--azurite-deep);
+  border:1px solid rgba(32,82,151,.3);background:rgba(32,82,151,.05);
+  padding:2px 7px;border-radius:4px;white-space:nowrap;
+}
+.rv-user{
+  width:24px;height:24px;border-radius:50%;flex:none;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--font-mono);font-size:8.5px;
+  display:grid;place-items:center;
+}
+.deeper{
+  display:block;text-align:center;font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.16em;color:var(--ink-2);padding:16px;
+}
+.deeper:hover{color:var(--ink);text-decoration:none;background:var(--paper-2)}
+
+.side{display:grid;gap:20px;position:sticky;top:126px}
+.side .panel-head{padding:11px 18px}
+.side .panel-head .fname{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.comp-rows{margin-top:13px;display:grid;gap:7px}
+.comp-row{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2);
+}
+.comp-row .l{display:inline-flex;align-items:center;gap:8px}
+.comp-row i{width:9px;height:9px;border-radius:2px;flex:none}
+.comp-note{margin-top:12px;font-size:12px;color:var(--ink-2)}
+.br-row,.peer-row{
+  display:flex;align-items:center;gap:10px;padding:9px 0;
+  border-top:1px dashed var(--line);font-family:var(--font-mono);font-size:11px;
+}
+.br-row:first-child,.peer-row:first-child{border-top:none}
+.swatch{width:16px;height:3px;border-radius:2px;flex:none}
+.br-name{min-width:118px;color:var(--ink)}
+.br-tip{color:var(--ink-2);margin-left:auto;text-align:right}
+.peer-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.pulse{animation:ping 2.4s infinite}
+@keyframes ping{
+  0%{box-shadow:0 0 0 0 rgba(47,110,90,.45)}
+  70%{box-shadow:0 0 0 7px rgba(47,110,90,0)}
+  100%{box-shadow:0 0 0 0 rgba(47,110,90,0)}
+}
+.peer-name{color:var(--ink)}
+.peer-state{color:var(--ink-2);margin-left:auto;text-align:right}
+.sync-cap{margin-top:10px;font-size:12px;color:var(--ink-2)}
+
+[data-theme="dark"] .rv-svg [stroke="rgba(28,35,44,.45)"]{stroke:rgba(232,234,223,.45)}
+[data-theme="dark"] .rv-svg [stroke="#205297"]{stroke:#7AA5E4}
+[data-theme="dark"] .rv-svg [stroke="#2F6E5A"]{stroke:#5FB394}
+[data-theme="dark"] .rv-svg [fill="#205297"]{fill:#7AA5E4}
+[data-theme="dark"] .rv-svg [fill="#A64B22"]{fill:#D98A57}
+[data-theme="dark"] .rv-svg [fill="#2F6E5A"]{fill:#5FB394}
+[data-theme="dark"] .rv-svg [fill="#F4F5EC"]{fill:#202834}
+[data-theme="dark"] .rv-svg [stroke="#1C232C"]{stroke:#E8EADF}
+[data-theme="dark"] .rv-svg [fill="#1C232C"]{fill:#E8EADF}
+[data-theme="dark"] .rv-row{border-bottom-color:rgba(232,234,223,.1)}
+[data-theme="dark"] .label-card{box-shadow:4px 5px 0 rgba(0,0,0,.5)}
+
+@media (max-width:1140px){
+  .body-grid{grid-template-columns:1fr}
+  .side{position:static;grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+}
+@media (max-width:980px){
+  .mast-grid{grid-template-columns:1fr}
+  .label-card{max-width:380px}
+}
+@media (max-width:640px){
+  .rv-row{grid-template-columns:56px 40px minmax(0,1fr) auto}
+  .rv-hash{display:none}
+  .tl-legend{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="rail" aria-hidden="true">
+  <div class="rail-track"></div>
+  <span class="rail-label" style="top:9%">0M</span>
+  <span class="rail-label" style="top:30%">3M</span>
+  <span class="rail-label" style="top:51%">6M</span>
+  <span class="rail-label" style="top:72%">9M</span>
+  <span class="rail-label" style="top:91%">12M</span>
+  <div class="rail-ind" id="railInd"></div>
+  <div class="rail-now" id="railNow">0.0M</div>
+</div>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="index.html" aria-label="FossilHub home">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+        <path d="M12 12a1.1 1.1 0 0 1 1.1 1.1A2.2 2.2 0 0 1 10.9 15.3 3.6 3.6 0 0 1 7.3 11.7 5.2 5.2 0 0 1 12.5 6.5 7 7 0 0 1 19.5 13.5"/>
+      </svg>
+      <b>Fossilhub</b>
+    </a>
+    <nav class="topnav" aria-label="Repository">
+      <a href="#tl">Timeline</a>
+      <a href="#tl">Files</a>
+      <a href="#tl">Wiki</a>
+      <a href="#tl">Tickets</a>
+      <a href="#tl">Forum</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
+    </button>
+    <span class="cmd-chip"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
+  </div>
+</header>
+
+<main>
+
+  <section class="masthead">
+    <div class="wrap">
+      <div class="crumb-row">
+        <p class="crumb">FOSSILHUB ▸ DIGS ▸ <b>DIG.FOSSIL</b></p>
+        <span class="chip chip-plain"><span class="sdot"></span>PUBLIC · MIRROR OF d.r.hipp/dig</span>
+      </div>
+      <div class="mast-grid">
+        <div class="repo-title">
+          <h1>dig.fossil</h1>
+          <p class="desc">Delta-compressed bundle writer research dig. Companion repository to forum thread 118 — every experiment lands here first.</p>
+          <div class="chip-row">
+            <span class="chip chip-verdi"><span class="sdot"></span>autosync on</span>
+            <span class="chip chip-azu"><span class="sdot"></span>3 peers converged</span>
+            <span class="chip chip-plain"><span class="sdot"></span>updated 14m ago</span>
+          </div>
+          <div class="clone-row">
+            <span class="cmd-chip"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
+            <a class="btn btn-ghost btn-sm" href="#tl">Download dig.fossil · 3.1 MB</a>
+          </div>
+        </div>
+        <aside class="label-card reveal" aria-label="Specimen label">
+          <span class="lab-tag">SPECIMEN LABEL</span>
+          <div class="lab-row"><span class="lab-k">SITE ID</span><span class="lab-v">8f3a21c4</span></div>
+          <div class="lab-row"><span class="lab-k">OPENED</span><span class="lab-v">2019-03-12</span></div>
+          <div class="lab-row"><span class="lab-k">LAST FIND</span><span class="lab-v">14:32 today</span></div>
+          <div class="lab-row"><span class="lab-k">ARTIFACTS</span><span class="lab-v">1,284</span></div>
+          <div class="lab-row"><span class="lab-k">DEPTH</span><span class="lab-v">3.1 MB Δ-packed</span></div>
+          <div class="lab-row"><span class="lab-k">UPSTREAM</span><span class="lab-v">d.r.hipp/dig</span></div>
+          <div class="lab-row"><span class="lab-k">LICENSE</span><span class="lab-v">BSD-2-Clause</span></div>
+        </aside>
+      </div>
+      <div class="stats mast-stats">
+        <div class="stat"><b>1,284</b><span>artifacts in one file</span></div>
+        <div class="stat"><b>214</b><span>wiki versions</span></div>
+        <div class="stat"><b>118</b><span>tickets resolved</span></div>
+        <div class="stat"><b>7</b><span>contributors</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="repo-body" id="tl">
+    <div class="tabbar">
+      <div class="wrap" style="display:flex;gap:26px">
+        <a class="tab active" href="#tl">Timeline</a>
+        <a class="tab" href="#tl">Files</a>
+        <a class="tab" href="#tl">Docs</a>
+        <a class="tab" href="#tl">Wiki <span class="n">214</span></a>
+        <a class="tab" href="#tl">Tickets <span class="n">9 open</span></a>
+        <a class="tab" href="#tl">Forum <span class="n">31</span></a>
+      </div>
+    </div>
+
+    <div class="wrap body-grid">
+      <div>
+        <div class="filters">
+          <button class="fchip sel">All events</button>
+          <button class="fchip">Check-ins</button>
+          <button class="fchip">Wiki</button>
+          <button class="fchip">Tickets</button>
+          <button class="fchip">Forum</button>
+          <div class="tl-legend" aria-hidden="true">
+            <span><i class="dot dot-azu"></i>check-in</span>
+            <span><i class="dot dot-verdi"></i>wiki</span>
+            <span><i class="dot dot-iron"></i>ticket</span>
+            <span><i class="dot dot-hollow"></i>forum</span>
+          </div>
+        </div>
+
+        <div class="panel rv-panel">
+          <div class="rv-list">
+            <svg class="rv-svg" viewBox="0 0 56 600" aria-hidden="true">
+              <path d="M28 0V600" stroke="rgba(28,35,44,.45)" stroke-width="1.5" fill="none"/>
+              <path d="M28 66C40 74 46 92 46 112V338C46 360 39 372 30 378" stroke="#205297" stroke-width="1.5" fill="none"/>
+              <path d="M28 470C40 478 46 496 46 512L46 522" stroke="#2F6E5A" stroke-width="1.5" fill="none"/>
+              <circle cx="28" cy="66" r="4.5" fill="#205297"/>
+              <circle cx="46" cy="118" r="4.5" fill="#205297"/>
+              <circle cx="28" cy="170" r="4.5" fill="#A64B22"/>
+              <circle cx="46" cy="222" r="4.5" fill="#205297"/>
+              <circle cx="28" cy="274" r="4.5" fill="#2F6E5A"/>
+              <circle cx="28" cy="326" r="4.5" fill="#F4F5EC" stroke="#1C232C" stroke-width="1.4"/>
+              <circle cx="28" cy="378" r="6.5" fill="#F4F5EC" stroke="#1C232C" stroke-width="1.4"/>
+              <circle cx="28" cy="378" r="2.6" fill="#205297"/>
+              <circle cx="28" cy="470" r="4.5" fill="#205297"/>
+              <circle cx="46" cy="522" r="4" fill="none" stroke="#2F6E5A" stroke-width="1.4" stroke-dasharray="3 2.5"/>
+              <rect x="23.5" y="569.5" width="9" height="9" transform="rotate(45 28 574)" fill="#1C232C"/>
+            </svg>
+            <div class="day-h">TODAY — AUG 24</div>
+            <div class="rv-row">
+              <span class="rv-time">14:32</span>
+              <div><p class="rv-title">Add delta compression to bundle writer</p>
+              <p class="rv-meta">check-in · delta-v2</p></div>
+              <div class="rv-end"><span class="rv-hash">c-a17f3b</span><span class="rv-user">RH</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">13:07</span>
+              <div><p class="rv-title">Retry delta push with exponential backoff</p>
+              <p class="rv-meta">check-in · delta-v2</p></div>
+              <div class="rv-end"><span class="rv-hash">c-9f2e1a</span><span class="rv-user">DH</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">11:58</span>
+              <div><p class="rv-title">Sync stalls on flaky links</p>
+              <p class="rv-meta">ticket #42 · closed · linked c-9f2e1a</p></div>
+              <div class="rv-end"><span class="rv-hash">#42</span><span class="rv-user">RH</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">11:40</span>
+              <div><p class="rv-title">Wire backoff into the sync loop</p>
+              <p class="rv-meta">check-in · delta-v2</p></div>
+              <div class="rv-end"><span class="rv-hash">c-77b02d</span><span class="rv-user">MT</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">09:41</span>
+              <div><p class="rv-title">Embedded docs: rewrite the autosync intro</p>
+              <p class="rv-meta">wiki edit · www/autosync.wiki v214</p></div>
+              <div class="rv-end"><span class="rv-hash">v214</span><span class="rv-user">SL</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">09:12</span>
+              <div><p class="rv-title">Re: autosync vs explicit sync — which default?</p>
+              <p class="rv-meta">forum reply · thread 118</p></div>
+              <div class="rv-end"><span class="rv-hash">#118</span><span class="rv-user">PN</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">08:15</span>
+              <div><p class="rv-title">Merge delta-v2 backoff work into trunk</p>
+              <p class="rv-meta">check-in · merge of delta-v2</p></div>
+              <div class="rv-end"><span class="rv-hash">c-71aa90</span><span class="rv-user">DH</span></div>
+            </div>
+            <div class="day-h">YESTERDAY — AUG 23</div>
+            <div class="rv-row">
+              <span class="rv-time">19:03</span>
+              <div><p class="rv-title">Open branch “shale-experiments”</p>
+              <p class="rv-meta">check-in · branch point</p></div>
+              <div class="rv-end"><span class="rv-hash">c-b4001e</span><span class="rv-user">MT</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">17:44</span>
+              <div><p class="rv-title">Sketch layered-shader prototype</p>
+              <p class="rv-meta">check-in · shale-experiments</p></div>
+              <div class="rv-end"><span class="rv-hash">c-c91d77</span><span class="rv-user">MT</span></div>
+            </div>
+            <div class="rv-row">
+              <span class="rv-time">16:02</span>
+              <div><p class="rv-title">Tag release-2.26 added</p>
+              <p class="rv-meta">tag · points at c-5d88fa</p></div>
+              <div class="rv-end"><span class="rv-hash">v2.26</span><span class="rv-user">DH</span></div>
+            </div>
+          </div>
+          <a class="deeper" href="#tl">↓ OLDER — KEEP DIGGING</a>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="panel reveal">
+          <div class="panel-head"><span class="fname">Composition</span></div>
+          <div class="panel-body">
+            <div class="comp-seg" aria-hidden="true">
+              <span class="cb-code" style="width:62%"></span>
+              <span class="cb-wiki" style="width:18%"></span>
+              <span class="cb-tkt" style="width:12%"></span>
+              <span class="cb-forum" style="width:8%"></span>
+            </div>
+            <div class="comp-rows">
+              <div class="comp-row"><span class="l"><i class="cb-code"></i>source &amp; docs tree</span><span>792 artifacts</span></div>
+              <div class="comp-row"><span class="l"><i class="cb-wiki"></i>wiki pages</span><span>231 edits</span></div>
+              <div class="comp-row"><span class="l"><i class="cb-tkt"></i>ticket changes</span><span>154 events</span></div>
+              <div class="comp-row"><span class="l"><i class="cb-forum"></i>forum posts</span><span>107 posts</span></div>
+            </div>
+            <p class="comp-note">Four kinds of history, one stone — all versioned, all cloned together.</p>
+          </div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="panel-head"><span class="fname">Branches</span></div>
+          <div class="panel-body">
+            <div class="br-row"><span class="swatch" style="background:rgba(28,35,44,.55)"></span><span class="br-name">trunk</span><span class="br-tip">c-a17f3b</span></div>
+            <div class="br-row"><span class="swatch" style="background:#205297"></span><span class="br-name">delta-v2</span><span class="br-tip">merged today</span></div>
+            <div class="br-row"><span class="swatch" style="background:#2F6E5A"></span><span class="br-name">shale-experiments</span><span class="br-tip">open · no merge</span></div>
+          </div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="panel-head"><span class="fname">Autosync</span></div>
+          <div class="panel-body">
+            <div class="peer-row"><span class="peer-dot pulse" style="background:#2F6E5A"></span><span class="peer-name">fossilhub.org</span><span class="peer-state">primary · 41s ago</span></div>
+            <div class="peer-row"><span class="peer-dot" style="background:transparent;border:1.5px dashed #A64B22"></span><span class="peer-name">laptop-offline</span><span class="peer-state">will reconcile</span></div>
+            <div class="peer-row"><span class="peer-dot pulse" style="background:#2F6E5A"></span><span class="peer-name">workstation-2</span><span class="peer-state">2m ago</span></div>
+            <p class="sync-cap">Every commit is pushed as it happens; peers reconcile automatically when they reappear.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+</main>
+
+<footer class="bedrock" id="about">
+  <div class="wrap">
+    <p class="eyebrow">Bedrock · Nothing below this line</p>
+    <p class="giant-mark" aria-hidden="true">Fossilhub</p>
+    <div class="bedrock-grid">
+      <div>
+        <h4>Start a dig</h4>
+        <ul>
+          <li><a href="explore.html">Browse repositories</a></li>
+          <li><a href="index.html#engine">Field manual</a></li>
+          <li><a href="#about">Hosting plans</a></li>
+        </ul>
+        <span class="clone-dark"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
+      </div>
+      <div>
+        <h4>Upstream</h4>
+        <ul>
+          <li><a href="#about">fossil-scm.org</a></li>
+          <li><a href="#about">SQLite, the sibling project</a></li>
+          <li><a href="#about">Release history</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>The hub</h4>
+        <ul>
+          <li><a href="#about">Site rules</a></li>
+          <li><a href="#about">Status board</a></li>
+          <li><a href="#about">Contact the wardens</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="bedrock-bottom">
+      <span>© 2026 FOSSILHUB — SURVEY DRAWING NO. FH-26-08</span>
+      <span>SET IN BIG SHOULDERS &amp; IBM PLEX · DRAWN AT 1:1 SCALE</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+const ind = document.getElementById('railInd');
+const now = document.getElementById('railNow');
+addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const f = Math.min(1, Math.max(0, h.scrollTop / (h.scrollHeight - h.clientHeight)));
+  ind.style.top = `${(f * 100).toFixed(2)}%`;
+  now.textContent = `${(f * 12).toFixed(1)}M`;
+}, { passive: true });
+
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('fh-theme', next);
+});
+</script>
+
+</body>
+</html>
