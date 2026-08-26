@@ -65,7 +65,8 @@ proc ::fossilhub::trustedFile {path mime cache} {
     return
   }
 
-  set channel [open $path rb]
+  set channel [open $path r]
+  fconfigure $channel -encoding utf-8 -translation lf
   try {
     set content [read $channel]
   } finally {
@@ -85,13 +86,13 @@ proc ::fossilhub::templatePage {filename} {
   ::fossilhub::htmlPolicy
   ::fossilhub::trustedFile \
     [file join $root templates $filename] \
-    text/html \
+    "text/html; charset=utf-8" \
     no-cache
 }
 
 proc ::fossilhub::placeholder {title message} {
   ::fossilhub::htmlPolicy
-  wapp-mimetype text/html
+  wapp-mimetype "text/html; charset=utf-8"
   wapp-cache-control no-cache
   wapp-trim {
     <!doctype html>
@@ -130,7 +131,7 @@ proc wapp-default {} {
       variable ::fossilhub::root
       ::fossilhub::trustedFile \
         [file join $::fossilhub::root public fh.css] \
-        text/css \
+        "text/css; charset=utf-8" \
         max-age=3600
     }
     default {

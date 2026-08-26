@@ -15,7 +15,7 @@ FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.title="FossilHub" \
       org.opencontainers.image.description="Tcl/Wapp Fossil repository hub served by althttpd" \
-      org.opencontainers.image.version="0.1.0"
+      org.opencontainers.image.version="0.1.1"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
