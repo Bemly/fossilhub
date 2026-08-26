@@ -1,0 +1,9 @@
+.git
+.commandcode
+.DS_Store
+.runtime
+dist
+reference
+docs
+*.log
+
