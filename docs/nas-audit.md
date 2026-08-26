@@ -18,6 +18,7 @@ This audit was read-only. No existing container or fnOS system file was changed.
 - Host port: `6080` (confirmed unused at audit time)
 - Container port: `8080`
 - Persistent host path: `/vol1/1000/fossilhub` (confirmed absent at audit time)
+- Persistent path owner: UID/GID `10001:10001`, mode `0750`
 
 ## Protected containers observed
 
@@ -39,4 +40,3 @@ must not be modified by this project:
 - Do not use host networking.
 - Do not mount the Docker socket or any fnOS system path.
 - Never use or invoke fnOS application-center internals for this container.
-

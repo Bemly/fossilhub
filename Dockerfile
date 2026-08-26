@@ -29,7 +29,7 @@ RUN apt-get update \
     && groupadd --gid 10001 fossilhub \
     && useradd --uid 10001 --gid fossilhub --home-dir /nonexistent \
       --shell /usr/sbin/nologin fossilhub \
-    && ln -s /usr/bin/tclsh8.6 /usr/local/bin/tclsh
+    && ln -s /usr/bin/tclsh8.6 /usr/bin/tclsh
 
 COPY --from=althttpd-builder /build/althttpd/althttpd /usr/local/bin/althttpd
 COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
@@ -46,7 +46,7 @@ RUN chmod 0555 /usr/local/bin/althttpd /srv/www/default.website/index \
     && ln /srv/www/default.website/index \
       /srv/www/default.website/not-found.html \
     && install -d -o fossilhub -g fossilhub -m 0750 /data \
-    && /usr/local/bin/tclsh /srv/www/default.website/index --lint
+    && /usr/bin/tclsh /srv/www/default.website/index --lint
 
 USER fossilhub:fossilhub
 WORKDIR /srv/www
