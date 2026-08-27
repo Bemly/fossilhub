@@ -9,6 +9,8 @@ repository_dir="${data_dir}/repositories"
 repository_path="${repository_dir}/dig.fossil"
 bootstrap_record="${data_dir}/fossil-bootstrap-admin.txt"
 
+export HOME="${data_dir}"
+
 seed_repository() {
   temporary_repository="${repository_path}.new.$$"
   temporary_record="${bootstrap_record}.new.$$"
