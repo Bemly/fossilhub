@@ -5,77 +5,17 @@ set -eu
 umask 077
 
 data_dir=${FOSSILHUB_DATA_DIR:-/data}
-repository_dir="${data_dir}/repositories"
-repository_path="${repository_dir}/dig.fossil"
-bootstrap_record="${data_dir}/fossil-bootstrap-admin.txt"
+repository_dir="${FOSSILHUB_REPOSITORY_DIR:-${data_dir}/repositories}"
+catalog_database="${FOSSILHUB_CATALOG_DB:-${data_dir}/catalog/fossilhub.sqlite}"
+catalog_dir=$(dirname "${catalog_database}")
 
 export HOME="${data_dir}"
+export FOSSILHUB_REPOSITORY_DIR="${repository_dir}"
+export FOSSILHUB_CATALOG_DB="${catalog_database}"
 
-seed_repository() {
-  temporary_repository="${repository_path}.new.$$"
-  temporary_record="${bootstrap_record}.new.$$"
-  seed_checkout=$(mktemp -d /tmp/fossilhub-seed.XXXXXX)
+mkdir -p "${repository_dir}" "${catalog_dir}"
+chmod 0750 "${data_dir}" "${repository_dir}" "${catalog_dir}"
 
-  cleanup_seed() {
-    rm -f "${temporary_repository}" "${temporary_repository}-journal" \
-      "${temporary_repository}-wal" "${temporary_repository}-shm" \
-      "${temporary_record}"
-    rm -rf "${seed_checkout}"
-  }
-  trap cleanup_seed EXIT HUP INT TERM
-
-  /usr/local/bin/fossil init \
-    --admin-user fossilhub \
-    --project-name "FossilHub Demo Dig" \
-    --project-desc "A live Fossil repository behind the FossilHub reference interface." \
-    "${temporary_repository}" >"${temporary_record}"
-  chmod 0600 "${temporary_record}"
-
-  /usr/local/bin/fossil user capabilities nobody gjorz2 \
-    --repository "${temporary_repository}"
-  /usr/local/bin/fossil user capabilities anonymous hmnc3 \
-    --repository "${temporary_repository}"
-  /usr/local/bin/fossil setting autosync off \
-    --repository "${temporary_repository}"
-
-  (
-    cd "${seed_checkout}"
-    /usr/local/bin/fossil open "${temporary_repository}"
-    cp -R /opt/fossilhub/seed/. .
-    /usr/local/bin/fossil add .
-    /usr/local/bin/fossil commit \
-      --no-warnings \
-      --user fossilhub \
-      --comment "Open the FossilHub demonstration dig"
-  )
-
-  /usr/local/bin/fossil wiki create Welcome \
-    /opt/fossilhub/seed-wiki.md \
-    --mimetype markdown \
-    --user fossilhub \
-    --repository "${temporary_repository}"
-  /usr/local/bin/fossil ticket add \
-    title "Connect the reference interface to live repository strata" \
-    type Code_Defect \
-    status Open \
-    severity Important \
-    comment "This ticket is stored in the same Fossil artifact as the source and wiki." \
-    --user fossilhub \
-    --repository "${temporary_repository}"
-
-  mv "${temporary_repository}" "${repository_path}"
-  mv "${temporary_record}" "${bootstrap_record}"
-  chmod 0600 "${repository_path}" "${bootstrap_record}"
-
-  trap - EXIT HUP INT TERM
-  rm -rf "${seed_checkout}"
-}
-
-mkdir -p "${repository_dir}"
-chmod 0750 "${data_dir}" "${repository_dir}"
-
-if [ ! -f "${repository_path}" ]; then
-  seed_repository
-fi
+/usr/local/bin/fossilhub-index
 
 exec "$@"

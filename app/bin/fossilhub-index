@@ -1,0 +1,15 @@
+#!/usr/bin/tclsh
+
+set scriptDirectory [file dirname [file normalize [info script]]]
+set localRoot [file dirname $scriptDirectory]
+set applicationRoot /srv/www/default.website
+if {[file isfile [file join $localRoot lib fossil-model.tcl]]} {
+  set applicationRoot $localRoot
+}
+
+source [file join $applicationRoot lib repository-manifest.tcl]
+source [file join $applicationRoot lib fossil-model.tcl]
+source [file join $applicationRoot lib catalog-model.tcl]
+
+set count [::fossilhub::catalog::rebuild]
+puts "FossilHub indexed $count repositories"

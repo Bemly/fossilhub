@@ -1,0 +1,49 @@
+#!/usr/bin/tclsh
+
+set scriptDirectory [file dirname [file normalize [info script]]]
+set localRoot [file dirname $scriptDirectory]
+set applicationRoot /srv/www/default.website
+if {[file isfile [file join $localRoot lib fossil-model.tcl]]} {
+  set applicationRoot $localRoot
+}
+
+source [file join $applicationRoot lib repository-manifest.tcl]
+source [file join $applicationRoot lib fossil-model.tcl]
+source [file join $applicationRoot lib catalog-model.tcl]
+
+set repositoryRoot [::fossilhub::model::repositoryRoot]
+file mkdir $repositoryRoot
+file attributes $repositoryRoot -permissions 0750
+
+foreach entry [::fossilhub::manifest::all] {
+  set name [dict get $entry name]
+  set sourceUrl [dict get $entry source_url]
+  set destination [::fossilhub::model::repositoryPath $name]
+  if {[file isfile $destination]} {
+    puts "Updating $name"
+    exec [::fossilhub::model::fossilBinary] pull \
+      --once $sourceUrl --repository $destination >@stdout 2>@stderr
+    file attributes $destination -permissions 0600
+    continue
+  }
+
+  set temporary "${destination}.new.[pid]"
+  if {[file exists $temporary]} {
+    error "refusing to reuse repository temporary file"
+  }
+  puts "Cloning $name"
+  try {
+    exec [::fossilhub::model::fossilBinary] clone \
+      --no-open $sourceUrl $temporary >@stdout 2>@stderr
+    file attributes $temporary -permissions 0600
+    file rename $temporary $destination
+  } on error {message options} {
+    if {[file exists $temporary]} {
+      file delete -force $temporary
+    }
+    return -options $options $message
+  }
+}
+
+set count [::fossilhub::catalog::rebuild]
+puts "FossilHub synchronized and indexed $count repositories"

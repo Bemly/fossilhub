@@ -78,9 +78,9 @@ COPY --from=tcl-builder /opt/tcl /opt/tcl
 COPY --from=fossil-builder /build/fossil/fossil /usr/local/bin/fossil
 COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
 COPY app/bin/fossilhub-entrypoint /usr/local/bin/fossilhub-entrypoint
+COPY app/bin/fossilhub-index /usr/local/bin/fossilhub-index
+COPY app/bin/fossilhub-sync /usr/local/bin/fossilhub-sync
 COPY app/cgi/fossil /srv/www/default.website/fossil
-COPY app/seed/ /opt/fossilhub/seed/
-COPY app/seed-wiki.md /opt/fossilhub/seed-wiki.md
 COPY app/fossilhub.tcl /srv/www/default.website/index
 COPY app/lib/ /srv/www/default.website/lib/
 COPY app/views/ /srv/www/default.website/views/
@@ -92,13 +92,11 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
       /usr/local/bin/althttpd \
       /usr/local/bin/fossil \
       /usr/local/bin/fossilhub-entrypoint \
+      /usr/local/bin/fossilhub-index \
+      /usr/local/bin/fossilhub-sync \
       /srv/www/default.website/fossil \
       /srv/www/default.website/index \
     && chmod 0444 /opt/fossilhub/wapp.tcl \
-      /opt/fossilhub/seed-wiki.md \
-      /opt/fossilhub/seed/README.md \
-      /opt/fossilhub/seed/docs/ARCHITECTURE.md \
-      /opt/fossilhub/seed/src/hello.tcl \
       /srv/www/default.website/fh.css \
       /srv/www/default.website/public/fh.css \
       /srv/www/default.website/lib/*.tcl \
