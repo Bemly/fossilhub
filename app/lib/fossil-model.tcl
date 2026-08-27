@@ -280,6 +280,12 @@ proc ::fossilhub::model::files {name} {
   if {![file isfile $repository]} {
     error "repository not found"
   }
+  set checkinRows [::fossilhub::model::sqlRows $repository {
+    SELECT hex(CAST(COUNT(*) AS TEXT)) FROM event WHERE type='ci';
+  } 1]
+  if {[llength $checkinRows] == 0 || [lindex [lindex $checkinRows 0] 0] == 0} {
+    return {}
+  }
   set result {}
   foreach row [::fossilhub::model::sqlRows \
       $repository [::fossilhub::model::filesSql] 3] {

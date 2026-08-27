@@ -76,14 +76,14 @@ production change.
   `/vol1/1000/fossilhub/repositories/dig.fossil`
 - Candidate catalogue database:
   `/vol1/1000/fossilhub/catalog/fossilhub.sqlite`
-- Candidate official repositories:
-  `/vol1/1000/fossilhub/repositories/{sqlite,fossil,wapp,althttpd}.fossil`
+- Candidate blank repositories:
+  `/vol1/1000/fossilhub/repositories/{bedrock,ammonite,trilobite,basalt,cambrian,granite,shale,quartz,obsidian,tectonic}.fossil`
 - Fossil bootstrap administrator record:
   `/vol1/1000/fossilhub/fossil-bootstrap-admin.txt`
 - The repository and bootstrap record must remain mode 0600 and owned by
   UID/GID 10001:10001. Read the bootstrap record only in a trusted interactive
   SSH terminal; never include its contents in logs, tests, commits, or replies.
-- Every official repository and the catalogue database must also remain mode
+- Every candidate repository and the catalogue database must also remain mode
   0600 and owned by UID/GID 10001:10001. `dig.fossil` and its bootstrap record
   are retained as legacy production data even though the CalVer catalogue does
   not expose them.
@@ -113,7 +113,7 @@ before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
-The source candidate is `2026.08.27-beta.1`. It is not production until its NAS
+The source candidate is `2026.08.27-beta.2`. It is not production until its NAS
 validation record and transactional port-6080 switch are complete.
 
 ## Runtime and source pins
@@ -144,12 +144,12 @@ browser
      -> Tcl SSR repository surfaces and SQLite catalogue search
      -> Fossil CGI `directory:` mode only for clone/sync transport
   -> `/data/catalog/fossilhub.sqlite`
-  -> `/data/repositories/{sqlite,fossil,wapp,althttpd}.fossil`
+  -> ten manifest-listed blank `.fossil` repositories under `/data/repositories`
 ```
 
 - `app/fossilhub.tcl` owns Wapp routing and Tcl SSR response delivery.
-- `app/lib/repository-manifest.tcl` is the allow-list for the four official
-  repository names, source URLs, and catalogue facets. Files outside that list
+- `app/lib/repository-manifest.tcl` is the allow-list for the ten blank
+  repository names and catalogue facets. Files outside that list
   are never published merely because they end in `.fossil`.
 - `app/lib/fossil-model.tcl` queries repository metadata, history, trunk files,
   Wiki artifacts, Tickets, and Forum activity through Fossil's
@@ -172,12 +172,11 @@ browser
 - `app/public/catalog-search.js` progressively enhances the complete Explore
   SSR form with debounced HTML-fragment replacement.
 - `app/cgi/fossil` is Fossil's CGI directory-mode launcher.
-- `app/bin/fossilhub-sync` idempotently pulls or atomically clones the four
+- `app/bin/fossilhub-init` idempotently and atomically initializes the ten
   manifest repositories, sets mode 0600, removes capabilities from Fossil's
-  generated local user, and rebuilds the catalogue. Fossil clone output must
-  remain suppressed because it contains an automatically generated password.
-  A trusted runtime-only proxy may be passed as `FOSSILHUB_SYNC_PROXY` when
-  direct Fossil transport stalls; never write that value into the image.
+  generated local user, and rebuilds the catalogue. Fossil initialization
+  output must remain suppressed because it contains an automatically generated
+  password.
 - `app/bin/fossilhub-entrypoint` never clones or creates repositories. It only
   creates the data subdirectories and rebuilds the catalogue from official
   repository files already present on the mount.
@@ -236,8 +235,9 @@ redirect or 404. The server cannot infer the external prefix.
 - Shell entrypoints use `set -eu`, restrictive `umask`, quoted variables,
   atomic temporary files, and cleanup traps. Temporary directories must be
   exact `mktemp` results before recursive deletion.
-- Do not log generated passwords. The CalVer importer clones public upstreams
-  and does not create local administrators or bootstrap records.
+- Do not log generated passwords. The CalVer initializer suppresses Fossil's
+  generated credential and immediately removes that user's capabilities. It
+  does not write a bootstrap record.
 - Keep the runtime root filesystem read-only and write only to `/data` and the
   `/tmp` tmpfs. Do not add Docker socket access, host networking, privileged
   mode, or extra capabilities.
@@ -262,12 +262,12 @@ Before a production switch:
    8.5 and is not authoritative.
 4. Build on the x86_64 NAS and confirm Tcl 9.1b0, Fossil 2.29, Wapp lint, and the
    OCI Git revision label.
-5. Use `fossilhub-sync` to populate an isolated temporary data directory, then
+5. Use `fossilhub-init` to populate an isolated temporary data directory, then
    start a uniquely named `fossilhub-beta-*` container on confirmed-free port
    6082.
 6. Verify HTTP 200 for `/`, `/healthz`, Explore SSR queries and fragments, both
    scripts, and Timeline, Files, Docs, Wiki, Tickets, and Forum for all four
-   official repositories. Assert generated pages contain no native Fossil web
+   ten blank repositories. Assert generated pages contain no native Fossil web
    links.
 7. Perform a real HTTP `fossil clone` followed by `fossil sync`; compare its
    project code with the corresponding server repository.

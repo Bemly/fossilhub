@@ -73,7 +73,7 @@ proc ::fossilhub::routeForPath {path} {
     return explore
   }
   if {[regexp {(^|/)repo\.html$} $clean]} {
-    return [list repository sqlite.fossil timeline]
+    return [list repository bedrock.fossil timeline]
   }
   if {[regexp {(^|/)repo/([^/]+)/(file|wiki-page)/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository section artifactId]} {

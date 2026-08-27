@@ -11,7 +11,7 @@ source [file join $applicationRoot lib repository-manifest.tcl]
 source [file join $applicationRoot lib fossil-model.tcl]
 source [file join $applicationRoot lib catalog-model.tcl]
 
-proc fossilhubSyncRun {label command} {
+proc fossilhubInitRun {label command} {
   if {[catch {exec {*}$command}]} {
     error "FossilHub: $label failed; captured Fossil output was suppressed"
   }
@@ -21,23 +21,11 @@ set repositoryRoot [::fossilhub::model::repositoryRoot]
 file mkdir $repositoryRoot
 file attributes $repositoryRoot -permissions 0750
 
-set proxyArguments {}
-if {[info exists ::env(FOSSILHUB_SYNC_PROXY)] &&
-    $::env(FOSSILHUB_SYNC_PROXY) ne ""} {
-  set proxyArguments [list --proxy $::env(FOSSILHUB_SYNC_PROXY)]
-}
-
 foreach entry [::fossilhub::manifest::all] {
   set name [dict get $entry name]
-  set sourceUrl [dict get $entry source_url]
   set destination [::fossilhub::model::repositoryPath $name]
   if {[file isfile $destination]} {
-    puts "Updating $name"
-    fossilhubSyncRun "update of $name" [list \
-      [::fossilhub::model::fossilBinary] pull --once \
-      {*}$proxyArguments $sourceUrl --repository $destination]
-    catch {exec [::fossilhub::model::fossilBinary] user capabilities \
-      fossilhub "" --repository $destination}
+    puts "Keeping $name"
     file attributes $destination -permissions 0600
     continue
   }
@@ -46,13 +34,25 @@ foreach entry [::fossilhub::manifest::all] {
   if {[file exists $temporary]} {
     error "refusing to reuse repository temporary file"
   }
-  puts "Cloning $name"
+  puts "Initializing $name"
   try {
-    fossilhubSyncRun "clone of $name" [list \
-      [::fossilhub::model::fossilBinary] clone --no-open \
-      --admin-user fossilhub {*}$proxyArguments $sourceUrl $temporary]
-    fossilhubSyncRun "capability lockdown for $name" [list \
+    fossilhubInitRun "initialization of $name" [list \
+      [::fossilhub::model::fossilBinary] init \
+      --admin-user fossilhub \
+      --project-name [dict get $entry title] \
+      --project-desc [dict get $entry description] \
+      $temporary]
+    fossilhubInitRun "public capability setup for $name" [list \
+      [::fossilhub::model::fossilBinary] user capabilities nobody gjorz2 \
+      --repository $temporary]
+    fossilhubInitRun "anonymous capability setup for $name" [list \
+      [::fossilhub::model::fossilBinary] user capabilities anonymous hmnc3 \
+      --repository $temporary]
+    fossilhubInitRun "administrator lockdown for $name" [list \
       [::fossilhub::model::fossilBinary] user capabilities fossilhub "" \
+      --repository $temporary]
+    fossilhubInitRun "autosync lockdown for $name" [list \
+      [::fossilhub::model::fossilBinary] setting autosync off \
       --repository $temporary]
     file attributes $temporary -permissions 0600
     file rename $temporary $destination
@@ -60,9 +60,9 @@ foreach entry [::fossilhub::manifest::all] {
     if {[file exists $temporary]} {
       file delete -force $temporary
     }
-    error "FossilHub: synchronization failed for $name"
+    error "FossilHub: initialization failed for $name"
   }
 }
 
 set count [::fossilhub::catalog::rebuild]
-puts "FossilHub synchronized and indexed $count repositories"
+puts "FossilHub initialized and indexed $count blank repositories"

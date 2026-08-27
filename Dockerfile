@@ -54,7 +54,7 @@ RUN make althttpd \
 FROM ubuntu:24.04
 
 ARG FOSSILHUB_REVISION=unknown
-ARG FOSSILHUB_VERSION=2026.08.27-beta.1
+ARG FOSSILHUB_VERSION=2026.08.27-beta.2
 
 LABEL org.opencontainers.image.title="FossilHub" \
       org.opencontainers.image.description="Tcl 9.1/Wapp hub with native Fossil repositories served by althttpd" \
@@ -80,7 +80,7 @@ COPY --from=fossil-builder /build/fossil/fossil /usr/local/bin/fossil
 COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
 COPY app/bin/fossilhub-entrypoint /usr/local/bin/fossilhub-entrypoint
 COPY app/bin/fossilhub-index /usr/local/bin/fossilhub-index
-COPY app/bin/fossilhub-sync /usr/local/bin/fossilhub-sync
+COPY app/bin/fossilhub-init /usr/local/bin/fossilhub-init
 COPY app/cgi/fossil /srv/www/default.website/fossil
 COPY app/fossilhub.tcl /srv/www/default.website/index
 COPY app/lib/ /srv/www/default.website/lib/
@@ -94,7 +94,7 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
       /usr/local/bin/fossil \
       /usr/local/bin/fossilhub-entrypoint \
       /usr/local/bin/fossilhub-index \
-      /usr/local/bin/fossilhub-sync \
+      /usr/local/bin/fossilhub-init \
       /srv/www/default.website/fossil \
       /srv/www/default.website/index \
     && chmod 0444 /opt/fossilhub/wapp.tcl \

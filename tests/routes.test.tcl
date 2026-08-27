@@ -26,7 +26,7 @@ assertEqual [::fossilhub::routeForPath \
   {repository sqlite.fossil wiki-page abcdef1234567890} \
   "repository wiki artifact route"
 assertEqual [::fossilhub::routeForPath /repo.html] \
-  {repository sqlite.fossil timeline} "legacy repository route"
+  {repository bedrock.fossil timeline} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /catalog-fragment] \
   catalog-fragment "catalog fragment route"
 assertEqual [::fossilhub::routeForPath /healthz] health "health route"

@@ -1,41 +1,32 @@
 namespace eval ::fossilhub::manifest {
-  variable repositories [list \
-    [dict create \
-      name sqlite.fossil \
-      slug sqlite \
-      title SQLite \
-      description {The canonical SQLite source tree and its complete development history.} \
-      source_url https://sqlite.org/src \
-      category database \
-      language C \
-      featured 1] \
-    [dict create \
-      name fossil.fossil \
-      slug fossil \
-      title {Fossil SCM} \
-      description {The self-hosting distributed software configuration management system.} \
-      source_url https://sqlite.org/fossil \
-      category scm \
-      language C \
-      featured 0] \
-    [dict create \
-      name wapp.fossil \
-      slug wapp \
-      title Wapp \
-      description {The compact Tcl web-application framework used by FossilHub.} \
-      source_url https://sqlite.org/wapp \
-      category framework \
-      language Tcl \
-      featured 0] \
-    [dict create \
-      name althttpd.fossil \
-      slug althttpd \
-      title Althttpd \
-      description {The small, security-focused web server behind sqlite.org and FossilHub.} \
-      source_url https://sqlite.org/althttpd \
-      category server \
-      language C \
-      featured 0]]
+  variable repositories {}
+  set specimens {
+    {bedrock {Bedrock Dig} {A clean Fossil repository ready for its first durable layer.}}
+    {ammonite {Ammonite Dig} {An empty field site for code, notes, tickets, and discussion.}}
+    {trilobite {Trilobite Dig} {A newly opened Fossil specimen with no imported history.}}
+    {basalt {Basalt Dig} {A blank repository prepared for the first check-in.}}
+    {cambrian {Cambrian Dig} {A clean excavation where every future artifact stays together.}}
+    {granite {Granite Dig} {An empty long-lived repository with Fossil-native storage.}}
+    {shale {Shale Dig} {A fresh field notebook for source and project knowledge.}}
+    {quartz {Quartz Dig} {A blank Fossil repository awaiting its first contribution.}}
+    {obsidian {Obsidian Dig} {A clean project site with no demonstration data.}}
+    {tectonic {Tectonic Dig} {An empty collaborative repository ready to evolve.}}
+  }
+  set index 0
+  foreach specimen $specimens {
+    lassign $specimen slug title description
+    lappend repositories [dict create \
+      name "${slug}.fossil" \
+      slug $slug \
+      title $title \
+      description $description \
+      source_url "" \
+      category blank \
+      language {Not set} \
+      featured [expr {$index == 0}]]
+    incr index
+  }
+  unset specimens index specimen slug title description
 }
 
 proc ::fossilhub::manifest::all {} {

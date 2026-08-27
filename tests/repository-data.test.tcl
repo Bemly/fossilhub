@@ -36,6 +36,8 @@ set ::env(FOSSILHUB_REPOSITORY_DIR) $repositoryDirectory
 try {
   exec $fossil init --admin-user fossilhub \
     --project-name {Repository data fixture} $repository
+  assertEqual [::fossilhub::model::files sqlite.fossil] {} \
+    "empty repository has no trunk files"
 
   set priorDirectory [pwd]
   try {

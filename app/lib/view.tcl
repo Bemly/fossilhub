@@ -405,8 +405,8 @@ proc ::fossilhub::view::surfaceFeed {repositories} {
 proc ::fossilhub::view::emptyRepository {} {
   return [dict create \
     available 0 \
-    name dig.fossil \
-    slug dig \
+    name bedrock.fossil \
+    slug bedrock \
     path "" \
     bytes 0 \
     project_name "No repositories yet" \

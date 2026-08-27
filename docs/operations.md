@@ -38,16 +38,14 @@ Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
 
 ## CalVer candidate
 
-The source candidate is `2026.08.27-beta.1`; it is not the production image
+The source candidate is `2026.08.27-beta.2`; it is not the production image
 until the validation and transactional switch below are complete. Its public
 catalogue is an application-owned SQLite database at
-`/data/catalog/fossilhub.sqlite`, rebuilt atomically from these real repository
-files:
-
-- `/data/repositories/sqlite.fossil` from `https://sqlite.org/src`
-- `/data/repositories/fossil.fossil` from `https://sqlite.org/fossil`
-- `/data/repositories/wapp.fossil` from `https://sqlite.org/wapp`
-- `/data/repositories/althttpd.fossil` from `https://sqlite.org/althttpd`
+`/data/catalog/fossilhub.sqlite`, rebuilt atomically from ten clean local
+repositories: Bedrock, Ammonite, Trilobite, Basalt, Cambrian, Granite, Shale,
+Quartz, Obsidian, and Tectonic. They begin with no check-ins, Wiki pages,
+Tickets, Forum posts, files, or imported upstream history beyond Fossil's
+required initial empty check-in.
 
 The candidate does not create `dig.fossil`. If that legacy repository and its
 bootstrap record already exist, they are preserved but omitted from the public
@@ -57,26 +55,23 @@ catalogue.
 | --- | --- |
 | `/explore?q=sqlite&kind=code&sort=recent` | Complete SSR search result |
 | `/catalog-fragment` | Progressive-search HTML fragment |
-| `/repo/sqlite.fossil/timeline` | FossilHub timeline |
-| `/repo/sqlite.fossil/files` | FossilHub trunk source tree |
-| `/repo/sqlite.fossil/docs` | FossilHub documentation index |
-| `/repo/sqlite.fossil/wiki` | FossilHub Wiki index |
-| `/repo/sqlite.fossil/tickets` | FossilHub ticket cabinet |
-| `/repo/sqlite.fossil/forum` | FossilHub forum activity |
+| `/repo/bedrock.fossil/timeline` | FossilHub timeline |
+| `/repo/bedrock.fossil/files` | FossilHub trunk source tree |
+| `/repo/bedrock.fossil/docs` | FossilHub documentation index |
+| `/repo/bedrock.fossil/wiki` | FossilHub Wiki index |
+| `/repo/bedrock.fossil/tickets` | FossilHub ticket cabinet |
+| `/repo/bedrock.fossil/forum` | FossilHub forum activity |
 
 Browser pages do not link to Fossil's built-in web UI. The `/fossil/<slug>`
 endpoint remains enabled only because Fossil clients require it for clone and
 sync.
 
-The image provides an idempotent `/usr/local/bin/fossilhub-sync` command. It
-pulls an existing named repository, clones a missing one to a uniquely named
-temporary file before publishing it, applies mode 0600, and rebuilds the
-catalogue only after all four operations succeed. Run it only with the exact
-FossilHub data mount and the same UID/GID as the service. If direct Fossil
-transport stalls while ordinary HTTPS remains healthy, supply the trusted
-proxy only at runtime through `FOSSILHUB_SYNC_PROXY`; never hardcode it into an
-image. Clone output is deliberately suppressed because Fossil prints a
-generated local administrator password after a successful clone. The importer
+The image provides an idempotent `/usr/local/bin/fossilhub-init` command. It
+initializes each missing repository in a uniquely named temporary file before
+publishing it, applies mode 0600, and rebuilds the catalogue only after all ten
+operations succeed. Run it only with the exact FossilHub data mount and the
+same UID/GID as the service. Initialization output is deliberately suppressed
+because Fossil prints a generated local administrator password; the initializer
 immediately removes that generated user's capabilities.
 
 ## Read-only checks
@@ -163,7 +158,7 @@ temporary smoke-test data directory was removed as part of that cleanup.
 3. Transfer a `git archive` of that revision to a new `/tmp/fossilhub-build-*`
    directory on the NAS; do not build from a dirty working tree.
 4. Build a uniquely versioned image from `Dockerfile` on the x86_64 NAS.
-5. Populate an isolated data directory with `fossilhub-sync`, then smoke-test
+5. Populate an isolated data directory with `fossilhub-init`, then smoke-test
    all first-party routes in a temporary container on a different unused port.
 6. Stop and rename the current container as a rollback point, then create the
    replacement with the same restrictions and persistent volume.

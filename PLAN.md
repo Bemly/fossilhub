@@ -124,8 +124,8 @@ it is not a runtime data source.
 
 ## Phase 4: SQLite catalogue and first-party repository surfaces
 
-Requested 2026-08-27. Releases in this phase use CalVer beginning with
-`2026.08.27-beta.1`. The existing production image remains untouched until the
+Requested 2026-08-27. Releases in this phase use CalVer; the current candidate
+is `2026.08.27-beta.2`. The existing production image remains untouched until the
 candidate passes every smoke and browser gate.
 
 - [x] Add an application-owned SQLite catalogue under `/data/catalog/`, built
@@ -138,14 +138,14 @@ candidate passes every smoke and browser gate.
   Forum, stats, and ZIP pages with first-party FossilHub routes and styling.
 - [x] Preserve the native Fossil endpoint solely as the clone/sync transport;
   it must no longer be part of browser navigation.
-- [x] Add an idempotent Tcl importer for the official Althttpd, Wapp, Fossil,
-  and SQLite source repositories. Existing repository files are pulled, never
-  overwritten; new clones are published by atomic rename.
+- [x] Add an idempotent Tcl initializer for ten clean local Fossil repositories.
+  Existing repository files are retained; new repositories are published by
+  atomic rename and contain no demonstration check-ins.
 - [x] Stop creating the demonstration repository on a clean data directory.
   Preserve any existing `dig.fossil` and bootstrap record as legacy data, but
   do not include them in the public catalogue.
 - [ ] Build and smoke-test the committed x86_64 CalVer image on port 6082 with
-  isolated cloned repositories, including search, each styled repository
+  ten isolated blank repositories, including search, each styled repository
   surface, clone/sync, persistence, permissions, responsive layouts, and the
   public subdirectory prefix.
 - [ ] Update NAS production on port 6080 only after explicit authorization and

@@ -20,6 +20,11 @@ proc assertTrue {value label} {
   }
 }
 
+assertEqual [llength [::fossilhub::manifest::all]] 10 \
+  "blank repository manifest count"
+assertEqual [dict get [lindex [::fossilhub::manifest::all] 0] name] \
+  bedrock.fossil "featured blank repository"
+
 set handle [file tempfile temporaryMarker fossilhub-catalog-test]
 close $handle
 file delete $temporaryMarker
