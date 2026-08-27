@@ -150,3 +150,16 @@ candidate passes every smoke and browser gate.
   public subdirectory prefix.
 - [ ] Update NAS production on port 6080 only after explicit authorization and
   retain the current container as a rollback target.
+
+## Phase 5: collaboration platform foundation
+
+Requested 2026-08-28. This phase expands FossilHub from a read-only presentation
+layer into a GitHub-like self-hosted platform with central accounts, repository
+ownership and permissions, browser writes, complete first-party repository
+navigation, user and administrator workspaces, and real public information
+pages.
+
+The dependency-ordered, auditable checklist and acceptance gates are maintained
+in [docs/platform-roadmap.md](docs/platform-roadmap.md). Production port 6080
+must remain on its current release until the new platform candidate passes that
+roadmap and receives separate switch authorization.
