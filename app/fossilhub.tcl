@@ -45,6 +45,9 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)fh\.css$} $clean]} {
     return stylesheet
   }
+  if {[regexp {(^|/)fossilhub-live\.js$} $clean]} {
+    return live-script
+  }
   if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
   }
@@ -132,6 +135,13 @@ proc wapp-default {} {
       ::fossilhub::trustedFile \
         [file join $::fossilhub::root public fh.css] \
         "text/css; charset=utf-8" \
+        max-age=3600
+    }
+    live-script {
+      variable ::fossilhub::root
+      ::fossilhub::trustedFile \
+        [file join $::fossilhub::root public fossilhub-live.js] \
+        "text/javascript; charset=utf-8" \
         max-age=3600
     }
     default {

@@ -204,17 +204,17 @@
       <b>Fossilhub</b>
     </a>
     <nav class="topnav" aria-label="Repository">
-      <a href="#tl">Timeline</a>
-      <a href="#tl">Files</a>
-      <a href="#tl">Wiki</a>
-      <a href="#tl">Tickets</a>
-      <a href="#tl">Forum</a>
+      <a href="/fossil/dig/timeline" data-fossil-path="/timeline">Timeline</a>
+      <a href="/fossil/dig/tree" data-fossil-path="/tree">Files</a>
+      <a href="/fossil/dig/wiki" data-fossil-path="/wiki">Wiki</a>
+      <a href="/fossil/dig/reportlist" data-fossil-path="/reportlist">Tickets</a>
+      <a href="/fossil/dig/forum" data-fossil-path="/forum">Forum</a>
     </nav>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
     </button>
-    <span class="cmd-chip"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
+    <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
   </div>
 </header>
 
@@ -224,7 +224,7 @@
     <div class="wrap">
       <div class="crumb-row">
         <p class="crumb">FOSSILHUB ▸ DIGS ▸ <b>DIG.FOSSIL</b></p>
-        <span class="chip chip-plain"><span class="sdot"></span>PUBLIC · MIRROR OF d.r.hipp/dig</span>
+        <span class="chip chip-plain"><span class="sdot"></span>PUBLIC · LIVE FOSSIL 2.29</span>
       </div>
       <div class="mast-grid">
         <div class="repo-title">
@@ -236,8 +236,8 @@
             <span class="chip chip-plain"><span class="sdot"></span>updated 14m ago</span>
           </div>
           <div class="clone-row">
-            <span class="cmd-chip"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
-            <a class="btn btn-ghost btn-sm" href="#tl">Download dig.fossil · 3.1 MB</a>
+            <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
+            <a class="btn btn-ghost btn-sm" href="/fossil/dig/zip/dig-trunk.zip?uuid=trunk" data-fossil-path="/zip/dig-trunk.zip?uuid=trunk">Download trunk ZIP</a>
           </div>
         </div>
         <aside class="label-card reveal" aria-label="Specimen label">
@@ -263,12 +263,12 @@
   <section class="repo-body" id="tl">
     <div class="tabbar">
       <div class="wrap" style="display:flex;gap:26px">
-        <a class="tab active" href="#tl">Timeline</a>
-        <a class="tab" href="#tl">Files</a>
-        <a class="tab" href="#tl">Docs</a>
-        <a class="tab" href="#tl">Wiki <span class="n">214</span></a>
-        <a class="tab" href="#tl">Tickets <span class="n">9 open</span></a>
-        <a class="tab" href="#tl">Forum <span class="n">31</span></a>
+        <a class="tab active" href="/fossil/dig/timeline" data-fossil-path="/timeline">Timeline</a>
+        <a class="tab" href="/fossil/dig/tree" data-fossil-path="/tree">Files</a>
+        <a class="tab" href="/fossil/dig/doc/trunk/" data-fossil-path="/doc/trunk/">Docs</a>
+        <a class="tab" href="/fossil/dig/wiki" data-fossil-path="/wiki">Wiki <span class="n">214</span></a>
+        <a class="tab" href="/fossil/dig/reportlist" data-fossil-path="/reportlist">Tickets <span class="n">9 open</span></a>
+        <a class="tab" href="/fossil/dig/forum" data-fossil-path="/forum">Forum <span class="n">31</span></a>
       </div>
     </div>
 
@@ -369,7 +369,7 @@
               <div class="rv-end"><span class="rv-hash">v2.26</span><span class="rv-user">DH</span></div>
             </div>
           </div>
-          <a class="deeper" href="#tl">↓ OLDER — KEEP DIGGING</a>
+          <a class="deeper" href="/fossil/dig/timeline?n=200" data-fossil-path="/timeline?n=200">↓ OLDER — KEEP DIGGING</a>
         </div>
       </div>
 
@@ -429,7 +429,7 @@
           <li><a href="index.html#engine">Field manual</a></li>
           <li><a href="#about">Hosting plans</a></li>
         </ul>
-        <span class="clone-dark"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
+        <span class="clone-dark"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
       </div>
       <div>
         <h4>Upstream</h4>
@@ -455,6 +455,7 @@
   </div>
 </footer>
 
+<script src="fossilhub-live.js"></script>
 <script>
 document.documentElement.classList.add('js');
 const io = new IntersectionObserver((entries) => {

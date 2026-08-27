@@ -43,7 +43,7 @@
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
     </button>
-    <span class="cmd-chip"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
+    <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
   </div>
 </header>
 
@@ -287,7 +287,7 @@
 $ fossil ui
 <span class="dim">  serving</span> <span class="lit">http://127.0.0.1:8080</span> <span class="dim">(repo: dig.fossil)</span>
 
-$ fossil clone https://fossilhub.org/dig.fossil
+$ <span data-clone-command>fossil clone /fossil/dig</span>
 <span class="dim">  1,284 artifacts · 3.1 MB received</span>
 <span class="dim">  autosync:</span> 3 peers converged</pre>
           <div class="term-note">No daemons, no config files, no database server. The web UI ships inside the same binary that stores the data.</div>
@@ -313,7 +313,7 @@ $ fossil clone https://fossilhub.org/dig.fossil
           <li><a href="#engine">Field manual</a></li>
           <li><a href="#wiki">Hosting plans</a></li>
         </ul>
-        <span class="clone-dark"><span class="p">$</span><span class="u">fossil clone https://fossilhub.org/dig.fossil</span></span>
+        <span class="clone-dark"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
       </div>
       <div>
         <h4>Upstream</h4>
@@ -339,6 +339,7 @@ $ fossil clone https://fossilhub.org/dig.fossil
   </div>
 </footer>
 
+<script src="fossilhub-live.js"></script>
 <script>
 document.documentElement.classList.add('js');
 const io = new IntersectionObserver((entries) => {

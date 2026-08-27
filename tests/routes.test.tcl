@@ -17,6 +17,10 @@ assertEqual [::fossilhub::routeForPath /repo.html] \
   {repository dig.fossil} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /healthz] health "health route"
 assertEqual [::fossilhub::routeForPath /fh.css] stylesheet "stylesheet route"
+assertEqual [::fossilhub::routeForPath /fossilhub-live.js] \
+  live-script "live integration script route"
+assertEqual [::fossilhub::routeForPath /repo/fossilhub-live.js] \
+  live-script "nested live integration script route"
 assertEqual [::fossilhub::routeForPath /missing] not-found "not-found route"
 assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/explore] \
   explore "mounted explore route"
