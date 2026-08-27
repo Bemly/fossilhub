@@ -37,8 +37,6 @@ seed_repository() {
     --repository "${temporary_repository}"
   /usr/local/bin/fossil setting autosync off \
     --repository "${temporary_repository}"
-  /usr/local/bin/fossil setting index-page /timeline \
-    --repository "${temporary_repository}"
 
   (
     cd "${seed_checkout}"
