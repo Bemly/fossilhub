@@ -128,20 +128,20 @@ Requested 2026-08-27. Releases in this phase use CalVer beginning with
 `2026.08.27-beta.1`. The existing production image remains untouched until the
 candidate passes every smoke and browser gate.
 
-- [ ] Add an application-owned SQLite catalogue under `/data/catalog/`, built
+- [x] Add an application-owned SQLite catalogue under `/data/catalog/`, built
   atomically from read-only Fossil metadata without altering Fossil schemas.
-- [ ] Replace directory scanning at request time with indexed catalogue reads,
+- [x] Replace directory scanning at request time with indexed catalogue reads,
   literal search, type filters, deterministic sorting, and data-layer tests.
-- [ ] Keep Explore complete under SSR, then progressively enhance it with a
+- [x] Keep Explore complete under SSR, then progressively enhance it with a
   debounced HTML-fragment search that remains mount-prefix safe.
-- [ ] Replace links to Fossil's native Timeline, Files, Docs, Wiki, Tickets,
+- [x] Replace links to Fossil's native Timeline, Files, Docs, Wiki, Tickets,
   Forum, stats, and ZIP pages with first-party FossilHub routes and styling.
-- [ ] Preserve the native Fossil endpoint solely as the clone/sync transport;
+- [x] Preserve the native Fossil endpoint solely as the clone/sync transport;
   it must no longer be part of browser navigation.
-- [ ] Add an idempotent Tcl importer for the official Althttpd, Wapp, Fossil,
+- [x] Add an idempotent Tcl importer for the official Althttpd, Wapp, Fossil,
   and SQLite source repositories. Existing repository files are pulled, never
   overwritten; new clones are published by atomic rename.
-- [ ] Stop creating the demonstration repository on a clean data directory.
+- [x] Stop creating the demonstration repository on a clean data directory.
   Preserve any existing `dig.fossil` and bootstrap record as legacy data, but
   do not include them in the public catalogue.
 - [ ] Build and smoke-test the committed x86_64 CalVer image on port 6082 with

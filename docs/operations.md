@@ -36,6 +36,44 @@ fnOS system path.
 
 Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
 
+## CalVer candidate
+
+The source candidate is `2026.08.27-beta.1`; it is not the production image
+until the validation and transactional switch below are complete. Its public
+catalogue is an application-owned SQLite database at
+`/data/catalog/fossilhub.sqlite`, rebuilt atomically from these real repository
+files:
+
+- `/data/repositories/sqlite.fossil` from `https://sqlite.org/src`
+- `/data/repositories/fossil.fossil` from `https://sqlite.org/fossil`
+- `/data/repositories/wapp.fossil` from `https://sqlite.org/wapp`
+- `/data/repositories/althttpd.fossil` from `https://sqlite.org/althttpd`
+
+The candidate does not create `dig.fossil`. If that legacy repository and its
+bootstrap record already exist, they are preserved but omitted from the public
+catalogue.
+
+| Candidate route | Expected result |
+| --- | --- |
+| `/explore?q=sqlite&kind=code&sort=recent` | Complete SSR search result |
+| `/catalog-fragment` | Progressive-search HTML fragment |
+| `/repo/sqlite.fossil/timeline` | FossilHub timeline |
+| `/repo/sqlite.fossil/files` | FossilHub trunk source tree |
+| `/repo/sqlite.fossil/docs` | FossilHub documentation index |
+| `/repo/sqlite.fossil/wiki` | FossilHub Wiki index |
+| `/repo/sqlite.fossil/tickets` | FossilHub ticket cabinet |
+| `/repo/sqlite.fossil/forum` | FossilHub forum activity |
+
+Browser pages do not link to Fossil's built-in web UI. The `/fossil/<slug>`
+endpoint remains enabled only because Fossil clients require it for clone and
+sync.
+
+The image provides an idempotent `/usr/local/bin/fossilhub-sync` command. It
+pulls an existing named repository, clones a missing one to a uniquely named
+temporary file before publishing it, applies mode 0600, and rebuilds the
+catalogue only after all four operations succeed. Run it only with the exact
+FossilHub data mount and the same UID/GID as the service.
+
 ## Read-only checks
 
 Run these commands through the documented fnOS SSH connection. They do not
@@ -120,7 +158,8 @@ temporary smoke-test data directory was removed as part of that cleanup.
 3. Transfer a `git archive` of that revision to a new `/tmp/fossilhub-build-*`
    directory on the NAS; do not build from a dirty working tree.
 4. Build a uniquely versioned image from `Dockerfile` on the x86_64 NAS.
-5. Smoke-test all routes in a temporary container on a different unused port.
+5. Populate an isolated data directory with `fossilhub-sync`, then smoke-test
+   all first-party routes in a temporary container on a different unused port.
 6. Stop and rename the current container as a rollback point, then create the
    replacement with the same restrictions and persistent volume.
 7. Verify health, UTF-8 content, routes, logs, desktop/mobile layout, and restart

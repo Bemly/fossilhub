@@ -68,11 +68,19 @@ production change.
 - FossilHub persistent data: `/vol1/1000/fossilhub/`
 - FossilHub live repository:
   `/vol1/1000/fossilhub/repositories/dig.fossil`
+- Candidate catalogue database:
+  `/vol1/1000/fossilhub/catalog/fossilhub.sqlite`
+- Candidate official repositories:
+  `/vol1/1000/fossilhub/repositories/{sqlite,fossil,wapp,althttpd}.fossil`
 - Fossil bootstrap administrator record:
   `/vol1/1000/fossilhub/fossil-bootstrap-admin.txt`
 - The repository and bootstrap record must remain mode 0600 and owned by
   UID/GID 10001:10001. Read the bootstrap record only in a trusted interactive
   SSH terminal; never include its contents in logs, tests, commits, or replies.
+- Every official repository and the catalogue database must also remain mode
+  0600 and owned by UID/GID 10001:10001. `dig.fossil` and its bootstrap record
+  are retained as legacy production data even though the CalVer catalogue does
+  not expose them.
 
 ## Current FossilHub production state
 
@@ -99,6 +107,9 @@ before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
+The source candidate is `2026.08.27-beta.1`. It is not production until its NAS
+validation record and transactional port-6080 switch are complete.
+
 ## Runtime and source pins
 
 - Ubuntu 24.04 multi-stage image.
@@ -124,26 +135,42 @@ browser
   -> isolated Ubuntu container
   -> althttpd :8080
      -> executable Wapp CGI for the reference hub UI
-     -> Fossil CGI `directory:` mode for `/fossil/dig/*`
-  -> persistent `/data/repositories/dig.fossil`
+     -> Tcl SSR repository surfaces and SQLite catalogue search
+     -> Fossil CGI `directory:` mode only for clone/sync transport
+  -> `/data/catalog/fossilhub.sqlite`
+  -> `/data/repositories/{sqlite,fossil,wapp,althttpd}.fossil`
 ```
 
 - `app/fossilhub.tcl` owns Wapp routing and Tcl SSR response delivery.
-- `app/lib/fossil-model.tcl` discovers trusted repository names and queries
-  Fossil through its `sql --readonly` interface. Query values are hex-encoded
-  before crossing the process boundary and decoded in Tcl.
+- `app/lib/repository-manifest.tcl` is the allow-list for the four official
+  repository names, source URLs, and catalogue facets. Files outside that list
+  are never published merely because they end in `.fossil`.
+- `app/lib/fossil-model.tcl` queries repository metadata, history, trunk files,
+  Wiki artifacts, Tickets, and Forum activity through Fossil's
+  `sql --readonly` interface. Query values are hex-encoded before crossing the
+  process boundary and decoded in Tcl.
+- `app/lib/catalog-model.tcl` owns the separate application SQLite schema,
+  literal search, filters, sorting, and atomic index replacement. This is the
+  only database the application may open with raw `sqlite3`.
 - `app/lib/view.tcl` owns HTML escaping, formatting, and reusable repository,
   catalogue, composition, and timeline renderers.
 - `app/views/` contains Tcl view modules for the reference-derived home,
   Explore, and repository pages. Runtime `.html` templates do not exist.
 - `app/public/fh.css` is the shared design system.
-- `app/public/fossilhub-live.js` derives the runtime mount prefix and rewrites
-  clone and native Fossil links. It reads the active repository slug from the
-  server-rendered `body` data attribute.
+- `app/views/repository-sections.tcl` renders the first-party Timeline, Files,
+  Docs, Wiki, Tickets, and Forum surfaces. Browser navigation must not link to
+  Fossil's built-in web pages.
+- `app/public/fossilhub-live.js` derives the runtime mount prefix, rewrites
+  internal `data-hub-path` links, and produces clone commands. It reads the
+  active repository slug from the server-rendered `body` data attribute.
+- `app/public/catalog-search.js` progressively enhances the complete Explore
+  SSR form with debounced HTML-fragment replacement.
 - `app/cgi/fossil` is Fossil's CGI directory-mode launcher.
-- `app/bin/fossilhub-entrypoint` idempotently creates the first real repository,
-  seed check-in, Wiki page, Ticket, and administrator record. If
-  `dig.fossil` exists, startup must never recreate or overwrite it.
+- `app/bin/fossilhub-sync` idempotently pulls or atomically clones the four
+  manifest repositories, sets mode 0600, and rebuilds the catalogue.
+- `app/bin/fossilhub-entrypoint` never clones or creates repositories. It only
+  creates the data subdirectories and rebuilds the catalogue from official
+  repository files already present on the mount.
 - Fossil owns its repository SQLite schema. Do not manually alter internal
   Fossil tables to implement application features.
 
@@ -161,8 +188,9 @@ redirect or 404. The server cannot infer the external prefix.
 
 - Browser URLs must derive the mount prefix from `window.location.pathname` at
   runtime, as `fossilhub-live.js` does.
-- Every live Fossil link must use `data-fossil-path`; every displayed clone
-  command must use `data-clone-command`.
+- Every internal browser link that cannot be expressed safely as a relative URL
+  must use `data-hub-path`; every displayed clone command must use
+  `data-clone-command`. `data-fossil-path` is not used for browser navigation.
 - Test both direct LAN paths and a simulated
   `/bemly-moe/app/fossilhub/...` pathname.
 - Do not regress nested asset routes such as
@@ -187,7 +215,8 @@ redirect or 404. The server cannot infer the external prefix.
   `text/javascript; charset=utf-8`.
 - Repository reads must use Fossil's `sql --readonly` command. Do not open live
   repository files with raw SQLite for application queries, and never mutate
-  Fossil-owned tables.
+  Fossil-owned tables. Raw `sqlite3` access is restricted to the separate
+  `/data/catalog/fossilhub.sqlite` application index.
 - Runtime pages must be complete server-rendered HTML. Do not require JavaScript
   to fetch repository identity, counts, cards, or timeline events.
 - Only serve files through trusted, fixed paths. Never concatenate an
@@ -197,8 +226,8 @@ redirect or 404. The server cannot infer the external prefix.
 - Shell entrypoints use `set -eu`, restrictive `umask`, quoted variables,
   atomic temporary files, and cleanup traps. Temporary directories must be
   exact `mktemp` results before recursive deletion.
-- Do not log generated passwords. Redirect Fossil initialization output to the
-  protected bootstrap record before any container log capture.
+- Do not log generated passwords. The CalVer importer clones public upstreams
+  and does not create local administrators or bootstrap records.
 - Keep the runtime root filesystem read-only and write only to `/data` and the
   `/tmp` tmpfs. Do not add Docker socket access, host networking, privileged
   mode, or extra capabilities.
@@ -215,27 +244,31 @@ Before a production switch:
 
 1. Work from a committed revision; create the NAS build input with
    `git archive`, never from a dirty worktree.
-2. Run `git diff --check` and `node --check app/public/fossilhub-live.js`.
-3. Run `tests/routes.test.tcl`, `tests/model.test.tcl`, and
+2. Run `git diff --check` and `node --check` for both scripts under
+   `app/public/`.
+3. Run `tests/routes.test.tcl`, `tests/model.test.tcl`,
+   `tests/catalog.test.tcl`, `tests/repository-data.test.tcl`, and
    `tests/views.test.tcl` under the image's Tcl 9.1b0. macOS system Tcl may be
    8.5 and is not authoritative.
 4. Build on the x86_64 NAS and confirm Tcl 9.1b0, Fossil 2.29, Wapp lint, and the
    OCI Git revision label.
-5. Start a uniquely named `fossilhub-beta-*` smoke container on a confirmed-free
-   non-production port with an isolated temporary data directory.
-6. Verify HTTP 200 for `/`, `/healthz`, `/explore`, `/repo/dig.fossil`, both
-   integration-script routes, native Timeline, Files, Wiki, Tickets, Forum,
-   and trunk ZIP.
-7. Perform a real HTTP `fossil clone` followed by `fossil sync`; compare the
-   project code with the server repository.
+5. Use `fossilhub-sync` to populate an isolated temporary data directory, then
+   start a uniquely named `fossilhub-beta-*` container on confirmed-free port
+   6082.
+6. Verify HTTP 200 for `/`, `/healthz`, Explore SSR queries and fragments, both
+   scripts, and Timeline, Files, Docs, Wiki, Tickets, and Forum for all four
+   official repositories. Assert generated pages contain no native Fossil web
+   links.
+7. Perform a real HTTP `fossil clone` followed by `fossil sync`; compare its
+   project code with the corresponding server repository.
 8. Replace the smoke image while reusing its data directory, then restart it.
-   Confirm project code, check-in count, repository file, and bootstrap record
-   do not change.
+   Confirm project codes, check-in counts, repository identities, and catalogue
+   membership do not change.
 9. Verify file modes and ownership are 0600 and 10001:10001.
 10. Browser-test desktop, 913 px medium width, and 390 x 844 mobile. Check for
     horizontal overflow, missing assets, broken links, stale cached assets, and
-    console warnings/errors. Click from the reference UI into a native Fossil
-    page.
+    console warnings/errors. Exercise live catalogue search and every
+    first-party repository tab.
 11. Re-check the production container, rollback name, port 6080 owner, data
     mount, and candidate health immediately before switching.
 
