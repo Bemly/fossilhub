@@ -238,7 +238,8 @@ proc wapp-default {} {
         set repository [::fossilhub::model::repository $name 200]
         set sectionData [::fossilhub::repositorySectionData \
           $repository $section $route]
-      }]} {
+      } message]} {
+        puts stderr "FossilHub: repository request failed for [file tail $name]: $message"
         wapp-reply-code "503 Service Unavailable"
         ::fossilhub::placeholder \
           "Repository unavailable — FossilHub" \

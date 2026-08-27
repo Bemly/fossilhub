@@ -113,7 +113,7 @@ before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
-The source candidate is `2026.08.27-beta.2`. It is not production until its NAS
+The source candidate is `2026.08.27-beta.3`. It is not production until its NAS
 validation record and transactional port-6080 switch are complete.
 
 ## Runtime and source pins
@@ -148,6 +148,9 @@ browser
 ```
 
 - `app/fossilhub.tcl` owns Wapp routing and Tcl SSR response delivery.
+- Every Fossil CLI child launched by a Wapp request must include `--nocgi`;
+  otherwise Fossil inherits `GATEWAY_INTERFACE` and treats the next argument as
+  a CGI configuration filename instead of a CLI subcommand.
 - `app/lib/repository-manifest.tcl` is the allow-list for the ten blank
   repository names and catalogue facets. Files outside that list
   are never published merely because they end in `.fossil`.

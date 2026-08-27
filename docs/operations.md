@@ -38,8 +38,10 @@ Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
 
 ## CalVer candidate
 
-The source candidate is `2026.08.27-beta.2`; it is not the production image
-until the validation and transactional switch below are complete. Its public
+The source candidate is `2026.08.27-beta.3`; it is not the production image
+until the validation and transactional switch below are complete. Wapp request
+processes carry CGI environment variables, so application-side Fossil CLI
+queries must include Fossil's `--nocgi` global option. Its public
 catalogue is an application-owned SQLite database at
 `/data/catalog/fossilhub.sqlite`, rebuilt atomically from ten clean local
 repositories: Bedrock, Ammonite, Trilobite, Basalt, Cambrian, Granite, Shale,

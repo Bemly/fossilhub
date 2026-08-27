@@ -32,9 +32,10 @@ set checkout [file join $marker checkout]
 set repository [file join $repositoryDirectory sqlite.fossil]
 file mkdir $repositoryDirectory $checkout
 set ::env(FOSSILHUB_REPOSITORY_DIR) $repositoryDirectory
+set ::env(GATEWAY_INTERFACE) CGI/1.1
 
 try {
-  exec $fossil init --admin-user fossilhub \
+  exec $fossil --nocgi init --admin-user fossilhub \
     --project-name {Repository data fixture} $repository
   assertEqual [::fossilhub::model::files sqlite.fossil] {} \
     "empty repository has no trunk files"
@@ -42,13 +43,13 @@ try {
   set priorDirectory [pwd]
   try {
     cd $checkout
-    exec $fossil open $repository
+    exec $fossil --nocgi open $repository
     set readme [open README.md w]
     fconfigure $readme -encoding utf-8 -translation lf
     puts $readme "# Repository fixture\n\nA Tcl-owned read path."
     close $readme
-    exec $fossil add README.md
-    exec $fossil commit --no-warnings --user fossilhub \
+    exec $fossil --nocgi add README.md
+    exec $fossil --nocgi commit --no-warnings --user fossilhub \
       --comment {Seed repository data fixture}
   } finally {
     cd $priorDirectory
@@ -59,9 +60,9 @@ try {
   fconfigure $wiki -encoding utf-8 -translation lf
   puts $wiki "# Field notes\n\nRead through Tcl SSR."
   close $wiki
-  exec $fossil wiki create Welcome $wikiSource --mimetype markdown \
+  exec $fossil --nocgi wiki create Welcome $wikiSource --mimetype markdown \
     --user fossilhub --repository $repository
-  exec $fossil ticket add title {Data-layer ticket} type Code_Defect \
+  exec $fossil --nocgi ticket add title {Data-layer ticket} type Code_Defect \
     status Open severity Important comment {Stored in Fossil} \
     --user fossilhub --repository $repository
 

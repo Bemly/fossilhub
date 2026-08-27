@@ -87,6 +87,7 @@ proc ::fossilhub::model::decodeRows {raw columnCount} {
 proc ::fossilhub::model::sqlRows {repository sql columnCount} {
   set command [list \
     [::fossilhub::model::fossilBinary] \
+    --nocgi \
     sql \
     --readonly \
     -R $repository \
@@ -347,7 +348,7 @@ proc ::fossilhub::model::artifactText {repository artifactId} {
     error "invalid artifact id"
   }
   return [exec -keepnewline \
-    [::fossilhub::model::fossilBinary] artifact \
+    [::fossilhub::model::fossilBinary] --nocgi artifact \
     --repository $repository $artifactId]
 }
 

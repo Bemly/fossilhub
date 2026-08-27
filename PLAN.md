@@ -125,7 +125,7 @@ it is not a runtime data source.
 ## Phase 4: SQLite catalogue and first-party repository surfaces
 
 Requested 2026-08-27. Releases in this phase use CalVer; the current candidate
-is `2026.08.27-beta.2`. The existing production image remains untouched until the
+is `2026.08.27-beta.3`. The existing production image remains untouched until the
 candidate passes every smoke and browser gate.
 
 - [x] Add an application-owned SQLite catalogue under `/data/catalog/`, built
