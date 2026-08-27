@@ -16,8 +16,9 @@ browser
   -> fossilhub Ubuntu container
   -> althttpd :8080
   -> executable Wapp CGI for the reference hub UI
-  -> Fossil CGI directory mode for live repositories
-  -> Tcl SSR routes, read-only Fossil queries, and persistent Fossil artifacts
+  -> Tcl SSR routes and a separate SQLite catalogue index
+  -> read-only Fossil queries and persistent Fossil artifacts
+  -> Fossil CGI directory mode retained only for clone/sync transport
 ```
 
 Althttpd serves fingerprintable static assets directly and treats the executable
@@ -34,7 +35,13 @@ catalogue and timeline on the server.
 | --- | --- | --- |
 | `/` | `fossilhub.html` | Product landing page |
 | `/explore` | `explore.html` | Searchable repository catalogue |
-| `/repo/dig.fossil` | `repo.html` | Repository specimen and timeline |
+| `/catalog-fragment` | — | Live search/filter HTML fragment |
+| `/repo/<name>.fossil` | `repo.html` | Repository specimen and timeline |
+| `/repo/<name>.fossil/files` | — | Styled source tree |
+| `/repo/<name>.fossil/docs` | — | Styled documentation index |
+| `/repo/<name>.fossil/wiki` | — | Styled Wiki history |
+| `/repo/<name>.fossil/tickets` | — | Styled ticket index |
+| `/repo/<name>.fossil/forum` | — | Styled forum activity |
 | `/healthz` | — | Container health check |
 
 ## Milestones
@@ -110,8 +117,36 @@ replacing prototype repository facts with live Fossil data.
   public mount-prefix adaptation. Initial content must be complete without it.
 - [x] Add model and render tests, including hostile repository text, empty data,
   missing repositories, and public subdirectory routes.
-- [ ] Build and smoke-test a committed x86_64 image against isolated data before
-  proposing any production replacement.
+- [ ] Superseded by the wider Phase 4 candidate below.
 
 The immutable HTML prototype remains under `reference/` for visual comparison;
 it is not a runtime data source.
+
+## Phase 4: SQLite catalogue and first-party repository surfaces
+
+Requested 2026-08-27. Releases in this phase use CalVer beginning with
+`2026.08.27-beta.1`. The existing production image remains untouched until the
+candidate passes every smoke and browser gate.
+
+- [ ] Add an application-owned SQLite catalogue under `/data/catalog/`, built
+  atomically from read-only Fossil metadata without altering Fossil schemas.
+- [ ] Replace directory scanning at request time with indexed catalogue reads,
+  literal search, type filters, deterministic sorting, and data-layer tests.
+- [ ] Keep Explore complete under SSR, then progressively enhance it with a
+  debounced HTML-fragment search that remains mount-prefix safe.
+- [ ] Replace links to Fossil's native Timeline, Files, Docs, Wiki, Tickets,
+  Forum, stats, and ZIP pages with first-party FossilHub routes and styling.
+- [ ] Preserve the native Fossil endpoint solely as the clone/sync transport;
+  it must no longer be part of browser navigation.
+- [ ] Add an idempotent Tcl importer for the official Althttpd, Wapp, Fossil,
+  and SQLite source repositories. Existing repository files are pulled, never
+  overwritten; new clones are published by atomic rename.
+- [ ] Stop creating the demonstration repository on a clean data directory.
+  Preserve any existing `dig.fossil` and bootstrap record as legacy data, but
+  do not include them in the public catalogue.
+- [ ] Build and smoke-test the committed x86_64 CalVer image on port 6082 with
+  isolated cloned repositories, including search, each styled repository
+  surface, clone/sync, persistence, permissions, responsive layouts, and the
+  public subdirectory prefix.
+- [ ] Update NAS production on port 6080 only after explicit authorization and
+  retain the current container as a rollback target.
