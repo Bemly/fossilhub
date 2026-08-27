@@ -1,10 +1,50 @@
-FROM ubuntu:24.04 AS althttpd-builder
+FROM ubuntu:24.04 AS build-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential ca-certificates \
+    && apt-get install -y --no-install-recommends \
+      build-essential \
+      ca-certificates \
+      libssl-dev \
+      zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
+
+FROM build-base AS tcl-builder
+
+COPY vendor/tcl/tcl9.1b0-src.tar.gz /tmp/tcl.tar.gz
+RUN install -d /build/tcl /opt/tcl \
+    && tar -xzf /tmp/tcl.tar.gz --strip-components=1 -C /build/tcl
+
+WORKDIR /build/tcl/unix
+RUN ./configure \
+      --prefix=/opt/tcl \
+      --disable-shared \
+      --disable-symbols \
+    && make -j"$(nproc)" \
+    && make install \
+    && test "$(echo 'puts [info patchlevel]' | /opt/tcl/bin/tclsh9.1)" = "9.1b0"
+
+FROM build-base AS fossil-builder
+
+COPY --from=tcl-builder /opt/tcl /opt/tcl
+ENV PATH="/opt/tcl/bin:${PATH}"
+
+COPY vendor/fossil/fossil-b8c7665e121b.tar.gz /tmp/fossil.tar.gz
+RUN install -d /build/fossil \
+    && tar -xzf /tmp/fossil.tar.gz --strip-components=1 -C /build/fossil
+
+WORKDIR /build/fossil
+RUN ./configure \
+      --prefix=/usr/local \
+      --with-openssl=auto \
+      --with-zlib=auto \
+      --json \
+    && make -j"$(nproc)" \
+    && strip fossil \
+    && ./fossil version | grep -F '2.29'
+
+FROM build-base AS althttpd-builder
 
 WORKDIR /build/althttpd
 COPY vendor/althttpd/ ./
@@ -14,8 +54,8 @@ RUN make althttpd \
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.title="FossilHub" \
-      org.opencontainers.image.description="Tcl/Wapp Fossil repository hub served by althttpd" \
-      org.opencontainers.image.version="0.1.2"
+      org.opencontainers.image.description="Tcl 9.1/Wapp hub with native Fossil repositories served by althttpd" \
+      org.opencontainers.image.version="0.2.0-beta.1"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -24,28 +64,34 @@ RUN apt-get update \
       ca-certificates \
       curl \
       sqlite3 \
-      tcl8.6 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 fossilhub \
     && useradd --uid 10001 --gid fossilhub --home-dir /nonexistent \
       --shell /usr/sbin/nologin fossilhub \
-    && ln -s /usr/bin/tclsh8.6 /usr/bin/tclsh
+    && install -d -o fossilhub -g fossilhub -m 0750 /data
 
 COPY --from=althttpd-builder /build/althttpd/althttpd /usr/local/bin/althttpd
+COPY --from=tcl-builder /opt/tcl /opt/tcl
+COPY --from=fossil-builder /build/fossil/fossil /usr/local/bin/fossil
 COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
 COPY app/fossilhub.tcl /srv/www/default.website/index
 COPY app/templates/ /srv/www/default.website/templates/
 COPY app/public/ /srv/www/default.website/public/
 COPY app/public/fh.css /srv/www/default.website/fh.css
 
-RUN chmod 0555 /usr/local/bin/althttpd /srv/www/default.website/index \
+RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
+    && chmod 0555 \
+      /usr/local/bin/althttpd \
+      /usr/local/bin/fossil \
+      /srv/www/default.website/index \
     && chmod 0444 /opt/fossilhub/wapp.tcl \
       /srv/www/default.website/fh.css \
       /srv/www/default.website/public/fh.css \
       /srv/www/default.website/templates/*.html \
     && ln /srv/www/default.website/index \
       /srv/www/default.website/not-found.html \
-    && install -d -o fossilhub -g fossilhub -m 0750 /data \
+    && test "$(echo 'puts [info patchlevel]' | /usr/bin/tclsh)" = "9.1b0" \
+    && /usr/local/bin/fossil version | grep -F '2.29' \
     && /usr/bin/tclsh /srv/www/default.website/index --lint
 
 USER fossilhub:fossilhub
