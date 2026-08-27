@@ -24,8 +24,9 @@ Althttpd serves fingerprintable static assets directly and treats the executable
 Wapp entry point as CGI. Wapp owns application routes and response handling. The
 runtime data directory is mounted separately from the immutable application
 image and stores request logs, native Fossil repositories, and the one-time
-administrator bootstrap record. Fossil owns its SQLite repository schema; the
-reference catalogue remains a trusted Tcl/Wapp template.
+administrator bootstrap record. Fossil owns its SQLite repository schema. Tcl
+queries it through Fossil's read-only enhanced SQL shell and renders the public
+catalogue and timeline on the server.
 
 ## Route map
 
@@ -91,3 +92,26 @@ item below is complete.
 Production port 6080 runs 0.2.0-beta.1 at revision `0ac4dff`. Revision
 `188b918` and production 0.1.2 at revision `8c9726d` remain as stopped rollback
 containers. See `docs/validation-0.2.0-beta.1.md` for the evidence record.
+
+## Phase 3: Tcl-native server-side rendering
+
+Requested 2026-08-27. This phase preserves the accepted reference design while
+replacing prototype repository facts with live Fossil data.
+
+- [ ] Add a Tcl repository model that discovers only trusted `.fossil` files
+  below `/data/repositories` and queries them with `fossil sql --readonly`.
+- [ ] Decode delimiter-safe query results and escape every repository value at
+  the HTML boundary.
+- [ ] Render the home, Explore, and repository pages from Tcl view modules;
+  remove runtime dependence on static HTML templates.
+- [ ] Populate repository identity, counts, storage depth, contributors, open
+  tickets, and the unified event timeline from the live Fossil artifact.
+- [ ] Keep JavaScript limited to theme, reveal/rail effects, card motion, and
+  public mount-prefix adaptation. Initial content must be complete without it.
+- [ ] Add model and render tests, including hostile repository text, empty data,
+  missing repositories, and public subdirectory routes.
+- [ ] Build and smoke-test a committed x86_64 image against isolated data before
+  proposing any production replacement.
+
+The immutable HTML prototype remains under `reference/` for visual comparison;
+it is not a runtime data source.
