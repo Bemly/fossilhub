@@ -69,8 +69,8 @@ horizontal overflow without changing the desktop composition.
 Requested 2026-08-27. Release 0.1.2 remains the rollback baseline until every
 item below is complete.
 
-- [ ] Pin the latest official development snapshots of Wapp and Althttpd by
-  immutable Fossil check-in, plus Tcl 9.1b0 and Fossil 2.29 source releases.
+- [ ] Pin the latest official development snapshots of Wapp, Althttpd, and
+  Fossil by immutable Fossil check-in, plus the Tcl 9.1b0 source release.
 - [ ] Build Tcl 9.1b0, Wapp, Althttpd, and Fossil from source in a reproducible
   multi-stage Ubuntu 24.04 image.
 - [ ] Add a persistent `/data/repositories` directory and idempotently bootstrap

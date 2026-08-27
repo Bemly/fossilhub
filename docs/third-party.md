@@ -31,6 +31,41 @@ the safety scan can run.
 The snapshot hashes identify the downloaded official tarballs. The repository
 contains only the source and license files required to build and run FossilHub.
 
+## Tcl
+
+- Project: Tcl core language runtime
+- Upstream: `https://www.tcl-lang.org/software/tcltk/9.1.html`
+- Version: 9.1b0 (official beta source release, 2026-06-30)
+- Vendored archive: `vendor/tcl/tcl9.1b0-src.tar.gz`
+- Archive SHA-256: `7a5cba88694512b12bd052e5ddc1c80a1eeed5247d57a7735306137fc7533d1d`
+- License: Tcl/Tk license in the archive's root `license.terms`
+
+The runtime image builds Tcl from this source instead of installing Ubuntu's
+Tcl 8.6 package.
+
+## Fossil SCM
+
+- Project: Fossil distributed software configuration management
+- Upstream: `https://fossil-scm.org/home/`
+- Version: 2.29 development trunk
+- Fossil check-in: `b8c7665e121b25c3ccc268edbab86ec27c72f7a3c0cd56fa1ed2762a84fadc38`
+- Snapshot date: 2026-08-24 16:58:24 UTC
+- Vendored archive: `vendor/fossil/fossil-b8c7665e121b.tar.gz`
+- Archive SHA-256: `0aeb0d3a705de39bd0a7b103e718036b6ad126f12da0cdffe262cdc1f4c3dafd`
+- License: 2-Clause BSD in the archive's `COPYRIGHT-BSD2.txt`
+
+Fossil does not currently publish a 2.29 release tarball. The immutable trunk
+check-in above is used deliberately as the current development build, while
+the previous production container remains available for rollback.
+
+## Development-channel interpretation
+
+Wapp and Althttpd do not publish separately numbered beta channels. Their
+official trunk leaves are therefore the precise development snapshots used by
+this project. The pinned Wapp and Althttpd check-ins above were revalidated on
+2026-08-27 and were already current; only the documented downstream Wapp Tcl
+compatibility patch makes the vendored file differ from its upstream blob.
+
 ## Reference UI deviations
 
 The reference snapshot is preserved unchanged in `reference/`. The production
