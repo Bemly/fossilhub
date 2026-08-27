@@ -44,6 +44,14 @@ assertTrue [expr {[string first "LIMIT 17" $timelineSql] >= 0}] \
   "timeline limit embedded as integer"
 assertEqual [catch {::fossilhub::model::timelineSql {1; DROP TABLE event}}] 1 \
   "timeline SQL injection rejected"
+assertTrue [::fossilhub::model::validArtifactId abcdef1234567890] \
+  "artifact id accepted"
+assertTrue [expr {![::fossilhub::model::validArtifactId \
+  {abc'; DROP TABLE blob; --}]}] "artifact injection rejected"
+assertEqual [catch {::fossilhub::model::validatedLimit \
+  {10; DELETE FROM event}}] 1 "result limit injection rejected"
+assertTrue [expr {[string first {files_of_checkin('trunk')} \
+  [::fossilhub::model::filesSql]] >= 0}] "trunk file query"
 
 set fixture [file normalize [info script]]
 set model [::fossilhub::model::repositoryFromRows \

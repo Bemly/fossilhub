@@ -13,6 +13,18 @@ assertEqual [::fossilhub::routeForPath /explore] explore "explore route"
 assertEqual [::fossilhub::routeForPath /explore.html] explore "legacy explore route"
 assertEqual [::fossilhub::routeForPath /repo/dig.fossil] \
   {repository dig.fossil timeline} "repository route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/files] \
+  {repository sqlite.fossil files} "repository files route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/docs] \
+  {repository sqlite.fossil docs} "repository docs route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/file/abcdef1234567890] \
+  {repository sqlite.fossil file abcdef1234567890} \
+  "repository artifact route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/wiki-page/abcdef1234567890] \
+  {repository sqlite.fossil wiki-page abcdef1234567890} \
+  "repository wiki artifact route"
 assertEqual [::fossilhub::routeForPath /repo.html] \
   {repository sqlite.fossil timeline} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /catalog-fragment] \

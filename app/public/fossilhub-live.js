@@ -22,6 +22,9 @@
   const repositorySlug = document.body.dataset.repositorySlug || "dig";
   const repositoryBase = `${hubBase}/fossil/${encodeURIComponent(repositorySlug)}`;
   window.FossilHub = Object.freeze({ hubBase, repositoryBase });
+  document.querySelectorAll("[data-hub-path]").forEach((link) => {
+    link.href = `${hubBase}${link.dataset.hubPath}`;
+  });
   document.querySelectorAll("[data-fossil-path]").forEach((link) => {
     link.href = `${repositoryBase}${link.dataset.fossilPath}`;
   });

@@ -156,6 +156,47 @@ variable repositoryTemplate {
 .peer-name{color:var(--ink)}
 .peer-state{color:var(--ink-2);margin-left:auto;text-align:right}
 .sync-cap{margin-top:10px;font-size:12px;color:var(--ink-2)}
+.section-lede{margin:26px 0 14px}
+.section-lede>p:not(.eyebrow){margin-top:7px;color:var(--ink-2);font-size:13.5px}
+.section-lede h2{
+  margin-top:8px;font-family:var(--font-display);font-size:clamp(1.7rem,3vw,2.35rem);
+  line-height:1;text-transform:uppercase;overflow-wrap:anywhere;
+}
+.back-link{display:inline-block;margin-bottom:16px;font-family:var(--font-mono);font-size:11px;color:var(--azurite-deep)}
+.artifact-list{overflow:hidden}
+.artifact-row{
+  display:grid;grid-template-columns:44px minmax(0,1fr) auto 86px;gap:14px;
+  align-items:center;min-height:64px;padding:10px 16px;border-top:1px dashed var(--line);
+  color:inherit;text-decoration:none;
+}
+.artifact-row:first-child{border-top:0}
+a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
+.artifact-mark{
+  width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);
+  border-radius:50%;font-family:var(--font-mono);font-size:8px;text-transform:uppercase;color:var(--azurite-deep);
+}
+.wiki-mark{color:var(--verdi)}
+.artifact-main{min-width:0}
+.artifact-main b{display:block;font-size:13px;overflow-wrap:anywhere}
+.artifact-main small{display:block;margin-top:3px;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.artifact-size,.artifact-hash{font-family:var(--font-mono);font-size:10px;color:var(--ink-2);white-space:nowrap}
+.artifact-hash{color:var(--azurite-deep);text-align:right}
+.source-panel{overflow:auto;max-height:72vh}
+.source-panel pre,.prose-artifact pre{
+  margin:0;padding:20px;font-family:var(--font-mono);font-size:12px;line-height:1.65;
+  white-space:pre;tab-size:2;color:var(--ink);
+}
+.prose-artifact pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.content-note{margin:0 0 10px;font-family:var(--font-mono);font-size:10px;color:var(--iron)}
+.empty-stratum{color:var(--ink-2)}
+.ticket-state{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;text-align:center}
+.ticket-open{color:var(--iron)}
+.ticket-closed{color:var(--verdi)}
+.forum-list{overflow:hidden}
+.forum-post{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:start;padding:16px;border-top:1px dashed var(--line)}
+.forum-post:first-child{border-top:0}
+.forum-post h3{font-size:13.5px;line-height:1.45}
+.forum-post p,.forum-post time{margin-top:4px;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-2)}
 
 [data-theme="dark"] .rv-svg [stroke="rgba(28,35,44,.45)"]{stroke:rgba(232,234,223,.45)}
 [data-theme="dark"] .rv-svg [stroke="#205297"]{stroke:#7AA5E4}
@@ -181,6 +222,11 @@ variable repositoryTemplate {
   .rv-row{grid-template-columns:56px 40px minmax(0,1fr) auto}
   .rv-hash{display:none}
   .tl-legend{margin-left:0;width:100%}
+  .artifact-row{grid-template-columns:38px minmax(0,1fr) auto;padding-inline:12px}
+  .artifact-size{display:none}
+  .artifact-hash{font-size:9px}
+  .forum-post{grid-template-columns:32px minmax(0,1fr)}
+  .forum-post time{grid-column:2}
 }
 </style>
 </head>
@@ -206,11 +252,11 @@ variable repositoryTemplate {
       <b>Fossilhub</b>
     </a>
     <nav class="topnav" aria-label="Repository">
-      <a href="/fossil/dig/timeline" data-fossil-path="/timeline">Timeline</a>
-      <a href="/fossil/dig/tree" data-fossil-path="/tree">Files</a>
-      <a href="/fossil/dig/wiki" data-fossil-path="/wiki">Wiki</a>
-      <a href="/fossil/dig/reportlist" data-fossil-path="/reportlist">Tickets</a>
-      <a href="/fossil/dig/forum" data-fossil-path="/forum">Forum</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/timeline">Timeline</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">Files</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/wiki">Wiki</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/tickets">Tickets</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/forum">Forum</a>
     </nav>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
@@ -239,7 +285,7 @@ variable repositoryTemplate {
           </div>
           <div class="clone-row">
             <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
-            <a class="btn btn-ghost btn-sm" href="/fossil/dig/zip/@@ZIP_NAME@@-trunk.zip?uuid=trunk" data-fossil-path="/zip/@@ZIP_NAME@@-trunk.zip?uuid=trunk">Download trunk ZIP</a>
+            <a class="btn btn-ghost btn-sm" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">Survey trunk files</a>
           </div>
         </div>
         <aside class="label-card reveal" aria-label="Specimen label">
@@ -266,36 +312,19 @@ variable repositoryTemplate {
   <section class="repo-body" id="tl">
     <div class="tabbar">
       <div class="wrap" style="display:flex;gap:26px">
-        <a class="tab active" href="/fossil/dig/timeline" data-fossil-path="/timeline">Timeline</a>
-        <a class="tab" href="/fossil/dig/tree" data-fossil-path="/tree">Files</a>
-        <a class="tab" href="/fossil/dig/doc/trunk/" data-fossil-path="/doc/trunk/">Docs</a>
-        <a class="tab" href="/fossil/dig/wiki" data-fossil-path="/wiki">Wiki <span class="n">@@WIKI_EVENTS@@</span></a>
-        <a class="tab" href="/fossil/dig/reportlist" data-fossil-path="/reportlist">Tickets <span class="n">@@OPEN_TICKETS@@ open</span></a>
-        <a class="tab" href="/fossil/dig/forum" data-fossil-path="/forum">Forum <span class="n">@@FORUM_EVENTS@@</span></a>
+        <a class="tab @@TAB_TIMELINE@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/timeline">Timeline</a>
+        <a class="tab @@TAB_FILES@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">Files</a>
+        <a class="tab @@TAB_DOCS@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/docs">Docs</a>
+        <a class="tab @@TAB_WIKI@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/wiki">Wiki <span class="n">@@WIKI_EVENTS@@</span></a>
+        <a class="tab @@TAB_TICKETS@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/tickets">Tickets <span class="n">@@OPEN_TICKETS@@ open</span></a>
+        <a class="tab @@TAB_FORUM@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/forum">Forum <span class="n">@@FORUM_EVENTS@@</span></a>
       </div>
     </div>
 
     <div class="wrap body-grid">
       <div>
-        <div class="filters">
-          <button class="fchip sel">All events</button>
-          <button class="fchip">Check-ins</button>
-          <button class="fchip">Wiki</button>
-          <button class="fchip">Tickets</button>
-          <button class="fchip">Forum</button>
-          <div class="tl-legend" aria-hidden="true">
-            <span><i class="dot dot-azu"></i>check-in</span>
-            <span><i class="dot dot-verdi"></i>wiki</span>
-            <span><i class="dot dot-iron"></i>ticket</span>
-            <span><i class="dot dot-hollow"></i>forum</span>
-          </div>
-        </div>
-
-        <div class="panel rv-panel">
-          <!--SSR_TIMELINE_START-->
-          <!--SSR_TIMELINE_END-->
-          <a class="deeper" href="/fossil/dig/timeline?n=200" data-fossil-path="/timeline?n=200">↓ OLDER — KEEP DIGGING</a>
-        </div>
+        <!--SSR_SECTION_START-->
+        <!--SSR_SECTION_END-->
       </div>
 
       <aside class="side">
@@ -323,8 +352,8 @@ variable repositoryTemplate {
       <div>
         <h4>Start a dig</h4>
         <ul>
-          <li><a href="explore.html">Browse repositories</a></li>
-          <li><a href="index.html#engine">Field manual</a></li>
+          <li><a href="#" data-hub-path="/explore">Browse repositories</a></li>
+          <li><a href="#" data-hub-path="/#engine">Field manual</a></li>
           <li><a href="#about">Hosting plans</a></li>
         </ul>
         <span class="clone-dark"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
@@ -385,6 +414,7 @@ themeBtn.addEventListener('click', () => {
 }
 
 proc ::fossilhub::views::repositoryFacts {repository} {
+  set repositoryName [dict get $repository name]
   return [format {
         <div class="panel reveal">
           <div class="panel-head"><span class="fname">Repository facts</span></div>
@@ -395,29 +425,49 @@ proc ::fossilhub::views::repositoryFacts {repository} {
           </div>
         </div>
         <div class="panel reveal">
-          <div class="panel-head"><span class="fname">Native Fossil</span></div>
+          <div class="panel-head"><span class="fname">FossilHub surfaces</span></div>
           <div class="panel-body">
-            <div class="peer-row"><span class="peer-dot" style="background:#205297"></span><a class="peer-name" href="/fossil/dig/timeline" data-fossil-path="/timeline">Timeline</a><span class="peer-state">live</span></div>
-            <div class="peer-row"><span class="peer-dot" style="background:#2F6E5A"></span><a class="peer-name" href="/fossil/dig/tree" data-fossil-path="/tree">Files</a><span class="peer-state">trunk</span></div>
-            <div class="peer-row"><span class="peer-dot" style="background:#A64B22"></span><a class="peer-name" href="/fossil/dig/stat" data-fossil-path="/stat">Repository stats</a><span class="peer-state">Fossil</span></div>
-            <p class="sync-cap">These links open Fossil's native UI for the same repository queried by this Tcl page.</p>
+            <div class="peer-row"><span class="peer-dot" style="background:#205297"></span><a class="peer-name" href="#" data-hub-path="/repo/%s/timeline">Timeline</a><span class="peer-state">SSR</span></div>
+            <div class="peer-row"><span class="peer-dot" style="background:#2F6E5A"></span><a class="peer-name" href="#" data-hub-path="/repo/%s/files">Files</a><span class="peer-state">trunk</span></div>
+            <div class="peer-row"><span class="peer-dot" style="background:#A64B22"></span><a class="peer-name" href="#" data-hub-path="/repo/%s/docs">Docs</a><span class="peer-state">indexed</span></div>
+            <p class="sync-cap">Browser navigation stays in FossilHub. Fossil's endpoint is retained only for clone and sync clients.</p>
           </div>
         </div>} \
     [::fossilhub::view::formatCount [dict get $repository checkins]] \
     [::fossilhub::view::escape [::fossilhub::view::formatBytes \
       [dict get $repository bytes]]] \
     [::fossilhub::view::escape [::fossilhub::view::relativeTime \
-      [dict get $repository latest_epoch]]]]
+      [dict get $repository latest_epoch]]] \
+    $repositoryName $repositoryName $repositoryName]
 }
 
-proc ::fossilhub::views::renderRepository {repository} {
+proc ::fossilhub::views::renderRepository {repository {section timeline} {sectionData ""}} {
   variable repositoryTemplate
+  if {$sectionData eq ""} {
+    set sectionData [dict create repository $repository event_filter all]
+  }
+  set activeSection $section
+  if {$activeSection eq "file"} {
+    set activeSection files
+  } elseif {$activeSection eq "wiki-page"} {
+    set activeSection wiki
+  }
+  set tabs [dict create timeline "" files "" docs "" wiki "" tickets "" forum ""]
+  if {[dict exists $tabs $activeSection]} {
+    dict set tabs $activeSection active
+  }
   set latest [dict get $repository latest_epoch]
   set page [string map [list \
     @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $repository slug]] \
     @@REPOSITORY_NAME@@ [::fossilhub::view::escape [dict get $repository name]] \
     @@REPOSITORY_UPPER@@ [::fossilhub::view::escape \
       [string toupper [dict get $repository name]]] \
+    @@TAB_TIMELINE@@ [dict get $tabs timeline] \
+    @@TAB_FILES@@ [dict get $tabs files] \
+    @@TAB_DOCS@@ [dict get $tabs docs] \
+    @@TAB_WIKI@@ [dict get $tabs wiki] \
+    @@TAB_TICKETS@@ [dict get $tabs tickets] \
+    @@TAB_FORUM@@ [dict get $tabs forum] \
     @@DESCRIPTION@@ [::fossilhub::view::escape \
       [::fossilhub::view::repositoryDescription $repository]] \
     @@ZIP_NAME@@ [::fossilhub::view::escape [dict get $repository slug]] \
@@ -445,8 +495,9 @@ proc ::fossilhub::views::renderRepository {repository} {
       [dict get $repository forum_events]]] \
     $repositoryTemplate]
   set page [::fossilhub::view::replaceRegion $page \
-    <!--SSR_TIMELINE_START--> <!--SSR_TIMELINE_END--> \
-    [::fossilhub::view::repositoryTimeline $repository]]
+    <!--SSR_SECTION_START--> <!--SSR_SECTION_END--> \
+    [::fossilhub::views::renderRepositorySection \
+      $repository $section $sectionData]]
   set page [::fossilhub::view::replaceRegion $page \
     <!--SSR_COMPOSITION_START--> <!--SSR_COMPOSITION_END--> \
     [::fossilhub::view::composition $repository]]

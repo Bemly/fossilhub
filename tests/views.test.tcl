@@ -3,6 +3,7 @@ source [file join $projectRoot app lib view.tcl]
 source [file join $projectRoot app lib catalog-model.tcl]
 source [file join $projectRoot app views home.tcl]
 source [file join $projectRoot app views explore.tcl]
+source [file join $projectRoot app views repository-sections.tcl]
 source [file join $projectRoot app views repository.tcl]
 
 proc fail {message} {
@@ -95,10 +96,35 @@ assertContains $page {Ship &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;} \
 assertContains $page {<b>1,284</b><span>artifacts in one file</span>} \
   "repository artifact count"
 assertContains $page {Fossil read-only SQL} "repository source label"
+assertContains $page {data-hub-path="/repo/dig.fossil/files"} \
+  "repository internal file navigation"
+assertNotContains $page {data-fossil-path} \
+  "repository browser navigation avoids native Fossil"
+assertNotContains $page {href="/fossil/} \
+  "repository has no native Fossil hyperlink"
 assertNotContains $page {<script>alert("x")</script>} \
   "repository event cannot inject markup"
 assertNotContains $page {c-a17f3b} "repository prototype hash removed"
 assertNotContains $page {SSR_TIMELINE} "SSR implementation markers removed"
 assertNotContains $page {@@REPOSITORY_NAME@@} "SSR placeholders resolved"
+
+set files [list [dict create \
+  filename {docs/<guide>.md} uuid abcdef1234567890 size 2048 extension .md]]
+set filesPage [::fossilhub::views::renderRepository $repository files \
+  [dict create files $files]]
+assertContains $filesPage {docs/&lt;guide&gt;.md} "file name escaped"
+assertContains $filesPage {/repo/dig.fossil/file/abcdef1234567890} \
+  "file artifact route"
+assertContains $filesPage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/files"} \
+  "files tab active"
+
+set wikiPage [::fossilhub::views::renderRepository $repository wiki-page \
+  [dict create page [dict create title {Welcome <all>} uuid abcdef1234567890 \
+    epoch 1787788800 content {# Hello <script>alert(1)</script>}]]]
+assertContains $wikiPage {Welcome &lt;all&gt;} "wiki title escaped"
+assertContains $wikiPage {&lt;script&gt;alert(1)&lt;/script&gt;} \
+  "wiki content escaped"
+assertContains $wikiPage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/wiki"} \
+  "wiki tab active"
 
 puts "view tests passed"

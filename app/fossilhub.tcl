@@ -12,6 +12,7 @@ foreach sourceFile {
   lib/view.tcl
   views/home.tcl
   views/explore.tcl
+  views/repository-sections.tcl
   views/repository.tcl
 } {
   source [file join $::fossilhub::root $sourceFile]
@@ -73,6 +74,14 @@ proc ::fossilhub::routeForPath {path} {
   }
   if {[regexp {(^|/)repo\.html$} $clean]} {
     return [list repository sqlite.fossil timeline]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/(file|wiki-page)/([[:xdigit:]]{10,64})/?$} \
+      $clean -> _ repository section artifactId]} {
+    return [list repository $repository $section $artifactId]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/(timeline|files|docs|wiki|tickets|forum)/?$} \
+      $clean -> _ repository section]} {
+    return [list repository $repository $section]
   }
   if {[regexp {(^|/)repo/([^/]+)/?$} $clean -> _ repository]} {
     return [list repository $repository timeline]
@@ -141,6 +150,55 @@ proc ::fossilhub::placeholder {title message} {
   }
 }
 
+proc ::fossilhub::repositorySectionData {repository section route} {
+  set name [dict get $repository name]
+  switch -- $section {
+    timeline {
+      set filter [wapp-param event all]
+      if {$filter ni {all ci w t f}} {
+        set filter all
+      }
+      if {$filter ne "all"} {
+        set events {}
+        foreach event [dict get $repository events] {
+          if {[dict get $event type] eq $filter} {
+            lappend events $event
+          }
+        }
+        dict set repository events $events
+      }
+      return [dict create repository $repository event_filter $filter]
+    }
+    files {
+      return [dict create files [::fossilhub::model::files $name]]
+    }
+    docs {
+      return [dict create files \
+        [::fossilhub::model::documentationFiles $name]]
+    }
+    file {
+      return [dict create file [::fossilhub::model::fileRecord \
+        $name [lindex $route 3]]]
+    }
+    wiki {
+      return [dict create pages [::fossilhub::model::wikiPages $name]]
+    }
+    wiki-page {
+      return [dict create page [::fossilhub::model::wikiContent \
+        $name [lindex $route 3]]]
+    }
+    tickets {
+      return [dict create tickets [::fossilhub::model::tickets $name]]
+    }
+    forum {
+      return [dict create posts [::fossilhub::model::forumPosts $name]]
+    }
+    default {
+      error "unknown repository section"
+    }
+  }
+}
+
 proc wapp-default {} {
   set route [::fossilhub::routeForPath [::fossilhub::requestPath]]
   switch -- [lindex $route 0] {
@@ -168,6 +226,7 @@ proc wapp-default {} {
     }
     repository {
       set name [lindex $route 1]
+      set section [lindex $route 2]
       if {![::fossilhub::manifest::contains $name] ||
           ![::fossilhub::model::validRepositoryName $name] ||
           ![file isfile [::fossilhub::model::repositoryPath $name]]} {
@@ -176,7 +235,9 @@ proc wapp-default {} {
           "Repository not found — FossilHub" \
           "That repository is not in this dig."
       } elseif {[catch {
-        set repository [::fossilhub::model::repository $name 40]
+        set repository [::fossilhub::model::repository $name 200]
+        set sectionData [::fossilhub::repositorySectionData \
+          $repository $section $route]
       }]} {
         wapp-reply-code "503 Service Unavailable"
         ::fossilhub::placeholder \
@@ -184,7 +245,8 @@ proc wapp-default {} {
           "Fossil could not read this stratum. Try again shortly."
       } else {
         ::fossilhub::renderPage \
-          [::fossilhub::views::renderRepository $repository]
+          [::fossilhub::views::renderRepository \
+            $repository $section $sectionData]
       }
     }
     stylesheet {

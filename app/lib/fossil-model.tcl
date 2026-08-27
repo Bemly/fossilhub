@@ -248,3 +248,240 @@ proc ::fossilhub::model::catalogRepositories {{eventLimit 8}} {
   }
   return $result
 }
+
+proc ::fossilhub::model::validArtifactId {artifactId} {
+  expr {[regexp {^[[:xdigit:]]{10,64}$} $artifactId]}
+}
+
+proc ::fossilhub::model::textLiteral {value} {
+  return "CAST(X'[binary encode hex [encoding convertto utf-8 $value]]' AS TEXT)"
+}
+
+proc ::fossilhub::model::validatedLimit {limit {maximum 500}} {
+  if {![string is integer -strict $limit] || $limit < 1 || $limit > $maximum} {
+    error "invalid result limit"
+  }
+  return $limit
+}
+
+proc ::fossilhub::model::filesSql {} {
+  return {
+    SELECT hex(CAST(f.filename AS TEXT)),
+           hex(CAST(f.uuid AS TEXT)),
+           hex(CAST(COALESCE(b.size,0) AS TEXT))
+      FROM files_of_checkin('trunk') AS f
+      JOIN blob AS b ON b.uuid=f.uuid
+     ORDER BY f.filename COLLATE NOCASE;
+  }
+}
+
+proc ::fossilhub::model::files {name} {
+  set repository [::fossilhub::model::repositoryPath $name]
+  if {![file isfile $repository]} {
+    error "repository not found"
+  }
+  set result {}
+  foreach row [::fossilhub::model::sqlRows \
+      $repository [::fossilhub::model::filesSql] 3] {
+    lassign $row filename uuid size
+    lappend result [dict create \
+      filename $filename uuid $uuid size $size extension \
+      [string tolower [file extension $filename]]]
+  }
+  return $result
+}
+
+proc ::fossilhub::model::documentationFiles {name} {
+  set result {}
+  foreach record [::fossilhub::model::files $name] {
+    set filename [dict get $record filename]
+    set tail [string tolower [file tail $filename]]
+    set extension [dict get $record extension]
+    if {[string match readme* $tail] ||
+        [string match license* $tail] ||
+        [string match {docs/*} [string tolower $filename]] ||
+        [string match {www/*} [string tolower $filename]] ||
+        $extension in {.md .markdown .wiki .txt .html}} {
+      lappend result $record
+    }
+  }
+  return $result
+}
+
+proc ::fossilhub::model::fileMetadataSql {artifactId} {
+  if {![::fossilhub::model::validArtifactId $artifactId]} {
+    error "invalid artifact id"
+  }
+  set literal [::fossilhub::model::textLiteral [string tolower $artifactId]]
+  return [format {
+    SELECT hex(CAST(f.filename AS TEXT)),
+           hex(CAST(f.uuid AS TEXT)),
+           hex(CAST(COALESCE(b.size,0) AS TEXT))
+      FROM files_of_checkin('trunk') AS f
+      JOIN blob AS b ON b.uuid=f.uuid
+     WHERE lower(f.uuid)=lower(%s)
+     LIMIT 1;
+  } $literal]
+}
+
+proc ::fossilhub::model::textFilename {filename} {
+  set extension [string tolower [file extension $filename]]
+  if {$extension in {
+      .c .cc .cpp .h .hh .hpp .tcl .tm .md .markdown .txt .wiki .html .htm
+      .css .js .mjs .json .yaml .yml .xml .sql .sh .bash .zsh .mk .ac .in
+      .toml .ini .cfg .conf .java .rs .go .py .rb .pl}} {
+    return 1
+  }
+  set tail [string tolower [file tail $filename]]
+  expr {$tail in {readme license makefile manifest configure}}
+}
+
+proc ::fossilhub::model::artifactText {repository artifactId} {
+  if {![::fossilhub::model::validArtifactId $artifactId]} {
+    error "invalid artifact id"
+  }
+  return [exec -keepnewline \
+    [::fossilhub::model::fossilBinary] artifact \
+    --repository $repository $artifactId]
+}
+
+proc ::fossilhub::model::fileRecord {name artifactId {maximumBytes 262144}} {
+  set repository [::fossilhub::model::repositoryPath $name]
+  if {![file isfile $repository]} {
+    error "repository not found"
+  }
+  set rows [::fossilhub::model::sqlRows $repository \
+    [::fossilhub::model::fileMetadataSql $artifactId] 3]
+  if {[llength $rows] == 0} {
+    error "file artifact not found on trunk"
+  }
+  lassign [lindex $rows 0] filename uuid size
+  set result [dict create filename $filename uuid $uuid size $size \
+    text 0 truncated 0 content ""]
+  if {![::fossilhub::model::textFilename $filename]} {
+    return $result
+  }
+  set content [::fossilhub::model::artifactText $repository $uuid]
+  dict set result text 1
+  if {[string length [encoding convertto utf-8 $content]] > $maximumBytes} {
+    set content [string range $content 0 [expr {$maximumBytes - 1}]]
+    dict set result truncated 1
+  }
+  dict set result content $content
+  return $result
+}
+
+proc ::fossilhub::model::wikiSql {{limit 200}} {
+  set limit [::fossilhub::model::validatedLimit $limit]
+  return [format {
+    SELECT hex(CAST(substr(t.tagname,6) AS TEXT)),
+           hex(CAST(b.uuid AS TEXT)),
+           hex(CAST(CAST(strftime('%%s',tx.mtime) AS INTEGER) AS TEXT)),
+           hex(CAST(COALESCE(e.euser,e.user,'') AS TEXT)),
+           hex(CAST(COALESCE(e.ecomment,e.comment,'') AS TEXT))
+      FROM tag AS t
+      JOIN tagxref AS tx ON tx.tagid=t.tagid
+      JOIN blob AS b ON b.rid=tx.rid
+      LEFT JOIN event AS e ON e.objid=tx.rid
+     WHERE t.tagname GLOB 'wiki-*'
+       AND tx.tagtype>0
+       AND tx.rid=(
+         SELECT newest.rid FROM tagxref AS newest
+          WHERE newest.tagid=t.tagid AND newest.tagtype>0
+          ORDER BY newest.mtime DESC, newest.rid DESC LIMIT 1
+       )
+     ORDER BY tx.mtime DESC, t.tagname COLLATE NOCASE
+     LIMIT %d;
+  } $limit]
+}
+
+proc ::fossilhub::model::wikiPages {name {limit 200}} {
+  set repository [::fossilhub::model::repositoryPath $name]
+  set result {}
+  foreach row [::fossilhub::model::sqlRows \
+      $repository [::fossilhub::model::wikiSql $limit] 5] {
+    lassign $row title uuid epoch user comment
+    lappend result [dict create \
+      title $title uuid $uuid epoch $epoch user $user comment $comment]
+  }
+  return $result
+}
+
+proc ::fossilhub::model::wikiContent {name artifactId} {
+  set repository [::fossilhub::model::repositoryPath $name]
+  set page ""
+  foreach candidate [::fossilhub::model::wikiPages $name 500] {
+    if {[string equal -nocase [dict get $candidate uuid] $artifactId]} {
+      set page $candidate
+      break
+    }
+  }
+  if {$page eq ""} {
+    error "wiki artifact not found"
+  }
+  set artifact [::fossilhub::model::artifactText $repository $artifactId]
+  if {![regexp -indices {\nW [0-9]+\n} $artifact marker]} {
+    error "invalid wiki artifact"
+  }
+  set contentStart [expr {[lindex $marker 1] + 1}]
+  set checksumStart [string last "\nZ " $artifact]
+  if {$checksumStart < $contentStart} {
+    error "invalid wiki artifact checksum boundary"
+  }
+  dict set page content [string range $artifact $contentStart \
+    [expr {$checksumStart - 1}]]
+  return $page
+}
+
+proc ::fossilhub::model::ticketsSql {{limit 200}} {
+  set limit [::fossilhub::model::validatedLimit $limit]
+  return [format {
+    SELECT hex(CAST(tkt_uuid AS TEXT)),
+           hex(CAST(COALESCE(title,'Untitled ticket') AS TEXT)),
+           hex(CAST(COALESCE(status,'') AS TEXT)),
+           hex(CAST(COALESCE(type,'') AS TEXT)),
+           hex(CAST(COALESCE(severity,'') AS TEXT)),
+           hex(CAST(COALESCE(CAST(strftime('%%s',tkt_mtime) AS INTEGER),0) AS TEXT)),
+           hex(CAST(COALESCE(comment,'') AS TEXT))
+      FROM ticket
+     ORDER BY tkt_mtime DESC, tkt_id DESC
+     LIMIT %d;
+  } $limit]
+}
+
+proc ::fossilhub::model::tickets {name {limit 200}} {
+  set repository [::fossilhub::model::repositoryPath $name]
+  set result {}
+  foreach row [::fossilhub::model::sqlRows \
+      $repository [::fossilhub::model::ticketsSql $limit] 7] {
+    lassign $row uuid title status type severity epoch comment
+    lappend result [dict create uuid $uuid title $title status $status \
+      type $type severity $severity epoch $epoch comment $comment]
+  }
+  return $result
+}
+
+proc ::fossilhub::model::forumPosts {name {limit 200}} {
+  set repository [::fossilhub::model::repositoryPath $name]
+  set limit [::fossilhub::model::validatedLimit $limit]
+  set sql [format {
+    SELECT hex(CAST(e.type AS TEXT)),
+           hex(CAST(CAST(strftime('%%s',e.mtime) AS INTEGER) AS TEXT)),
+           hex(CAST(substr(b.uuid,1,10) AS TEXT)),
+           hex(CAST(COALESCE(e.euser,e.user,'') AS TEXT)),
+           hex(CAST(COALESCE(e.ecomment,e.comment,e.brief,'') AS TEXT))
+      FROM event AS e
+      JOIN blob AS b ON b.rid=e.objid
+     WHERE e.type='f'
+     ORDER BY e.mtime DESC, e.objid DESC
+     LIMIT %d;
+  } $limit]
+  set result {}
+  foreach row [::fossilhub::model::sqlRows $repository \
+      $sql 5] {
+    lassign $row type epoch uuid user comment
+    lappend result [dict create type $type epoch $epoch uuid $uuid \
+      user $user comment $comment]
+  }
+  return $result
+}
