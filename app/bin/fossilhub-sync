@@ -11,9 +11,21 @@ source [file join $applicationRoot lib repository-manifest.tcl]
 source [file join $applicationRoot lib fossil-model.tcl]
 source [file join $applicationRoot lib catalog-model.tcl]
 
+proc fossilhubSyncRun {label command} {
+  if {[catch {exec {*}$command}]} {
+    error "FossilHub: $label failed; captured Fossil output was suppressed"
+  }
+}
+
 set repositoryRoot [::fossilhub::model::repositoryRoot]
 file mkdir $repositoryRoot
 file attributes $repositoryRoot -permissions 0750
+
+set proxyArguments {}
+if {[info exists ::env(FOSSILHUB_SYNC_PROXY)] &&
+    $::env(FOSSILHUB_SYNC_PROXY) ne ""} {
+  set proxyArguments [list --proxy $::env(FOSSILHUB_SYNC_PROXY)]
+}
 
 foreach entry [::fossilhub::manifest::all] {
   set name [dict get $entry name]
@@ -21,8 +33,11 @@ foreach entry [::fossilhub::manifest::all] {
   set destination [::fossilhub::model::repositoryPath $name]
   if {[file isfile $destination]} {
     puts "Updating $name"
-    exec [::fossilhub::model::fossilBinary] pull \
-      --once $sourceUrl --repository $destination >@stdout 2>@stderr
+    fossilhubSyncRun "update of $name" [list \
+      [::fossilhub::model::fossilBinary] pull --once \
+      {*}$proxyArguments $sourceUrl --repository $destination]
+    catch {exec [::fossilhub::model::fossilBinary] user capabilities \
+      fossilhub "" --repository $destination}
     file attributes $destination -permissions 0600
     continue
   }
@@ -33,15 +48,19 @@ foreach entry [::fossilhub::manifest::all] {
   }
   puts "Cloning $name"
   try {
-    exec [::fossilhub::model::fossilBinary] clone \
-      --no-open $sourceUrl $temporary >@stdout 2>@stderr
+    fossilhubSyncRun "clone of $name" [list \
+      [::fossilhub::model::fossilBinary] clone --no-open \
+      --admin-user fossilhub {*}$proxyArguments $sourceUrl $temporary]
+    fossilhubSyncRun "capability lockdown for $name" [list \
+      [::fossilhub::model::fossilBinary] user capabilities fossilhub "" \
+      --repository $temporary]
     file attributes $temporary -permissions 0600
     file rename $temporary $destination
-  } on error {message options} {
+  } on error {} {
     if {[file exists $temporary]} {
       file delete -force $temporary
     }
-    return -options $options $message
+    error "FossilHub: synchronization failed for $name"
   }
 }
 

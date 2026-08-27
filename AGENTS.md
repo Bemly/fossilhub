@@ -167,7 +167,11 @@ browser
   SSR form with debounced HTML-fragment replacement.
 - `app/cgi/fossil` is Fossil's CGI directory-mode launcher.
 - `app/bin/fossilhub-sync` idempotently pulls or atomically clones the four
-  manifest repositories, sets mode 0600, and rebuilds the catalogue.
+  manifest repositories, sets mode 0600, removes capabilities from Fossil's
+  generated local user, and rebuilds the catalogue. Fossil clone output must
+  remain suppressed because it contains an automatically generated password.
+  A trusted runtime-only proxy may be passed as `FOSSILHUB_SYNC_PROXY` when
+  direct Fossil transport stalls; never write that value into the image.
 - `app/bin/fossilhub-entrypoint` never clones or creates repositories. It only
   creates the data subdirectories and rebuilds the catalogue from official
   repository files already present on the mount.

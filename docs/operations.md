@@ -72,7 +72,12 @@ The image provides an idempotent `/usr/local/bin/fossilhub-sync` command. It
 pulls an existing named repository, clones a missing one to a uniquely named
 temporary file before publishing it, applies mode 0600, and rebuilds the
 catalogue only after all four operations succeed. Run it only with the exact
-FossilHub data mount and the same UID/GID as the service.
+FossilHub data mount and the same UID/GID as the service. If direct Fossil
+transport stalls while ordinary HTTPS remains healthy, supply the trusted
+proxy only at runtime through `FOSSILHUB_SYNC_PROXY`; never hardcode it into an
+image. Clone output is deliberately suppressed because Fossil prints a
+generated local administrator password after a successful clone. The importer
+immediately removes that generated user's capabilities.
 
 ## Read-only checks
 
