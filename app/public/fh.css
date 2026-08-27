@@ -381,3 +381,70 @@ body,.topbar,.panel,.term,.cmd-chip,.searchbar,.pill,.feat-card,.tabbar,.rail,.s
 [data-theme="dark"] .core [fill="rgba(166,75,34,.07)"]{fill:rgba(217,138,87,.08)}
 [data-theme="dark"] .core [fill="rgba(32,82,151,.05)"]{fill:rgba(110,156,224,.06)}
 [data-theme="dark"] .core [fill="#DEE1D3"]{fill:#1A212B}
+
+/* Phase 5 identity surfaces */
+.account-body{min-height:100vh}
+.account-rail .rail-track{background:linear-gradient(to bottom,var(--azurite) 0 33%,var(--verdi) 33% 66%,var(--iron) 66%)}
+.account-nav{align-items:center}
+.account-nav .nav-form{display:inline-flex}
+.account-nav button{
+  border:0;background:none;color:var(--ink-2);font:inherit;cursor:pointer;padding:0
+}
+.account-nav button:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.account-main{padding-block:clamp(52px,8vw,96px)}
+.account-grid{display:grid;grid-template-columns:minmax(0,.88fr) minmax(360px,1.12fr);gap:clamp(36px,7vw,96px);align-items:start}
+.account-intro{position:sticky;top:112px}
+.account-intro h1{
+  margin-top:18px;font-family:var(--font-display);font-size:clamp(3.2rem,6vw,5.8rem);
+  font-weight:700;line-height:.92;text-transform:uppercase;letter-spacing:.01em
+}
+.account-intro>p:last-of-type{margin-top:22px;max-width:42ch;color:var(--ink-2)}
+.identity-strata{margin-top:38px;border:1px solid var(--line);background:var(--card)}
+.identity-strata span{
+  display:block;padding:12px 16px;border-bottom:1px solid var(--line);
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase
+}
+.identity-strata span:nth-child(1){border-left:8px solid var(--azurite)}
+.identity-strata span:nth-child(2){border-left:14px solid var(--verdi)}
+.identity-strata span:nth-child(3){border-left:20px solid var(--iron);border-bottom:0}
+.account-panel{border:1px solid var(--line);background:var(--card);padding:clamp(24px,4vw,46px);box-shadow:8px 10px 0 color-mix(in srgb,var(--ink) 9%,transparent)}
+.account-panel h2{
+  margin-bottom:18px;font-family:var(--font-display);font-size:2rem;
+  text-transform:uppercase;line-height:1
+}
+.field-form{display:grid;gap:18px}
+.field-form label{display:grid;gap:7px;font-size:13px;font-weight:600;color:var(--ink)}
+.field-form input,.field-form textarea,.field-form select{
+  width:100%;border:1px solid var(--line);border-radius:3px;background:var(--paper);
+  color:var(--ink);font:inherit;font-size:15px;padding:11px 12px
+}
+.field-form input:focus,.field-form textarea:focus,.field-form select:focus{border-color:var(--azurite);outline:2px solid color-mix(in srgb,var(--azurite) 22%,transparent);outline-offset:1px}
+.field-form small{font-family:var(--font-mono);font-size:10px;font-weight:400;color:var(--ink-2)}
+.field-form .btn{justify-self:start;margin-top:4px}
+.form-notice{margin-bottom:20px;border-left:4px solid var(--iron);background:color-mix(in srgb,var(--iron) 9%,var(--paper));padding:12px 14px;font-size:13px}
+.form-foot{margin-top:22px;color:var(--ink-2);font-size:13px}
+.account-label{display:grid;gap:2px;border:1px solid var(--line);border-left:8px solid var(--azurite);padding:15px 17px;margin-bottom:32px;background:var(--paper)}
+.account-label span,.account-label small{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2)}
+.account-label b{font-family:var(--font-display);font-size:1.7rem;line-height:1.1}
+.compact-form{gap:14px}
+.section-rule{height:1px;background:var(--line);margin-block:34px}
+.session-list{display:grid;border-top:1px solid var(--line)}
+.session-row{display:flex;justify-content:space-between;gap:20px;align-items:center;padding-block:15px;border-bottom:1px solid var(--line)}
+.session-row div{display:grid;gap:3px;min-width:0}
+.session-row b{font-size:14px}
+.session-row small{font-family:var(--font-mono);font-size:9px;color:var(--ink-2);overflow-wrap:anywhere}
+.btn-compact{padding:7px 12px;font-size:12px;background:transparent}
+@media (max-width:820px){
+  .account-grid{grid-template-columns:1fr}
+  .account-intro{position:static}
+  .identity-strata{display:grid;grid-template-columns:repeat(3,1fr)}
+  .identity-strata span{border-left:0!important;border-bottom:0;border-right:1px solid var(--line)}
+  .identity-strata span:last-child{border-right:0}
+  .account-nav{display:flex;margin-left:auto;gap:14px}
+}
+@media (max-width:520px){
+  .account-panel{padding:22px 18px;box-shadow:4px 5px 0 color-mix(in srgb,var(--ink) 9%,transparent)}
+  .account-intro h1{font-size:3.2rem}
+  .account-nav>a:first-child{display:none}
+  .session-row{align-items:flex-start;flex-direction:column}
+}

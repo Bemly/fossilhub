@@ -61,6 +61,31 @@ this database before rebuilding the public catalogue. The file is mode 0600;
 its parent directory is mode 0750. It is not a Fossil repository and must never
 be opened or modified with Fossil commands.
 
+The identity slice exposes `/register`, `/login`, `/logout`, and
+`/account/security`. Password processing uses the Ubuntu Argon2 command with
+Argon2id parameters `m=32768,t=2,p=1`; passwords are supplied on standard input
+and are never command arguments or log fields. Session identifiers and form
+challenges are random; only their SHA-256 hashes are stored. Password changes
+revoke every existing session and issue a new session cookie.
+
+On the first Phase 5 startup, `/usr/local/bin/fossilhub-bootstrap-admin`
+creates the central `warden` administrator and writes its one-time credential
+to:
+
+```text
+/vol1/1000/fossilhub/platform/fossilhub-bootstrap-admin.txt
+```
+
+The record is mode 0600 and owned by UID/GID 10001:10001. Read it only in a
+trusted interactive SSH terminal, never through logs or a captured automation
+command, and change the password immediately through `/account/security`.
+Startup does not overwrite the record or create a second administrator.
+
+Session cookies add `Secure` automatically when the CGI request reports HTTPS
+through `HTTPS` or `X-Forwarded-Proto`. The public fnOS reverse proxy must retain
+that scheme header. `FOSSILHUB_COOKIE_SECURE=always` is available for an
+HTTPS-only deployment; `never` is restricted to isolated HTTP smoke testing.
+
 | Candidate route | Expected result |
 | --- | --- |
 | `/explore?q=sqlite&kind=code&sort=recent` | Complete SSR search result |

@@ -29,6 +29,18 @@ assertEqual [::fossilhub::routeForPath /repo.html] \
   {repository bedrock.fossil timeline} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /catalog-fragment] \
   catalog-fragment "catalog fragment route"
+assertEqual [::fossilhub::routeForPath /login] login "login route"
+assertEqual [::fossilhub::routeForPath /register] register "register route"
+assertEqual [::fossilhub::routeForPath /logout] logout "logout route"
+assertEqual [::fossilhub::routeForPath /account/security] \
+  account-security "account security route"
+assertEqual [::fossilhub::routeForPath /account/session/revoke] \
+  account-session-revoke "session revoke route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/account/security] account-security \
+  "mounted account security route"
+assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/login] \
+  login "mounted login route"
 assertEqual [::fossilhub::routeForPath /healthz] health "health route"
 assertEqual [::fossilhub::routeForPath /fh.css] stylesheet "stylesheet route"
 assertEqual [::fossilhub::routeForPath /fossilhub-live.js] \

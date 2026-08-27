@@ -20,6 +20,7 @@ mkdir -p "${repository_dir}" "${catalog_dir}" "${platform_dir}"
 chmod 0750 "${data_dir}" "${repository_dir}" "${catalog_dir}" "${platform_dir}"
 
 /usr/local/bin/fossilhub-platform-init
+/usr/local/bin/fossilhub-bootstrap-admin
 /usr/local/bin/fossilhub-index
 
 exec "$@"

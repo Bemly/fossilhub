@@ -78,6 +78,8 @@ production change.
   `/vol1/1000/fossilhub/catalog/fossilhub.sqlite`
 - Phase 5 platform database:
   `/vol1/1000/fossilhub/platform/fossilhub.sqlite`
+- Phase 5 bootstrap administrator record:
+  `/vol1/1000/fossilhub/platform/fossilhub-bootstrap-admin.txt`
 - Candidate blank repositories:
   `/vol1/1000/fossilhub/repositories/{bedrock,ammonite,trilobite,basalt,cambrian,granite,shale,quartz,obsidian,tectonic}.fossil`
 - Fossil bootstrap administrator record:
@@ -93,6 +95,10 @@ production change.
   10001:10001. It stores application-owned repository registry, identity,
   authorization, session, settings, and audit data. Never query or mutate it
   through Fossil.
+- The Phase 5 bootstrap administrator record must remain mode 0600 and owned by
+  UID/GID 10001:10001. Read it only in a trusted interactive SSH terminal;
+  never capture or return its contents. The `warden` account must change its
+  generated password on first sign-in.
 
 ## Current FossilHub production state
 
@@ -171,6 +177,11 @@ browser
 - `app/lib/platform-model.tcl` owns the versioned Phase 5 application schema,
   migrations, and dynamic repository registry. It is also application-owned
   and may be accessed with raw `sqlite3`; Fossil-owned databases may not.
+- `app/lib/auth-model.tcl` owns central password hashing, opaque sessions,
+  one-time CSRF challenges, login throttling, and identity audit records.
+  Passwords go to Argon2id only through standard input. Raw session and
+  challenge tokens must never be stored, logged, or returned outside their
+  intended browser response.
 - `app/lib/view.tcl` owns HTML escaping, formatting, and reusable repository,
   catalogue, composition, and timeline renderers.
 - `app/views/` contains Tcl view modules for the reference-derived home,
@@ -255,8 +266,8 @@ redirect or 404. The server cannot infer the external prefix.
   `/tmp` tmpfs. Do not add Docker socket access, host networking, privileged
   mode, or extra capabilities.
 - Prefer a narrow dependency set. Runtime packages are currently
-  `ca-certificates`, `curl`, and `sqlite3`; Tcl, Fossil, and Althttpd are built
-  from pinned sources.
+  `ca-certificates`, `argon2`, `curl`, `openssl`, and `sqlite3`; Tcl, Fossil,
+  and Althttpd are built from pinned sources.
 - Image builds must set `FOSSILHUB_REVISION` so the OCI revision label identifies
   the exact code commit. The deploy documentation commit may follow the image
   commit and therefore have a newer Git revision.
@@ -270,9 +281,11 @@ Before a production switch:
 2. Run `git diff --check` and `node --check` for both scripts under
    `app/public/`.
 3. Run `tests/routes.test.tcl`, `tests/model.test.tcl`,
-   `tests/catalog.test.tcl`, `tests/repository-data.test.tcl`, and
-   `tests/views.test.tcl` under the image's Tcl 9.1b0. macOS system Tcl may be
-   8.5 and is not authoritative.
+   `tests/catalog.test.tcl`, `tests/platform.test.tcl`,
+   `tests/auth.test.tcl`, `tests/repository-data.test.tcl`, and
+   `tests/views.test.tcl` under the image's Tcl 9.1b0. The authentication suite
+   must also exercise the packaged Argon2 binary. macOS system Tcl may be 8.5
+   and is not authoritative.
 4. Build on the x86_64 NAS and confirm Tcl 9.1b0, Fossil 2.29, Wapp lint, and the
    OCI Git revision label.
 5. Use `fossilhub-init` to populate an isolated temporary data directory, then

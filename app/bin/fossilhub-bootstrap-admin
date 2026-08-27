@@ -1,0 +1,56 @@
+#!/usr/bin/tclsh
+
+set scriptDirectory [file dirname [file normalize [info script]]]
+set localRoot [file dirname $scriptDirectory]
+set applicationRoot /srv/www/default.website
+if {[file isfile [file join $localRoot lib auth-model.tcl]]} {
+  set applicationRoot $localRoot
+}
+
+source [file join $applicationRoot lib repository-manifest.tcl]
+source [file join $applicationRoot lib platform-model.tcl]
+source [file join $applicationRoot lib auth-model.tcl]
+
+::fossilhub::platform::initialize
+if {[::fossilhub::auth::administratorCount] > 0} {
+  puts "FossilHub bootstrap administrator already exists"
+  exit 0
+}
+
+set platformDirectory [file dirname [::fossilhub::platform::databasePath]]
+set record [file join $platformDirectory fossilhub-bootstrap-admin.txt]
+if {[file exists $record]} {
+  error "bootstrap administrator record exists without an active administrator"
+}
+set temporary "${record}.new.[pid]"
+if {[file exists $temporary]} {
+  error "refusing to reuse bootstrap administrator temporary file"
+}
+
+set username warden
+set email warden@localhost.invalid
+set password [::fossilhub::auth::randomToken 24]
+set channel [open $temporary {WRONLY CREAT EXCL}]
+fconfigure $channel -encoding utf-8 -translation lf
+try {
+  puts $channel "FossilHub one-time bootstrap administrator"
+  puts $channel "username: $username"
+  puts $channel "password: $password"
+  puts $channel "Change this password immediately after first sign-in."
+} finally {
+  close $channel
+}
+file attributes $temporary -permissions 0600
+
+try {
+  ::fossilhub::auth::createUser \
+    $username $email $password {FossilHub Warden} administrator 1
+  file rename $temporary $record
+  file attributes $record -permissions 0600
+} on error {message options} {
+  if {[file exists $temporary]} {
+    file delete -force $temporary
+  }
+  return -options $options $message
+}
+puts "FossilHub bootstrap administrator created; read the protected record in a trusted terminal"

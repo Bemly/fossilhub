@@ -34,6 +34,13 @@ repository files remain untouched and continue to be the artifact source of
 truth. See [docs/platform-roadmap.md](docs/platform-roadmap.md) for the ordered
 implementation and acceptance checklist.
 
+The first Phase 5 identity slice now provides `/register`, `/login`, `/logout`,
+and `/account/security`. Passwords are hashed with Argon2id; browser sessions
+are opaque, server-side, expiring, rotated after password changes, and protected
+by one-time CSRF form challenges. A clean data directory receives a one-time
+`warden` administrator whose initial credential is written only to the
+protected platform bootstrap record and must be changed after first sign-in.
+
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.

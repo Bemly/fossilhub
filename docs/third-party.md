@@ -43,6 +43,18 @@ contains only the source and license files required to build and run FossilHub.
 The runtime image builds Tcl from this source instead of installing Ubuntu's
 Tcl 8.6 package.
 
+## Ubuntu runtime security tools
+
+- `argon2`: the Ubuntu 24.04 package of the Password Hashing Competition
+  reference command, used in Argon2id mode for central account passwords.
+- `openssl`: the Ubuntu 24.04 command, used only for SHA-256 hashing of random
+  session and form-challenge values before application-database storage.
+
+Passwords are sent to Argon2 through standard input, never command arguments.
+The configured Argon2id cost is 32 MiB, two iterations, and one lane, exceeding
+the OWASP minimum memory recommendation while remaining bounded for the NAS.
+Neither tool is used to read or mutate Fossil-owned repository schemas.
+
 ## Fossil SCM
 
 - Project: Fossil distributed software configuration management

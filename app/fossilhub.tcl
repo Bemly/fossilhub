@@ -9,12 +9,15 @@ foreach sourceFile {
   lib/repository-manifest.tcl
   lib/fossil-model.tcl
   lib/platform-model.tcl
+  lib/auth-model.tcl
   lib/catalog-model.tcl
   lib/view.tcl
   views/home.tcl
   views/explore.tcl
   views/repository-sections.tcl
   views/repository.tcl
+  views/account.tcl
+  lib/account-controller.tcl
 } {
   source [file join $::fossilhub::root $sourceFile]
 }
@@ -70,6 +73,21 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)catalog-fragment$} $clean]} {
     return catalog-fragment
   }
+  if {[regexp {(^|/)login/?$} $clean]} {
+    return login
+  }
+  if {[regexp {(^|/)register/?$} $clean]} {
+    return register
+  }
+  if {[regexp {(^|/)logout/?$} $clean]} {
+    return logout
+  }
+  if {[regexp {(^|/)account/security/?$} $clean]} {
+    return account-security
+  }
+  if {[regexp {(^|/)account/session/revoke/?$} $clean]} {
+    return account-session-revoke
+  }
   if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
   }
@@ -111,7 +129,20 @@ proc ::fossilhub::trustedFile {path mime cache} {
 }
 
 proc ::fossilhub::htmlPolicy {} {
-  wapp-content-security-policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; frame-ancestors 'self'"
+  wapp-content-security-policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+  wapp-reply-extra X-Content-Type-Options nosniff
+  wapp-reply-extra Referrer-Policy strict-origin-when-cross-origin
+  wapp-reply-extra Permissions-Policy \
+    {camera=(), microphone=(), geolocation=(), payment=(), usb=()}
+  set forwarded [wapp-param HTTP_X_FORWARDED_PROTO ""]
+  if {$forwarded eq ""} {
+    set forwarded [wapp-param {.hdr:X-FORWARDED-PROTO} ""]
+  }
+  set forwarded [string tolower $forwarded]
+  if {[string tolower [wapp-param HTTPS ""]] in {on 1 true} ||
+      [lindex [split $forwarded ,] 0] eq "https"} {
+    wapp-reply-extra Strict-Transport-Security {max-age=31536000}
+  }
 }
 
 proc ::fossilhub::renderPage {content} {
@@ -209,6 +240,7 @@ proc ::fossilhub::repositorySectionData {repository section route} {
 
 proc wapp-default {} {
   set route [::fossilhub::routeForPath [::fossilhub::requestPath]]
+  set accountContext [::fossilhub::account::requestContext]
   switch -- [lindex $route 0] {
     health {
       wapp-mimetype text/plain
@@ -218,6 +250,21 @@ proc wapp-default {} {
     home {
       ::fossilhub::renderPage [::fossilhub::views::renderHome \
         [::fossilhub::primaryRepository]]
+    }
+    login {
+      ::fossilhub::account::handleLogin $accountContext
+    }
+    register {
+      ::fossilhub::account::handleRegister $accountContext
+    }
+    logout {
+      ::fossilhub::account::handleLogout $accountContext
+    }
+    account-security {
+      ::fossilhub::account::handleSecurity $accountContext
+    }
+    account-session-revoke {
+      ::fossilhub::account::handleSessionRevoke $accountContext
     }
     explore {
       set options [::fossilhub::catalogOptions]

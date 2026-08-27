@@ -89,14 +89,14 @@ interactive accounts.
 - [x] Add a versioned, transactional application schema for users, credentials,
   sessions, login attempts, repositories, collaborators, audit events, and
   platform settings.
-- [ ] Add deterministic migrations and backup/restore checks; migrations must
+- [x] Add deterministic migrations and backup/restore checks; migrations must
   be repeatable and must not touch Fossil-owned schemas.
 - [x] Import the ten manifest repositories into the registry without changing
   their repository files or project codes. Keep legacy `dig.fossil` retained
   but unpublished.
 - [x] Make the catalogue rebuild from enabled registry records instead of a
   compile-time-only manifest, while retaining a seed manifest for clean installs.
-- [ ] Add database integrity, permission, ownership, migration, and hostile-data
+- [x] Add database integrity, permission, ownership, migration, and hostile-data
   tests.
 
 Acceptance: a clean data directory and a migrated beta.3 data directory produce
@@ -105,17 +105,19 @@ database usable.
 
 ### Phase B — identity, sessions, and authorization
 
-- [ ] Add Argon2id password hashing and verification without logging passwords.
-- [ ] Add registration, login, logout, current-user loading, password change,
-  session listing/revocation, disabled accounts, and administrator role.
-- [ ] Add opaque server-side sessions with rotation, idle and absolute expiry,
+- [x] Add Argon2id password hashing and verification without logging passwords.
+- [x] Add registration, login, logout, current-user loading, password change,
+  session listing/revocation, and administrator identity support.
+- [ ] Add administrator controls for disabling, restoring, and deactivating
+  accounts; their session rejection is already enforced by the identity model.
+- [x] Add opaque server-side sessions with rotation, idle and absolute expiry,
   `HttpOnly` and `SameSite` cookies, secure-cookie enforcement behind HTTPS,
   and no browser storage of credentials.
 - [ ] Add per-session CSRF tokens, recent re-authentication for sensitive
   actions, generic login failures, and bounded login throttling.
 - [ ] Add centralized request guards for anonymous, authenticated, repository
   role, and administrator access.
-- [ ] Add a one-time bootstrap administrator workflow whose generated
+- [x] Add a one-time bootstrap administrator workflow whose generated
   credential is suppressed from non-interactive output and stored only in a
   mode-0600 record owned by UID/GID 10001:10001.
 - [ ] Add security headers, session fixation, CSRF, authorization, timing-safe

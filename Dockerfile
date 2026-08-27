@@ -66,7 +66,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       ca-certificates \
+      argon2 \
       curl \
+      openssl \
       sqlite3 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 fossilhub \
@@ -82,6 +84,7 @@ COPY app/bin/fossilhub-entrypoint /usr/local/bin/fossilhub-entrypoint
 COPY app/bin/fossilhub-index /usr/local/bin/fossilhub-index
 COPY app/bin/fossilhub-init /usr/local/bin/fossilhub-init
 COPY app/bin/fossilhub-platform-init /usr/local/bin/fossilhub-platform-init
+COPY app/bin/fossilhub-bootstrap-admin /usr/local/bin/fossilhub-bootstrap-admin
 COPY app/cgi/fossil /srv/www/default.website/fossil
 COPY app/fossilhub.tcl /srv/www/default.website/index
 COPY app/lib/ /srv/www/default.website/lib/
@@ -97,6 +100,7 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
       /usr/local/bin/fossilhub-index \
       /usr/local/bin/fossilhub-init \
       /usr/local/bin/fossilhub-platform-init \
+      /usr/local/bin/fossilhub-bootstrap-admin \
       /srv/www/default.website/fossil \
       /srv/www/default.website/index \
     && chmod 0444 /opt/fossilhub/wapp.tcl \

@@ -5,6 +5,7 @@ source [file join $projectRoot app views home.tcl]
 source [file join $projectRoot app views explore.tcl]
 source [file join $projectRoot app views repository-sections.tcl]
 source [file join $projectRoot app views repository.tcl]
+source [file join $projectRoot app views account.tcl]
 
 proc fail {message} {
   puts stderr $message
@@ -126,5 +127,23 @@ assertContains $wikiPage {&lt;script&gt;alert(1)&lt;/script&gt;} \
   "wiki content escaped"
 assertContains $wikiPage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/wiki"} \
   "wiki tab active"
+
+set anonymousContext [dict create \
+  authenticated 0 user "" session_hash "" token "" logout_token ""]
+set loginPage [::fossilhub::views::renderLogin \
+  $anonymousContext [string repeat a 64] {Invalid <account>} {alice&admin}]
+assertContains $loginPage {action="login" method="post" data-hub-action="/login"} \
+  "login mount-safe form action"
+assertContains $loginPage {Invalid &lt;account&gt;} "login error escaped"
+assertContains $loginPage {value="alice&amp;admin"} "login identity escaped"
+assertContains $loginPage {autocomplete="current-password"} \
+  "login password autocomplete"
+
+set registerPage [::fossilhub::views::renderRegister \
+  $anonymousContext [string repeat b 64] "" \
+  [dict create username alice email alice@example.test display_name Alice]]
+assertContains $registerPage {minlength="12"} "registration password policy"
+assertContains $registerPage {Passwords are stored with Argon2id.} \
+  "registration password storage notice"
 
 puts "view tests passed"

@@ -30,10 +30,10 @@ if {![info exists ::env(FOSSILHUB_SQLITE)]} {
 }
 
 try {
-  assertEqual [::fossilhub::platform::initialize] 1 \
+  assertEqual [::fossilhub::platform::initialize] 3 \
     "initial platform schema"
   assertTrue [file isfile $database] "platform database created"
-  assertEqual [::fossilhub::platform::databaseVersion] 1 \
+  assertEqual [::fossilhub::platform::databaseVersion] 3 \
     "platform schema version"
   assertEqual [llength [::fossilhub::platform::publicRepositories]] 10 \
     "seed repository count"
@@ -44,8 +44,23 @@ try {
   assertTrue [expr {![::fossilhub::platform::publicContains dig.fossil]}] \
     "legacy repository remains unpublished"
 
+  ::fossilhub::platform::execute $database {
+    DROP INDEX form_challenges_expiry;
+    DROP TABLE form_challenges;
+    ALTER TABLE users DROP COLUMN must_change_password;
+    DELETE FROM schema_migrations WHERE version=2;
+    DELETE FROM schema_migrations WHERE version=3;
+    PRAGMA user_version=1;
+  }
+  assertEqual [::fossilhub::platform::databaseVersion] 1 \
+    "previous platform schema fixture"
+  assertEqual [::fossilhub::platform::initialize] 3 \
+    "platform schema migration"
+  assertEqual [llength [glob -nocomplain "${database}.backup-v1.*"]] 1 \
+    "platform migration backup"
+
   set before [file size $database]
-  assertEqual [::fossilhub::platform::initialize] 1 \
+  assertEqual [::fossilhub::platform::initialize] 3 \
     "idempotent platform initialization"
   assertEqual [llength [::fossilhub::platform::publicRepositories]] 10 \
     "idempotent repository seed"

@@ -1,7 +1,7 @@
 namespace eval ::fossilhub::platform {
   variable defaultDatabase /data/platform/fossilhub.sqlite
   variable defaultSqlite /usr/bin/sqlite3
-  variable schemaVersion 1
+  variable schemaVersion 3
 }
 
 proc ::fossilhub::platform::databasePath {} {
@@ -106,7 +106,9 @@ proc ::fossilhub::platform::schemaSql {} {
         CHECK(status IN ('active','disabled','deactivated')),
       created_epoch INTEGER NOT NULL,
       updated_epoch INTEGER NOT NULL,
-      last_login_epoch INTEGER NOT NULL DEFAULT 0
+      last_login_epoch INTEGER NOT NULL DEFAULT 0,
+      must_change_password INTEGER NOT NULL DEFAULT 0
+        CHECK(must_change_password IN (0,1))
     ) STRICT;
 
     CREATE TABLE credentials(
@@ -133,6 +135,14 @@ proc ::fossilhub::platform::schemaSql {} {
       attempts INTEGER NOT NULL CHECK(attempts >= 0),
       window_epoch INTEGER NOT NULL,
       blocked_until_epoch INTEGER NOT NULL DEFAULT 0
+    ) STRICT;
+
+    CREATE TABLE form_challenges(
+      token_hash TEXT PRIMARY KEY,
+      session_id_hash TEXT REFERENCES sessions(id_hash) ON DELETE CASCADE,
+      purpose TEXT NOT NULL,
+      created_epoch INTEGER NOT NULL,
+      expires_epoch INTEGER NOT NULL
     ) STRICT;
 
     CREATE TABLE repositories(
@@ -186,6 +196,7 @@ proc ::fossilhub::platform::schemaSql {} {
 
     CREATE INDEX users_status ON users(status,username COLLATE NOCASE);
     CREATE INDEX sessions_user ON sessions(user_id,absolute_expires_epoch);
+    CREATE INDEX form_challenges_expiry ON form_challenges(expires_epoch);
     CREATE INDEX repositories_public
       ON repositories(state,visibility,featured DESC,slug COLLATE NOCASE);
     CREATE INDEX repositories_owner ON repositories(owner_user_id,state);
@@ -199,7 +210,9 @@ proc ::fossilhub::platform::schemaSql {} {
     INSERT INTO settings VALUES('default_visibility','public',0);
     INSERT INTO settings VALUES('maintenance_banner','',0);
     INSERT INTO schema_migrations VALUES(1,0,'initial platform schema');
-    PRAGMA user_version=1;
+    INSERT INTO schema_migrations VALUES(2,0,'form challenge store');
+    INSERT INTO schema_migrations VALUES(3,0,'forced password change state');
+    PRAGMA user_version=3;
     COMMIT;
     PRAGMA quick_check;
   }
@@ -258,13 +271,7 @@ proc ::fossilhub::platform::migrateDatabase {database fromVersion} {
     error "platform database schema is newer than this application"
   }
 
-  # Version zero is accepted only for an empty SQLite file. Future migrations
-  # are added here as copy-mutate-verify-rename steps.
-  if {$fromVersion != 0 || [file size $database] != 0} {
-    error "unsupported platform database migration from version $fromVersion"
-  }
-
-  set backup "${database}.backup-v${fromVersion}.[clock seconds]"
+  set backup "${database}.backup-v${fromVersion}.[pid].[clock clicks]"
   set temporary "${database}.migrate.[pid].[clock clicks]"
   if {[file exists $backup] || [file exists $temporary]} {
     error "refusing to reuse platform migration files"
@@ -272,7 +279,61 @@ proc ::fossilhub::platform::migrateDatabase {database fromVersion} {
   file copy $database $backup
   file attributes $backup -permissions 0600
   try {
-    ::fossilhub::platform::createDatabase $temporary
+    if {$fromVersion == 0 && [file size $database] == 0} {
+      ::fossilhub::platform::createDatabase $temporary
+    } elseif {$fromVersion in {1 2}} {
+      file copy $database $temporary
+      set currentVersion $fromVersion
+      while {$currentVersion < $schemaVersion} {
+        switch -- $currentVersion {
+          1 {
+            set migration {
+              PRAGMA foreign_keys=ON;
+              BEGIN IMMEDIATE;
+              CREATE TABLE form_challenges(
+                token_hash TEXT PRIMARY KEY,
+                session_id_hash TEXT REFERENCES sessions(id_hash)
+                  ON DELETE CASCADE,
+                purpose TEXT NOT NULL,
+                created_epoch INTEGER NOT NULL,
+                expires_epoch INTEGER NOT NULL
+              ) STRICT;
+              CREATE INDEX form_challenges_expiry
+                ON form_challenges(expires_epoch);
+              INSERT INTO schema_migrations
+                VALUES(2,0,'form challenge store');
+              PRAGMA user_version=2;
+              COMMIT;
+              PRAGMA quick_check;
+            }
+          }
+          2 {
+            set migration {
+              PRAGMA foreign_keys=ON;
+              BEGIN IMMEDIATE;
+              ALTER TABLE users ADD COLUMN must_change_password INTEGER
+                NOT NULL DEFAULT 0 CHECK(must_change_password IN (0,1));
+              INSERT INTO schema_migrations
+                VALUES(3,0,'forced password change state');
+              PRAGMA user_version=3;
+              COMMIT;
+              PRAGMA quick_check;
+            }
+          }
+          default {
+            error "unsupported platform database migration from version $currentVersion"
+          }
+        }
+        set output [::fossilhub::platform::execute $temporary $migration]
+        if {[string trim $output] ne "ok"} {
+          error "platform migration integrity check failed"
+        }
+        incr currentVersion
+      }
+      file attributes $temporary -permissions 0600
+    } else {
+      error "unsupported platform database migration from version $fromVersion"
+    }
     file rename -force $temporary $database
     file attributes $database -permissions 0600
   } on error {message options} {

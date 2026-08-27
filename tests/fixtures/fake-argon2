@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+salt=$1
+shift
+iterations=3
+memory_exponent=12
+parallelism=1
+length=32
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -id|-e)
+      shift
+      ;;
+    -t)
+      iterations=$2
+      shift 2
+      ;;
+    -m)
+      memory_exponent=$2
+      shift 2
+      ;;
+    -p)
+      parallelism=$2
+      shift 2
+      ;;
+    -l)
+      length=$2
+      shift 2
+      ;;
+    *)
+      exit 2
+      ;;
+  esac
+done
+
+salt64=$(printf '%s' "$salt" | /usr/bin/openssl base64 -A | tr -d '=')
+digest64=$(
+  { printf '%s' "$salt"; /bin/cat; } \
+    | /usr/bin/openssl dgst -sha256 -binary \
+    | /usr/bin/openssl base64 -A \
+    | tr -d '='
+)
+memory=$((1 << memory_exponent))
+printf '$argon2id$v=19$m=%s,t=%s,p=%s$%s$%s\n' \
+  "$memory" "$iterations" "$parallelism" "$salt64" "$digest64"
