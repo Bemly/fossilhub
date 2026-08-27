@@ -63,3 +63,25 @@ Acceptance completed against production release 0.1.2. The one intentional
 deviation from the immutable reference snapshot is a mobile-only wrapping rule
 for the Explore language filters below 640 px; it removes prototype-originated
 horizontal overflow without changing the desktop composition.
+
+## Phase 2: beta runtime and real Fossil service
+
+Requested 2026-08-27. Release 0.1.2 remains the rollback baseline until every
+item below is complete.
+
+- [ ] Pin the latest official development snapshots of Wapp and Althttpd by
+  immutable Fossil check-in, plus Tcl 9.1b0 and Fossil 2.29 source releases.
+- [ ] Build Tcl 9.1b0, Wapp, Althttpd, and Fossil from source in a reproducible
+  multi-stage Ubuntu 24.04 image.
+- [ ] Add a persistent `/data/repositories` directory and idempotently bootstrap
+  a real `dig.fossil` repository without exposing its setup password in logs.
+- [ ] Serve the repository through Althttpd and Fossil's documented CGI
+  `directory:` mode under `/fossil/dig/`.
+- [ ] Preserve the reference UI composition while wiring repository navigation
+  to live Timeline, Files, Docs, Wiki, Tickets, Forum, clone, and sync surfaces.
+- [ ] Keep public access read-only by default; retain Fossil's own authenticated
+  permission model for repository writes and administration.
+- [ ] Verify a real HTTP clone, a pull/sync round trip, repository persistence
+  across restart, CGI writes under UID/GID 10001, and all prior visual checks.
+- [ ] Deploy only after smoke tests pass, retaining the current 0.1.2 container
+  as the immediate rollback target and documenting credential recovery.
