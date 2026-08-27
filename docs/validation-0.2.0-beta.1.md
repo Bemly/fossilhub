@@ -4,15 +4,17 @@ Validation completed: 2026-08-27
 
 ## Candidate
 
-- Source revision: `188b918`
+- Final source revision: `0ac4dff`
+- Base candidate revision: `188b918`
 - Image: `fossilhub:0.2.0-beta.1`
-- Image ID: `sha256:22fc745e0d795327c6e5eb8ac5aba75379a2bd41498916adb3bd56ccec3d224e`
-- OCI revision label: `188b918`
-- Temporary container: `fossilhub-beta-final-188b918`
-- Temporary endpoint: `http://192.168.1.162:6082/`
+- Image ID: `sha256:8b873837f192be367314fbacbb21940aa18071bb887ef39a9ac44235384b95f9`
+- OCI revision label: `0ac4dff`
+- Production container: `fossilhub`
+- Production endpoint: `http://192.168.1.162:6080/`
 
-The production container was not changed during this validation. It remains
-the healthy `fossilhub:0.1.2` instance on host port 6080.
+The temporary 6082 validation container is stopped. Production 6080 is healthy
+on the final image; revisions `188b918` and `8c9726d` are retained as the two
+immediate rollback containers.
 
 ## Runtime versions
 
@@ -56,16 +58,19 @@ the healthy `fossilhub:0.1.2` instance on host port 6080.
   browser console warnings or errors.
 - Mobile verification: 390 x 844 viewport, no horizontal overflow and no
   browser console warnings or errors.
+- Medium-width verification: 913 x 720 viewport, no horizontal overflow and no
+  browser console warnings or errors. Revision `0ac4dff` hides the long header
+  clone command below 1100 px while preserving the navigation.
 - Theme switching changes the active colour theme.
 - Clicking Timeline in the reference UI reaches the native Fossil Timeline,
   whose rendered page reports two check-ins.
 - With a simulated `/bemly-moe/app/fossilhub/` pathname, clone, Timeline, and
   ZIP URLs retain that complete fnOS mount prefix.
 
-## Production gate
+## Production deployment
 
-The remaining operation is the production container replacement. Retain the
-current 0.1.2 container as `fossilhub-rollback-8c9726d`, start the candidate on
-the same dedicated data volume and port, and automatically restore 0.1.2 if the
-candidate does not become healthy. This step requires explicit production
-change approval.
+Production deployment completed after explicit approval. The existing 0.1.2
+container was retained as `fossilhub-rollback-8c9726d`; the first beta image was
+retained as `fossilhub-rollback-188b918` after the medium-width hotfix. The final
+container reached healthy state, preserved repository identity and check-in
+count, passed all listed HTTP routes, and completed a fresh clone plus sync.

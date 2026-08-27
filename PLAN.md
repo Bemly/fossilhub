@@ -23,8 +23,9 @@ browser
 Althttpd serves fingerprintable static assets directly and treats the executable
 Wapp entry point as CGI. Wapp owns application routes and response handling. The
 runtime data directory is mounted separately from the immutable application
-image and currently stores request logs. SQLite is bundled for a future dynamic
-catalogue phase; it is not part of the 0.1.2 request path.
+image and stores request logs, native Fossil repositories, and the one-time
+administrator bootstrap record. Fossil owns its SQLite repository schema; the
+reference catalogue remains a trusted Tcl/Wapp template.
 
 ## Route map
 
@@ -60,10 +61,10 @@ catalogue phase; it is not part of the 0.1.2 request path.
 - Typography, spacing, colours, borders, responsive breakpoints, and motion follow
   the reference files; reduced-motion mode remains functional.
 
-Acceptance completed against production release 0.1.2. The one intentional
-deviation from the immutable reference snapshot is a mobile-only wrapping rule
-for the Explore language filters below 640 px; it removes prototype-originated
-horizontal overflow without changing the desktop composition.
+Acceptance completed against production release 0.2.0-beta.1. Intentional
+responsive corrections wrap Explore language filters below 640 px and hide the
+long header clone command below 1100 px. Both remove horizontal clipping without
+changing the reference desktop composition.
 
 ## Phase 2: beta runtime and real Fossil service
 
@@ -84,10 +85,9 @@ item below is complete.
   permission model for repository writes and administration.
 - [x] Verify a real HTTP clone, a pull/sync round trip, repository persistence
   across restart, CGI writes under UID/GID 10001, and all prior visual checks.
-- [ ] Deploy only after smoke tests pass, retaining the current 0.1.2 container
+- [x] Deploy only after smoke tests pass, retaining the current 0.1.2 container
   as the immediate rollback target and documenting credential recovery.
 
-The 0.2.0-beta.1 candidate at revision `188b918` passed all pre-deployment
-checks on NAS port 6082. Production port 6080 remains on 0.1.2 until the
-production container replacement is explicitly approved. See
-`docs/validation-0.2.0-beta.1.md` for the evidence record.
+Production port 6080 runs 0.2.0-beta.1 at revision `0ac4dff`. Revision
+`188b918` and production 0.1.2 at revision `8c9726d` remain as stopped rollback
+containers. See `docs/validation-0.2.0-beta.1.md` for the evidence record.

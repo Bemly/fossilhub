@@ -7,8 +7,8 @@ Deployment verified: 2026-08-27
 - Site: `http://192.168.1.162:6080/`
 - Health: `http://192.168.1.162:6080/healthz`
 - Container: `fossilhub`
-- Image: `fossilhub:0.1.2`
-- Source revision label: `8c9726d`
+- Image: `fossilhub:0.2.0-beta.1`
+- Source revision label: `0ac4dff`
 - Host/container port: `6080:8080`
 - Persistent data: `/vol1/1000/fossilhub:/data`
 - Restart policy: `unless-stopped`
@@ -27,6 +27,12 @@ fnOS system path.
 | `/repo/dig.fossil` | Repository specimen and timeline |
 | `/fh.css` | Shared stylesheet |
 | `/healthz` | HTTP 200 with `ok` |
+| `/fossil/` | Native Fossil repository list |
+| `/fossil/dig/timeline` | Native Fossil Timeline |
+| `/fossil/dig/tree` | Versioned source tree |
+| `/fossil/dig/wiki` | Native Fossil Wiki |
+| `/fossil/dig/reportlist` | Native Fossil Tickets |
+| `/fossil/dig/forum` | Native Fossil Forum |
 
 Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
 
@@ -45,6 +51,23 @@ sudo docker logs --tail 100 fossilhub
 Althttpd request logs are persisted as
 `/vol1/1000/fossilhub/althttpd-YYYYMMDD.csv`.
 
+The live repository is `/vol1/1000/fossilhub/repositories/dig.fossil`.
+Clone it from a LAN client with:
+
+```sh
+fossil clone http://192.168.1.162:6080/fossil/dig dig.fossil
+```
+
+The one-time administrator name and password generated during repository
+bootstrap are stored in
+`/vol1/1000/fossilhub/fossil-bootstrap-admin.txt`. The file and repository are
+mode 0600 and owned by UID/GID 10001:10001. Read the record only in a trusted
+SSH terminal and never paste it into logs, tickets, or this repository:
+
+```sh
+sudo cat /vol1/1000/fossilhub/fossil-bootstrap-admin.txt
+```
+
 ## Lifecycle
 
 ```sh
@@ -59,24 +82,27 @@ container.
 
 ## Rollback
 
-Two stopped rollback containers were intentionally retained after deployment:
+Four stopped rollback containers are intentionally retained:
 
+- `fossilhub-rollback-188b918` — the first validated 0.2.0-beta.1 image
+- `fossilhub-rollback-8c9726d` — image `fossilhub:0.1.2`
 - `fossilhub-rollback-94f8097` — image `fossilhub:0.1.1`
 - `fossilhub-rollback-348f399` — image `fossilhub:0.1.0`
 
-The preferred rollback target is 0.1.1. Preserve the failed 0.1.2 container for
-diagnosis rather than deleting it:
+The preferred rollback target is revision `188b918`; its existing container
+retains the original image ID even though the mutable beta tag now names the
+newer `0ac4dff` image. Preserve the failed container for diagnosis:
 
 ```sh
 sudo docker stop fossilhub
-sudo docker rename fossilhub fossilhub-failed-8c9726d
-sudo docker rename fossilhub-rollback-94f8097 fossilhub
+sudo docker rename fossilhub fossilhub-failed-0ac4dff
+sudo docker rename fossilhub-rollback-188b918 fossilhub
 sudo docker start fossilhub
 curl --fail --silent --show-error http://127.0.0.1:6080/healthz
 ```
 
 Before running this sequence, confirm that the rollback container still exists
-and that no container already has the proposed `fossilhub-failed-8c9726d` name.
+and that no container already has the proposed `fossilhub-failed-0ac4dff` name.
 Reversing a rollback follows the same stop-and-rename pattern.
 
 ## Upgrade procedure
