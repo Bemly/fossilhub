@@ -76,6 +76,8 @@ production change.
   `/vol1/1000/fossilhub/repositories/dig.fossil`
 - Candidate catalogue database:
   `/vol1/1000/fossilhub/catalog/fossilhub.sqlite`
+- Phase 5 platform database:
+  `/vol1/1000/fossilhub/platform/fossilhub.sqlite`
 - Candidate blank repositories:
   `/vol1/1000/fossilhub/repositories/{bedrock,ammonite,trilobite,basalt,cambrian,granite,shale,quartz,obsidian,tectonic}.fossil`
 - Fossil bootstrap administrator record:
@@ -87,6 +89,10 @@ production change.
   0600 and owned by UID/GID 10001:10001. `dig.fossil` and its bootstrap record
   are retained as legacy production data even though the CalVer catalogue does
   not expose them.
+- The Phase 5 platform database must remain mode 0600 and owned by UID/GID
+  10001:10001. It stores application-owned repository registry, identity,
+  authorization, session, settings, and audit data. Never query or mutate it
+  through Fossil.
 
 ## Current FossilHub production state
 
@@ -144,6 +150,7 @@ browser
      -> Tcl SSR repository surfaces and SQLite catalogue search
      -> Fossil CGI `directory:` mode only for clone/sync transport
   -> `/data/catalog/fossilhub.sqlite`
+  -> `/data/platform/fossilhub.sqlite`
   -> ten manifest-listed blank `.fossil` repositories under `/data/repositories`
 ```
 
@@ -159,8 +166,11 @@ browser
   `sql --readonly` interface. Query values are hex-encoded before crossing the
   process boundary and decoded in Tcl.
 - `app/lib/catalog-model.tcl` owns the separate application SQLite schema,
-  literal search, filters, sorting, and atomic index replacement. This is the
-  only database the application may open with raw `sqlite3`.
+  literal search, filters, sorting, and atomic index replacement. It is one of
+  the two application databases that may be opened with raw `sqlite3`.
+- `app/lib/platform-model.tcl` owns the versioned Phase 5 application schema,
+  migrations, and dynamic repository registry. It is also application-owned
+  and may be accessed with raw `sqlite3`; Fossil-owned databases may not.
 - `app/lib/view.tcl` owns HTML escaping, formatting, and reusable repository,
   catalogue, composition, and timeline renderers.
 - `app/views/` contains Tcl view modules for the reference-derived home,
@@ -227,8 +237,8 @@ redirect or 404. The server cannot infer the external prefix.
   `text/javascript; charset=utf-8`.
 - Repository reads must use Fossil's `sql --readonly` command. Do not open live
   repository files with raw SQLite for application queries, and never mutate
-  Fossil-owned tables. Raw `sqlite3` access is restricted to the separate
-  `/data/catalog/fossilhub.sqlite` application index.
+  Fossil-owned tables. Raw `sqlite3` access is restricted to the application-owned
+  catalogue and platform databases under `/data/catalog/` and `/data/platform/`.
 - Runtime pages must be complete server-rendered HTML. Do not require JavaScript
   to fetch repository identity, counts, cards, or timeline events.
 - Only serve files through trusted, fixed paths. Never concatenate an

@@ -53,6 +53,14 @@ The candidate does not create `dig.fossil`. If that legacy repository and its
 bootstrap record already exist, they are preserved but omitted from the public
 catalogue.
 
+Phase 5 introduces a second application-owned database at
+`/data/platform/fossilhub.sqlite`. It is the versioned source of truth for the
+repository registry and, as later Phase 5 milestones land, central accounts,
+sessions, memberships, settings, and audit events. Startup creates or migrates
+this database before rebuilding the public catalogue. The file is mode 0600;
+its parent directory is mode 0750. It is not a Fossil repository and must never
+be opened or modified with Fossil commands.
+
 | Candidate route | Expected result |
 | --- | --- |
 | `/explore?q=sqlite&kind=code&sort=recent` | Complete SSR search result |

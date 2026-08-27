@@ -86,15 +86,15 @@ interactive accounts.
 
 ### Phase A — platform database and migrations
 
-- [ ] Add a versioned, transactional application schema for users, credentials,
+- [x] Add a versioned, transactional application schema for users, credentials,
   sessions, login attempts, repositories, collaborators, audit events, and
   platform settings.
 - [ ] Add deterministic migrations and backup/restore checks; migrations must
   be repeatable and must not touch Fossil-owned schemas.
-- [ ] Import the ten manifest repositories into the registry without changing
+- [x] Import the ten manifest repositories into the registry without changing
   their repository files or project codes. Keep legacy `dig.fossil` retained
   but unpublished.
-- [ ] Make the catalogue rebuild from enabled registry records instead of a
+- [x] Make the catalogue rebuild from enabled registry records instead of a
   compile-time-only manifest, while retaining a seed manifest for clean installs.
 - [ ] Add database integrity, permission, ownership, migration, and hostile-data
   tests.

@@ -9,6 +9,7 @@ if {[file isfile [file join $localRoot lib fossil-model.tcl]]} {
 
 source [file join $applicationRoot lib repository-manifest.tcl]
 source [file join $applicationRoot lib fossil-model.tcl]
+source [file join $applicationRoot lib platform-model.tcl]
 source [file join $applicationRoot lib catalog-model.tcl]
 
 proc fossilhubInitRun {label command} {
@@ -64,5 +65,6 @@ foreach entry [::fossilhub::manifest::all] {
   }
 }
 
+::fossilhub::platform::initialize
 set count [::fossilhub::catalog::rebuild]
 puts "FossilHub initialized and indexed $count blank repositories"

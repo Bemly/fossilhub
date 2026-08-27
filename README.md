@@ -26,6 +26,14 @@ Candidate routes begin at `/explore` and `/repo/bedrock.fossil`. The image tag
 is `fossilhub:2026.08.27-beta.3`; [VERSION](VERSION) is the release source of
 truth.
 
+Phase 5 development adds a separate versioned platform database at
+`/data/platform/fossilhub.sqlite` for central identities, authorization,
+sessions, audit events, settings, and the dynamic repository registry. The ten
+candidate repositories are imported into that registry idempotently; Fossil
+repository files remain untouched and continue to be the artifact source of
+truth. See [docs/platform-roadmap.md](docs/platform-roadmap.md) for the ordered
+implementation and acceptance checklist.
+
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.

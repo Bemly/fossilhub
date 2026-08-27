@@ -8,6 +8,7 @@ namespace eval ::fossilhub {
 foreach sourceFile {
   lib/repository-manifest.tcl
   lib/fossil-model.tcl
+  lib/platform-model.tcl
   lib/catalog-model.tcl
   lib/view.tcl
   views/home.tcl
@@ -137,6 +138,13 @@ proc ::fossilhub::primaryRepository {} {
   return [lindex $repositories 0]
 }
 
+proc ::fossilhub::publishedRepository {name} {
+  if {[file isfile [::fossilhub::platform::databasePath]]} {
+    return [::fossilhub::platform::publicContains $name]
+  }
+  return [::fossilhub::manifest::contains $name]
+}
+
 proc ::fossilhub::placeholder {title message} {
   ::fossilhub::htmlPolicy
   wapp-mimetype "text/html; charset=utf-8"
@@ -227,7 +235,7 @@ proc wapp-default {} {
     repository {
       set name [lindex $route 1]
       set section [lindex $route 2]
-      if {![::fossilhub::manifest::contains $name] ||
+      if {![::fossilhub::publishedRepository $name] ||
           ![::fossilhub::model::validRepositoryName $name] ||
           ![file isfile [::fossilhub::model::repositoryPath $name]]} {
         wapp-reply-code "404 Not Found"

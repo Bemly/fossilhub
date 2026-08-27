@@ -8,14 +8,18 @@ data_dir=${FOSSILHUB_DATA_DIR:-/data}
 repository_dir="${FOSSILHUB_REPOSITORY_DIR:-${data_dir}/repositories}"
 catalog_database="${FOSSILHUB_CATALOG_DB:-${data_dir}/catalog/fossilhub.sqlite}"
 catalog_dir=$(dirname "${catalog_database}")
+platform_database="${FOSSILHUB_PLATFORM_DB:-${data_dir}/platform/fossilhub.sqlite}"
+platform_dir=$(dirname "${platform_database}")
 
 export HOME="${data_dir}"
 export FOSSILHUB_REPOSITORY_DIR="${repository_dir}"
 export FOSSILHUB_CATALOG_DB="${catalog_database}"
+export FOSSILHUB_PLATFORM_DB="${platform_database}"
 
-mkdir -p "${repository_dir}" "${catalog_dir}"
-chmod 0750 "${data_dir}" "${repository_dir}" "${catalog_dir}"
+mkdir -p "${repository_dir}" "${catalog_dir}" "${platform_dir}"
+chmod 0750 "${data_dir}" "${repository_dir}" "${catalog_dir}" "${platform_dir}"
 
+/usr/local/bin/fossilhub-platform-init
 /usr/local/bin/fossilhub-index
 
 exec "$@"

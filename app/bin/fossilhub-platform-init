@@ -3,15 +3,13 @@
 set scriptDirectory [file dirname [file normalize [info script]]]
 set localRoot [file dirname $scriptDirectory]
 set applicationRoot /srv/www/default.website
-if {[file isfile [file join $localRoot lib fossil-model.tcl]]} {
+if {[file isfile [file join $localRoot lib platform-model.tcl]]} {
   set applicationRoot $localRoot
 }
 
 source [file join $applicationRoot lib repository-manifest.tcl]
-source [file join $applicationRoot lib fossil-model.tcl]
 source [file join $applicationRoot lib platform-model.tcl]
-source [file join $applicationRoot lib catalog-model.tcl]
 
-::fossilhub::platform::initialize
-set count [::fossilhub::catalog::rebuild]
-puts "FossilHub indexed $count repositories"
+set version [::fossilhub::platform::initialize]
+set repositoryCount [llength [::fossilhub::platform::publicRepositories]]
+puts "FossilHub platform schema $version with $repositoryCount public repositories"

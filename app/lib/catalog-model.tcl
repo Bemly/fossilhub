@@ -296,7 +296,13 @@ proc ::fossilhub::catalog::writeDatabase {repositories {target ""}} {
 
 proc ::fossilhub::catalog::rebuild {} {
   set repositories {}
-  foreach entry [::fossilhub::manifest::all] {
+  if {[llength [info commands ::fossilhub::platform::publicRepositories]] > 0 &&
+      [file isfile [::fossilhub::platform::databasePath]]} {
+    set entries [::fossilhub::platform::publicRepositories]
+  } else {
+    set entries [::fossilhub::manifest::all]
+  }
+  foreach entry $entries {
     set name [dict get $entry name]
     set path [::fossilhub::model::repositoryPath $name]
     if {![file isfile $path]} {

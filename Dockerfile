@@ -81,6 +81,7 @@ COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
 COPY app/bin/fossilhub-entrypoint /usr/local/bin/fossilhub-entrypoint
 COPY app/bin/fossilhub-index /usr/local/bin/fossilhub-index
 COPY app/bin/fossilhub-init /usr/local/bin/fossilhub-init
+COPY app/bin/fossilhub-platform-init /usr/local/bin/fossilhub-platform-init
 COPY app/cgi/fossil /srv/www/default.website/fossil
 COPY app/fossilhub.tcl /srv/www/default.website/index
 COPY app/lib/ /srv/www/default.website/lib/
@@ -95,6 +96,7 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
       /usr/local/bin/fossilhub-entrypoint \
       /usr/local/bin/fossilhub-index \
       /usr/local/bin/fossilhub-init \
+      /usr/local/bin/fossilhub-platform-init \
       /srv/www/default.website/fossil \
       /srv/www/default.website/index \
     && chmod 0444 /opt/fossilhub/wapp.tcl \
