@@ -26,7 +26,13 @@ variable exploreTemplate {
   padding:14px 18px;max-width:720px;
 }
 .searchbar:focus-within{border-color:var(--azurite)}
-.searchbar .q{font-family:var(--font-mono);font-size:13px;color:var(--ink-2);flex:1}
+.searchbar .q{
+  font-family:var(--font-mono);font-size:13px;color:var(--ink);flex:1;
+  border:0;outline:0;background:transparent;min-width:0;
+}
+.searchbar .q::placeholder{color:var(--ink-2)}
+.search-state{font-family:var(--font-mono);font-size:10px;color:var(--ink-2);white-space:nowrap}
+.catalog-form.loading .search-state{color:var(--azurite-deep)}
 .kbd{
   font-family:var(--font-mono);font-size:10px;color:var(--ink-2);
   border:1px solid var(--line);border-radius:4px;padding:2px 7px;background:var(--paper);
@@ -41,12 +47,15 @@ variable exploreTemplate {
   font-family:var(--font-mono);font-size:11px;padding:6px 13px;
   border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:transparent;
 }
+.fchip{cursor:pointer}
 .fchip.sel{border-color:var(--azurite);color:var(--azurite-deep);background:rgba(32,82,151,.08)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
-.seg span{
+.seg select{
   font-family:var(--font-mono);font-size:11px;padding:7px 15px;color:var(--ink-2);
+  border:0;background:var(--card);outline:0;cursor:pointer;
 }
-.seg .on{background:var(--azurite);color:var(--paper)}
+.search-submit{font-family:var(--font-mono);font-size:10px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 .featured{padding-block:44px 10px}
 .sec-tag{
@@ -304,54 +313,40 @@ variable exploreTemplate {
       <p class="eyebrow">Fossilhub · Site survey</p>
       <h1>The field guide to open digs.</h1>
       <p class="lede">Every listing below is a complete Fossil repository — code, wiki, tickets, and forum packed into one artifact you can clone, mirror, or mail. Sorted by most recent surface activity.</p>
-      <div class="searchbar">
-        <span class="q">@@REPOSITORY_COUNT@@ live digs — queried from Fossil at request time</span>
-        <span class="kbd">/</span>
-      </div>
-      <div class="filterbar">
-        <div class="fgroup">
-          <span class="gl">CATALOGUE</span>
-          <button class="fchip sel">All repositories</button>
-          <button class="fchip">Live Fossil data</button>
+      <form class="catalog-form" action="explore" method="get" data-catalog-form>
+        <div class="searchbar">
+          <label class="sr-only" for="catalogQuery">Search repositories</label>
+          <input class="q" id="catalogQuery" name="q" type="search" value="@@QUERY@@" placeholder="Search names, descriptions, categories, or languages" autocomplete="off">
+          <span class="search-state" data-search-state>@@RESULT_SUMMARY@@</span>
+          <span class="kbd">/</span>
         </div>
-        <div class="fgroup">
-          <span class="gl">SORT BY</span>
-          <div class="seg"><span class="on">Surface · recent</span><span>Deep time · oldest</span></div>
+        <div class="filterbar">
+          <div class="fgroup" role="group" aria-label="Repository content filter">
+            <span class="gl">STRATA</span>
+            <input type="hidden" name="kind" value="@@KIND@@" data-kind-input>
+            <button class="fchip @@KIND_ALL@@" type="button" data-kind="all">All</button>
+            <button class="fchip @@KIND_CODE@@" type="button" data-kind="code">Code</button>
+            <button class="fchip @@KIND_WIKI@@" type="button" data-kind="wiki">Wiki</button>
+            <button class="fchip @@KIND_TICKETS@@" type="button" data-kind="tickets">Tickets</button>
+            <button class="fchip @@KIND_FORUM@@" type="button" data-kind="forum">Forum</button>
+          </div>
+          <div class="fgroup">
+            <label class="gl" for="catalogSort">SORT BY</label>
+            <span class="seg"><select id="catalogSort" name="sort">
+              <option value="recent" @@SORT_RECENT@@>Surface · recent</option>
+              <option value="oldest" @@SORT_OLDEST@@>Deep time · oldest</option>
+              <option value="name" @@SORT_NAME@@>Specimen · name</option>
+              <option value="size" @@SORT_SIZE@@>Mass · largest</option>
+            </select></span>
+          </div>
+          <noscript><button class="btn btn-ghost search-submit" type="submit">Apply survey</button></noscript>
         </div>
-      </div>
+      </form>
     </div>
   </section>
 
-  <section class="featured wrap" id="featured">
-    <p class="sec-tag">Featured excavation</p>
-    <!--SSR_FEATURE_START-->
-    <!--SSR_FEATURE_END-->
-
-    <div class="feed" id="feed">
-      <div class="feed-head">
-        <p>Across all digs — the surface feed</p>
-        <span class="feed-hint">scroll →</span>
-      </div>
-      <div class="feed-row">
-        <!--SSR_FEED_START-->
-        <!--SSR_FEED_END-->
-      </div>
-    </div>
-  </section>
-
-  <section class="grid-sec" id="digs">
-    <div class="wrap">
-      <div class="toolrow reveal">
-        <p class="eyebrow">All digs on the hub</p>
-        <span class="count">SHOWING @@REPOSITORY_COUNT@@ — SORTED BY SURFACE ACTIVITY</span>
-      </div>
-      <div class="cards">
-        <!--SSR_CARDS_START-->
-        <!--SSR_CARDS_END-->
-
-      </div>
-    </div>
-  </section>
+  <!--SSR_RESULTS_START-->
+  <!--SSR_RESULTS_END-->
 
 </main>
 
@@ -441,19 +436,21 @@ themeBtn.addEventListener('click', () => {
   localStorage.setItem('fh-theme', next);
 });
 </script>
+<script src="catalog-search.js"></script>
 
 </body>
 </html>
 }
 }
 
-proc ::fossilhub::views::renderExplore {repositories} {
-  variable exploreTemplate
+proc ::fossilhub::views::renderExploreResults {repositories} {
   set count [llength $repositories]
+  set featuredHtml ""
   if {$count == 0} {
-    set featured [::fossilhub::view::emptyRepository]
+    set featuredHtml {<div class="panel"><div class="panel-body">No repositories match this survey.</div></div>}
   } else {
-    set featured [lindex $repositories 0]
+    set featuredHtml [::fossilhub::view::featuredRepository \
+      [lindex $repositories 0]]
   }
 
   set cards ""
@@ -463,19 +460,66 @@ proc ::fossilhub::views::renderExplore {repositories} {
     append cards [::fossilhub::view::repositoryCard $repository $index]
   }
   if {$cards eq ""} {
-    set cards {<div class="panel"><div class="panel-body">No Fossil repositories are available yet.</div></div>}
+    set cards {<div class="panel"><div class="panel-body">Try a broader term or select a different stratum.</div></div>}
   }
 
+  return [format {
+  <div data-catalog-results data-result-count="%d">
+    <section class="featured wrap" id="featured">
+      <p class="sec-tag">Surface specimen</p>
+      %s
+      <div class="feed" id="feed">
+        <div class="feed-head">
+          <p>Across matching digs — the surface feed</p>
+          <span class="feed-hint">scroll →</span>
+        </div>
+        <div class="feed-row">%s</div>
+      </div>
+    </section>
+    <section class="grid-sec" id="digs">
+      <div class="wrap">
+        <div class="toolrow reveal">
+          <p class="eyebrow">Survey results</p>
+          <span class="count">SHOWING %s — INDEXED IN SQLITE</span>
+        </div>
+        <div class="cards">%s</div>
+      </div>
+    </section>
+  </div>} \
+    $count $featuredHtml [::fossilhub::view::surfaceFeed $repositories] \
+    [::fossilhub::view::formatCount $count] $cards]
+}
+
+proc ::fossilhub::views::renderExplore {repositories {options {}}} {
+  variable exploreTemplate
+  set options [::fossilhub::catalog::searchOptions $options]
+  set count [llength $repositories]
+  if {$count == 0} {
+    set featured [::fossilhub::view::emptyRepository]
+  } else {
+    set featured [lindex $repositories 0]
+  }
+
+  set selected [dict create recent "" oldest "" name "" size ""]
+  dict set selected [dict get $options sort] selected
+  set kinds [dict create all "" code "" wiki "" tickets "" forum ""]
+  dict set kinds [dict get $options kind] sel
   set page [string map [list \
     @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $featured slug]] \
-    @@REPOSITORY_COUNT@@ [::fossilhub::view::formatCount $count]] \
+    @@QUERY@@ [::fossilhub::view::escape [dict get $options q]] \
+    @@RESULT_SUMMARY@@ "$count matches" \
+    @@KIND@@ [dict get $options kind] \
+    @@KIND_ALL@@ [dict get $kinds all] \
+    @@KIND_CODE@@ [dict get $kinds code] \
+    @@KIND_WIKI@@ [dict get $kinds wiki] \
+    @@KIND_TICKETS@@ [dict get $kinds tickets] \
+    @@KIND_FORUM@@ [dict get $kinds forum] \
+    @@SORT_RECENT@@ [dict get $selected recent] \
+    @@SORT_OLDEST@@ [dict get $selected oldest] \
+    @@SORT_NAME@@ [dict get $selected name] \
+    @@SORT_SIZE@@ [dict get $selected size]] \
     $exploreTemplate]
-  set page [::fossilhub::view::replaceRegion $page \
-    <!--SSR_FEATURE_START--> <!--SSR_FEATURE_END--> \
-    [::fossilhub::view::featuredRepository $featured]]
-  set page [::fossilhub::view::replaceRegion $page \
-    <!--SSR_FEED_START--> <!--SSR_FEED_END--> \
-    [::fossilhub::view::surfaceFeed $repositories]]
   return [::fossilhub::view::replaceRegion $page \
-    <!--SSR_CARDS_START--> <!--SSR_CARDS_END--> $cards]
+    <!--SSR_RESULTS_START--> <!--SSR_RESULTS_END--> \
+    [::fossilhub::views::renderExploreResults $repositories]]
 }

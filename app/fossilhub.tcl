@@ -6,7 +6,9 @@ namespace eval ::fossilhub {
 }
 
 foreach sourceFile {
+  lib/repository-manifest.tcl
   lib/fossil-model.tcl
+  lib/catalog-model.tcl
   lib/view.tcl
   views/home.tcl
   views/explore.tcl
@@ -60,14 +62,20 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)fossilhub-live\.js$} $clean]} {
     return live-script
   }
+  if {[regexp {(^|/)catalog-search\.js$} $clean]} {
+    return catalog-script
+  }
+  if {[regexp {(^|/)catalog-fragment$} $clean]} {
+    return catalog-fragment
+  }
   if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
   }
   if {[regexp {(^|/)repo\.html$} $clean]} {
-    return [list repository dig.fossil]
+    return [list repository sqlite.fossil timeline]
   }
   if {[regexp {(^|/)repo/([^/]+)/?$} $clean -> _ repository]} {
-    return [list repository $repository]
+    return [list repository $repository timeline]
   }
   return not-found
 }
@@ -103,12 +111,17 @@ proc ::fossilhub::renderPage {content} {
   wapp-unsafe $content
 }
 
-proc ::fossilhub::catalog {{eventLimit 8}} {
-  return [::fossilhub::model::catalogRepositories $eventLimit]
+proc ::fossilhub::catalogOptions {} {
+  return [::fossilhub::catalog::searchOptions [dict create \
+    q [wapp-param q ""] \
+    kind [wapp-param kind all] \
+    sort [wapp-param sort recent] \
+    limit 100]]
 }
 
 proc ::fossilhub::primaryRepository {} {
-  set repositories [::fossilhub::catalog 5]
+  set repositories [::fossilhub::catalog::repositories \
+    [dict create limit 1]]
   if {[llength $repositories] == 0} {
     return [::fossilhub::view::emptyRepository]
   }
@@ -141,12 +154,22 @@ proc wapp-default {} {
         [::fossilhub::primaryRepository]]
     }
     explore {
+      set options [::fossilhub::catalogOptions]
       ::fossilhub::renderPage [::fossilhub::views::renderExplore \
-        [::fossilhub::catalog 8]]
+        [::fossilhub::catalog::repositories $options] $options]
+    }
+    catalog-fragment {
+      set options [::fossilhub::catalogOptions]
+      ::fossilhub::htmlPolicy
+      wapp-mimetype "text/html; charset=utf-8"
+      wapp-cache-control no-cache
+      wapp-unsafe [::fossilhub::views::renderExploreResults \
+        [::fossilhub::catalog::repositories $options]]
     }
     repository {
       set name [lindex $route 1]
-      if {![::fossilhub::model::validRepositoryName $name] ||
+      if {![::fossilhub::manifest::contains $name] ||
+          ![::fossilhub::model::validRepositoryName $name] ||
           ![file isfile [::fossilhub::model::repositoryPath $name]]} {
         wapp-reply-code "404 Not Found"
         ::fossilhub::placeholder \
@@ -178,11 +201,22 @@ proc wapp-default {} {
         "text/javascript; charset=utf-8" \
         max-age=3600
     }
+    catalog-script {
+      variable ::fossilhub::root
+      ::fossilhub::trustedFile \
+        [file join $::fossilhub::root public catalog-search.js] \
+        "text/javascript; charset=utf-8" \
+        max-age=3600
+    }
     default {
       wapp-reply-code "404 Not Found"
       ::fossilhub::placeholder "Not found — FossilHub" "That layer is not in this dig."
     }
   }
+}
+
+proc wapp-before-dispatch-hook {} {
+  wapp-allow-xorigin-params
 }
 
 if {[file normalize [info script]] eq [file normalize $::argv0]} {

@@ -12,15 +12,19 @@ assertEqual [::fossilhub::routeForPath /] home "root route"
 assertEqual [::fossilhub::routeForPath /explore] explore "explore route"
 assertEqual [::fossilhub::routeForPath /explore.html] explore "legacy explore route"
 assertEqual [::fossilhub::routeForPath /repo/dig.fossil] \
-  {repository dig.fossil} "repository route"
+  {repository dig.fossil timeline} "repository route"
 assertEqual [::fossilhub::routeForPath /repo.html] \
-  {repository dig.fossil} "legacy repository route"
+  {repository sqlite.fossil timeline} "legacy repository route"
+assertEqual [::fossilhub::routeForPath /catalog-fragment] \
+  catalog-fragment "catalog fragment route"
 assertEqual [::fossilhub::routeForPath /healthz] health "health route"
 assertEqual [::fossilhub::routeForPath /fh.css] stylesheet "stylesheet route"
 assertEqual [::fossilhub::routeForPath /fossilhub-live.js] \
   live-script "live integration script route"
 assertEqual [::fossilhub::routeForPath /repo/fossilhub-live.js] \
   live-script "nested live integration script route"
+assertEqual [::fossilhub::routeForPath /repo/catalog-search.js] \
+  catalog-script "nested catalog script route"
 assertEqual [::fossilhub::routeForPath /missing] not-found "not-found route"
 assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/explore] \
   explore "mounted explore route"

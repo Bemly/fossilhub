@@ -1,5 +1,6 @@
 set projectRoot [file dirname [file dirname [file normalize [info script]]]]
 source [file join $projectRoot app lib view.tcl]
+source [file join $projectRoot app lib catalog-model.tcl]
 source [file join $projectRoot app views home.tcl]
 source [file join $projectRoot app views explore.tcl]
 source [file join $projectRoot app views repository.tcl]
@@ -61,8 +62,9 @@ assertNotContains $home {Add delta compression to bundle writer} \
   "home prototype event removed"
 
 set explore [::fossilhub::views::renderExplore [list $repository]]
-assertContains $explore {1 live digs — queried from Fossil at request time} \
-  "Explore live count"
+assertContains $explore {1 match} "Explore live count"
+assertContains $explore {SHOWING 1 — INDEXED IN SQLITE} \
+  "Explore SQLite source"
 assertContains $explore {A live &amp; durable repository} \
   "Explore description escaped"
 assertContains $explore {repo/dig.fossil} "Explore repository route"
@@ -70,9 +72,18 @@ assertNotContains $explore {12,408} "Explore prototype count removed"
 assertNotContains $explore {amber.fossil} "Explore prototype repository removed"
 
 set emptyExplore [::fossilhub::views::renderExplore {}]
-assertContains $emptyExplore {No Fossil repositories are available yet.} \
+assertContains $emptyExplore {No repositories match this survey.} \
   "Explore empty state"
-assertContains $emptyExplore {0 live digs} "Explore empty count"
+assertContains $emptyExplore {0 matches} "Explore empty count"
+
+set searchedExplore [::fossilhub::views::renderExplore [list $repository] \
+  [dict create q {Tcl & SQLite} kind wiki sort name]]
+assertContains $searchedExplore {value="Tcl &amp; SQLite"} \
+  "Explore query escaped"
+assertContains $searchedExplore {name="kind" value="wiki"} \
+  "Explore filter rendered"
+assertContains $searchedExplore {value="name" selected} \
+  "Explore sort rendered"
 
 set page [::fossilhub::views::renderRepository $repository]
 assertContains $page {<h1>dig.fossil</h1>} "repository heading"

@@ -8,7 +8,7 @@
   ];
 
   let hubBase = pathname;
-  const repositoryPage = pathname.match(/\/repo\/[^/]+$/);
+  const repositoryPage = pathname.match(/\/repo\/[^/]+(?:\/.*)?$/);
   if (repositoryPage) {
     hubBase = pathname.slice(0, -repositoryPage[0].length);
   }
@@ -21,6 +21,7 @@
 
   const repositorySlug = document.body.dataset.repositorySlug || "dig";
   const repositoryBase = `${hubBase}/fossil/${encodeURIComponent(repositorySlug)}`;
+  window.FossilHub = Object.freeze({ hubBase, repositoryBase });
   document.querySelectorAll("[data-fossil-path]").forEach((link) => {
     link.href = `${repositoryBase}${link.dataset.fossilPath}`;
   });
