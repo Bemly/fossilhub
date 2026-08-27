@@ -7,10 +7,13 @@ production change.
 
 ## Non-negotiable safety boundaries
 
-- Never commit, print, echo, paste, or otherwise disclose the fnOS SSH/sudo
-  password, Fossil administrator password, API keys, webhook tokens, or other
-  credentials. Use the configured `fnOS` SSH alias and a secure local credential
-  source. Redact command output before returning it to the user.
+- Never commit, print, document, or return the fnOS SSH/sudo password, Fossil
+  administrator password, API keys, webhook tokens, or other credentials. The
+  agent may authenticate non-interactively with a password explicitly supplied
+  by the user for the current task; keep it transient, filter authentication
+  prompts from captured output, and never save it in this repository, a helper
+  script, Git configuration, or documentation. Do not require manual SSH
+  authentication when the user has supplied and authorized a working password.
 - Treat Docker and application logs as sensitive. Logs from unrelated services
   may include tokens in query strings or message content. Prefer targeted
   status/health queries; never dump broad logs into Git or a response.
@@ -40,11 +43,14 @@ production change.
 ## fnOS connection and shell discipline
 
 - Target: fnOS 1.2.0401, hostname `MEminiFnOS`, x86_64.
-- Use the configured alias: `ssh fnOS`. Authentication details belong in a
-  secure local store, never in this repository or `AGENTS.md`.
+- Use the configured alias `fnOS`. Authentication details belong only in the
+  current authorized session or a secure local store, never in this repository
+  or `AGENTS.md`.
 - Remote Docker access requires sudo. Suppress the sudo prompt with `-p ''` and
-  filter password prompts from captured output. Do not put the password in a
-  saved script, Git configuration, shell history, or documentation.
+  filter password prompts from captured output. Non-interactive password SSH
+  and sudo are allowed when explicitly authorized by the user, but the password
+  must remain transient and must not be written to a saved script, Git
+  configuration, shell history, documentation, logs, or replies.
 - Commands run through remote `sh -c` must be quoted deliberately. In the local
   zsh, unquoted strings such as `===name===` can be treated as glob patterns.
 - A background process can keep an SSH pipe open after the useful command has
