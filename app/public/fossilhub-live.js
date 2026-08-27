@@ -1,7 +1,6 @@
 (() => {
   const pathname = window.location.pathname.replace(/\/+$/, "");
   const pageSuffixes = [
-    "/repo/dig.fossil",
     "/repo.html",
     "/explore.html",
     "/explore",
@@ -9,6 +8,10 @@
   ];
 
   let hubBase = pathname;
+  const repositoryPage = pathname.match(/\/repo\/[^/]+$/);
+  if (repositoryPage) {
+    hubBase = pathname.slice(0, -repositoryPage[0].length);
+  }
   for (const suffix of pageSuffixes) {
     if (pathname.endsWith(suffix)) {
       hubBase = pathname.slice(0, -suffix.length);
@@ -16,7 +19,8 @@
     }
   }
 
-  const repositoryBase = `${hubBase}/fossil/dig`;
+  const repositorySlug = document.body.dataset.repositorySlug || "dig";
+  const repositoryBase = `${hubBase}/fossil/${encodeURIComponent(repositorySlug)}`;
   document.querySelectorAll("[data-fossil-path]").forEach((link) => {
     link.href = `${repositoryBase}${link.dataset.fossilPath}`;
   });

@@ -24,5 +24,7 @@ assertEqual [::fossilhub::routeForPath /repo/fossilhub-live.js] \
 assertEqual [::fossilhub::routeForPath /missing] not-found "not-found route"
 assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/explore] \
   explore "mounted explore route"
+assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/] \
+  home "mounted home route"
 
 puts "route tests passed"

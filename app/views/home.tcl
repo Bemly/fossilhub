@@ -1,3 +1,5 @@
+namespace eval ::fossilhub::views {
+variable homeTemplate {
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,7 +13,7 @@
 <script>document.documentElement.dataset.theme=localStorage.getItem("fh-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script>
 <link rel="stylesheet" href="fh.css">
 </head>
-<body>
+<body data-repository-slug="@@REPOSITORY_SLUG@@">
 
 <div class="rail" aria-hidden="true">
   <div class="rail-track"></div>
@@ -153,45 +155,10 @@
         </div>
         <div class="panel">
           <div class="panel-head">
-            <span class="fname">dig.fossil — recent activity</span>
+            <span class="fname">@@REPOSITORY_NAME@@ — recent activity</span>
             <span class="chip chip-azu"><span class="sdot"></span>live</span>
           </div>
-          <div class="tl-list">
-            <svg class="tl-svg" viewBox="0 0 44 280" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M22 0V280" stroke="rgba(28,35,44,.28)" stroke-width="1.5" fill="none"/>
-              <path d="M22 14C38 18 40 24 40 44V150C40 176 33 187 25 196" stroke="#205297" stroke-width="1.5" fill="none"/>
-            </svg>
-            <div class="tl-row onbranch">
-              <i class="tl-dot dot-azu"></i>
-              <span class="tl-time">14:32</span>
-              <div><p class="tl-title">Add delta compression to bundle writer</p>
-              <p class="tl-meta">check-in <span class="hash">c-a17f3b</span> · delta-v2</p></div>
-            </div>
-            <div class="tl-row">
-              <i class="tl-dot dot-azu"></i>
-              <span class="tl-time">13:07</span>
-              <div><p class="tl-title">Retry delta push with exponential backoff</p>
-              <p class="tl-meta">check-in <span class="hash">c-9f2e1a</span> · trunk</p></div>
-            </div>
-            <div class="tl-row">
-              <i class="tl-dot dot-iron"></i>
-              <span class="tl-time">11:58</span>
-              <div><p class="tl-title">Sync stalls on flaky links</p>
-              <p class="tl-meta">ticket #42 · closed by c-9f2e1a</p></div>
-            </div>
-            <div class="tl-row">
-              <i class="tl-dot dot-verdi"></i>
-              <span class="tl-time">09:41</span>
-              <div><p class="tl-title">Embedded docs: rewrite the autosync intro</p>
-              <p class="tl-meta">wiki edit · www/autosync.wiki</p></div>
-            </div>
-            <div class="tl-row">
-              <i class="tl-dot dot-hollow"></i>
-              <span class="tl-time">08:15</span>
-              <div><p class="tl-title">Re: autosync vs explicit sync — which default?</p>
-              <p class="tl-meta">forum · thread 118</p></div>
-            </div>
-          </div>
+          @@HOME_TIMELINE@@
         </div>
       </div>
     </div>
@@ -280,16 +247,16 @@
       </div>
       <div class="demo-grid flip reveal">
         <div class="term">
-          <div class="term-head">dig.fossil — fossil shell</div>
-<pre>$ fossil init dig.fossil
-<span class="dim">  project-id:</span> <span class="lit">8f3a21c4</span> <span class="dim">· baseline artifact created</span>
+          <div class="term-head">@@REPOSITORY_NAME@@ — fossil shell</div>
+<pre>$ fossil init @@REPOSITORY_NAME@@
+<span class="dim">  project-id:</span> <span class="lit">@@PROJECT_ID@@</span> <span class="dim">· repository artifact</span>
 
 $ fossil ui
-<span class="dim">  serving</span> <span class="lit">http://127.0.0.1:8080</span> <span class="dim">(repo: dig.fossil)</span>
+<span class="dim">  serving</span> <span class="lit">http://127.0.0.1:8080</span> <span class="dim">(repo: @@REPOSITORY_NAME@@)</span>
 
 $ <span data-clone-command>fossil clone /fossil/dig</span>
-<span class="dim">  1,284 artifacts · 3.1 MB received</span>
-<span class="dim">  autosync:</span> 3 peers converged</pre>
+<span class="dim">  @@ARTIFACTS@@ artifacts · @@DEPTH@@ received</span>
+<span class="dim">  history:</span> @@CHECKINS@@ check-ins · @@EVENTS@@ timeline events</pre>
           <div class="term-note">No daemons, no config files, no database server. The web UI ships inside the same binary that stores the data.</div>
         </div>
         <div class="copy">
@@ -367,3 +334,29 @@ themeBtn.addEventListener('click', () => {
 
 </body>
 </html>
+}
+}
+
+proc ::fossilhub::views::renderHome {repository} {
+  variable homeTemplate
+  set eventCount [expr {
+    [dict get $repository checkins] +
+    [dict get $repository wiki_events] +
+    [dict get $repository ticket_events] +
+    [dict get $repository forum_events]
+  }]
+  return [string map [list \
+    @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $repository slug]] \
+    @@REPOSITORY_NAME@@ [::fossilhub::view::escape [dict get $repository name]] \
+    @@PROJECT_ID@@ [::fossilhub::view::escape \
+      [::fossilhub::view::projectId $repository]] \
+    @@ARTIFACTS@@ [::fossilhub::view::formatCount \
+      [dict get $repository artifacts]] \
+    @@DEPTH@@ [::fossilhub::view::escape [::fossilhub::view::formatBytes \
+      [dict get $repository bytes]]] \
+    @@CHECKINS@@ [::fossilhub::view::formatCount \
+      [dict get $repository checkins]] \
+    @@EVENTS@@ [::fossilhub::view::formatCount $eventCount] \
+    @@HOME_TIMELINE@@ [::fossilhub::view::homeTimeline $repository]] \
+    $homeTemplate]
+}

@@ -57,7 +57,7 @@ ARG FOSSILHUB_REVISION=unknown
 
 LABEL org.opencontainers.image.title="FossilHub" \
       org.opencontainers.image.description="Tcl 9.1/Wapp hub with native Fossil repositories served by althttpd" \
-      org.opencontainers.image.version="0.2.0-beta.1" \
+      org.opencontainers.image.version="0.3.0-beta.1" \
       org.opencontainers.image.revision="${FOSSILHUB_REVISION}"
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -82,7 +82,8 @@ COPY app/cgi/fossil /srv/www/default.website/fossil
 COPY app/seed/ /opt/fossilhub/seed/
 COPY app/seed-wiki.md /opt/fossilhub/seed-wiki.md
 COPY app/fossilhub.tcl /srv/www/default.website/index
-COPY app/templates/ /srv/www/default.website/templates/
+COPY app/lib/ /srv/www/default.website/lib/
+COPY app/views/ /srv/www/default.website/views/
 COPY app/public/ /srv/www/default.website/public/
 COPY app/public/fh.css /srv/www/default.website/fh.css
 
@@ -100,7 +101,8 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
       /opt/fossilhub/seed/src/hello.tcl \
       /srv/www/default.website/fh.css \
       /srv/www/default.website/public/fh.css \
-      /srv/www/default.website/templates/*.html \
+      /srv/www/default.website/lib/*.tcl \
+      /srv/www/default.website/views/*.tcl \
     && ln /srv/www/default.website/index \
       /srv/www/default.website/not-found.html \
     && test "$(echo 'puts [info patchlevel]' | /usr/bin/tclsh)" = "9.1b0" \

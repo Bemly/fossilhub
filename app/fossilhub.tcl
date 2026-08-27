@@ -5,6 +5,16 @@ namespace eval ::fossilhub {
   variable mountName "fossilhub"
 }
 
+foreach sourceFile {
+  lib/fossil-model.tcl
+  lib/view.tcl
+  views/home.tcl
+  views/explore.tcl
+  views/repository.tcl
+} {
+  source [file join $::fossilhub::root $sourceFile]
+}
+
 proc ::fossilhub::loadWapp {} {
   variable root
   set candidates [list \
@@ -35,7 +45,9 @@ proc ::fossilhub::routeForPath {path} {
   variable mountName
   set clean [string trim $path /]
 
-  if {$clean eq "" || $clean eq $mountName || $clean eq "index" ||
+  if {$clean eq "" || $clean eq $mountName ||
+      [regexp [format {(^|/)%s$} $mountName] $clean] ||
+      $clean eq "index" ||
       [regexp {(^|/)index\.html$} $clean]} {
     return home
   }
@@ -84,13 +96,23 @@ proc ::fossilhub::htmlPolicy {} {
   wapp-content-security-policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; frame-ancestors 'self'"
 }
 
-proc ::fossilhub::templatePage {filename} {
-  variable root
+proc ::fossilhub::renderPage {content} {
   ::fossilhub::htmlPolicy
-  ::fossilhub::trustedFile \
-    [file join $root templates $filename] \
-    "text/html; charset=utf-8" \
-    no-cache
+  wapp-mimetype "text/html; charset=utf-8"
+  wapp-cache-control no-cache
+  wapp-unsafe $content
+}
+
+proc ::fossilhub::catalog {{eventLimit 8}} {
+  return [::fossilhub::model::catalogRepositories $eventLimit]
+}
+
+proc ::fossilhub::primaryRepository {} {
+  set repositories [::fossilhub::catalog 5]
+  if {[llength $repositories] == 0} {
+    return [::fossilhub::view::emptyRepository]
+  }
+  return [lindex $repositories 0]
 }
 
 proc ::fossilhub::placeholder {title message} {
@@ -115,19 +137,31 @@ proc wapp-default {} {
       wapp-subst {ok\n}
     }
     home {
-      ::fossilhub::templatePage fossilhub.html
+      ::fossilhub::renderPage [::fossilhub::views::renderHome \
+        [::fossilhub::primaryRepository]]
     }
     explore {
-      ::fossilhub::templatePage explore.html
+      ::fossilhub::renderPage [::fossilhub::views::renderExplore \
+        [::fossilhub::catalog 8]]
     }
     repository {
-      if {[lindex $route 1] ne "dig.fossil"} {
+      set name [lindex $route 1]
+      if {![::fossilhub::model::validRepositoryName $name] ||
+          ![file isfile [::fossilhub::model::repositoryPath $name]]} {
         wapp-reply-code "404 Not Found"
         ::fossilhub::placeholder \
           "Repository not found — FossilHub" \
           "That repository is not in this dig."
+      } elseif {[catch {
+        set repository [::fossilhub::model::repository $name 40]
+      }]} {
+        wapp-reply-code "503 Service Unavailable"
+        ::fossilhub::placeholder \
+          "Repository unavailable — FossilHub" \
+          "Fossil could not read this stratum. Try again shortly."
       } else {
-        ::fossilhub::templatePage repo.html
+        ::fossilhub::renderPage \
+          [::fossilhub::views::renderRepository $repository]
       }
     }
     stylesheet {

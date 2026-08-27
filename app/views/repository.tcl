@@ -1,9 +1,11 @@
+namespace eval ::fossilhub::views {
+variable repositoryTemplate {
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>dig.fossil — FossilHub</title>
+<title>@@REPOSITORY_NAME@@ — FossilHub</title>
 <meta name="description" content="dig.fossil on FossilHub — timeline, wiki, tickets and forum inside one artifact.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -182,7 +184,7 @@
 }
 </style>
 </head>
-<body>
+<body data-repository-slug="@@REPOSITORY_SLUG@@">
 
 <div class="rail" aria-hidden="true">
   <div class="rail-track"></div>
@@ -223,39 +225,40 @@
   <section class="masthead">
     <div class="wrap">
       <div class="crumb-row">
-        <p class="crumb">FOSSILHUB ▸ DIGS ▸ <b>DIG.FOSSIL</b></p>
+        <p class="crumb">FOSSILHUB ▸ DIGS ▸ <b>@@REPOSITORY_UPPER@@</b></p>
         <span class="chip chip-plain"><span class="sdot"></span>PUBLIC · LIVE FOSSIL 2.29</span>
       </div>
       <div class="mast-grid">
         <div class="repo-title">
-          <h1>dig.fossil</h1>
-          <p class="desc">Delta-compressed bundle writer research dig. Companion repository to forum thread 118 — every experiment lands here first.</p>
+          <h1>@@REPOSITORY_NAME@@</h1>
+          <p class="desc">@@DESCRIPTION@@</p>
           <div class="chip-row">
-            <span class="chip chip-verdi"><span class="sdot"></span>autosync on</span>
-            <span class="chip chip-azu"><span class="sdot"></span>3 peers converged</span>
-            <span class="chip chip-plain"><span class="sdot"></span>updated 14m ago</span>
+            <span class="chip chip-verdi"><span class="sdot"></span>live Fossil artifact</span>
+            <span class="chip chip-azu"><span class="sdot"></span>Tcl server-rendered</span>
+            <span class="chip chip-plain"><span class="sdot"></span>updated @@RELATIVE_TIME@@</span>
           </div>
           <div class="clone-row">
             <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
-            <a class="btn btn-ghost btn-sm" href="/fossil/dig/zip/dig-trunk.zip?uuid=trunk" data-fossil-path="/zip/dig-trunk.zip?uuid=trunk">Download trunk ZIP</a>
+            <a class="btn btn-ghost btn-sm" href="/fossil/dig/zip/@@ZIP_NAME@@-trunk.zip?uuid=trunk" data-fossil-path="/zip/@@ZIP_NAME@@-trunk.zip?uuid=trunk">Download trunk ZIP</a>
           </div>
         </div>
         <aside class="label-card reveal" aria-label="Specimen label">
           <span class="lab-tag">SPECIMEN LABEL</span>
-          <div class="lab-row"><span class="lab-k">SITE ID</span><span class="lab-v">8f3a21c4</span></div>
-          <div class="lab-row"><span class="lab-k">OPENED</span><span class="lab-v">2019-03-12</span></div>
-          <div class="lab-row"><span class="lab-k">LAST FIND</span><span class="lab-v">14:32 today</span></div>
-          <div class="lab-row"><span class="lab-k">ARTIFACTS</span><span class="lab-v">1,284</span></div>
-          <div class="lab-row"><span class="lab-k">DEPTH</span><span class="lab-v">3.1 MB Δ-packed</span></div>
-          <div class="lab-row"><span class="lab-k">UPSTREAM</span><span class="lab-v">d.r.hipp/dig</span></div>
-          <div class="lab-row"><span class="lab-k">LICENSE</span><span class="lab-v">BSD-2-Clause</span></div>
+          <div class="lab-row"><span class="lab-k">SITE ID</span><span class="lab-v">@@PROJECT_ID@@</span></div>
+          <div class="lab-row"><span class="lab-k">PROJECT</span><span class="lab-v">@@PROJECT_NAME@@</span></div>
+          <div class="lab-row"><span class="lab-k">OPENED</span><span class="lab-v">@@OPENED_DATE@@</span></div>
+          <div class="lab-row"><span class="lab-k">LAST FIND</span><span class="lab-v">@@LAST_FIND@@</span></div>
+          <div class="lab-row"><span class="lab-k">ARTIFACTS</span><span class="lab-v">@@ARTIFACTS@@</span></div>
+          <div class="lab-row"><span class="lab-k">DEPTH</span><span class="lab-v">@@DEPTH@@</span></div>
+          <div class="lab-row"><span class="lab-k">SOURCE</span><span class="lab-v">Fossil read-only SQL</span></div>
+          <div class="lab-row"><span class="lab-k">RENDERER</span><span class="lab-v">Tcl 9.1 + Wapp</span></div>
         </aside>
       </div>
       <div class="stats mast-stats">
-        <div class="stat"><b>1,284</b><span>artifacts in one file</span></div>
-        <div class="stat"><b>214</b><span>wiki versions</span></div>
-        <div class="stat"><b>118</b><span>tickets resolved</span></div>
-        <div class="stat"><b>7</b><span>contributors</span></div>
+        <div class="stat"><b>@@ARTIFACTS@@</b><span>artifacts in one file</span></div>
+        <div class="stat"><b>@@WIKI_EVENTS@@</b><span>wiki versions</span></div>
+        <div class="stat"><b>@@OPEN_TICKETS@@</b><span>open tickets</span></div>
+        <div class="stat"><b>@@CONTRIBUTORS@@</b><span>contributors</span></div>
       </div>
     </div>
   </section>
@@ -266,9 +269,9 @@
         <a class="tab active" href="/fossil/dig/timeline" data-fossil-path="/timeline">Timeline</a>
         <a class="tab" href="/fossil/dig/tree" data-fossil-path="/tree">Files</a>
         <a class="tab" href="/fossil/dig/doc/trunk/" data-fossil-path="/doc/trunk/">Docs</a>
-        <a class="tab" href="/fossil/dig/wiki" data-fossil-path="/wiki">Wiki <span class="n">214</span></a>
-        <a class="tab" href="/fossil/dig/reportlist" data-fossil-path="/reportlist">Tickets <span class="n">9 open</span></a>
-        <a class="tab" href="/fossil/dig/forum" data-fossil-path="/forum">Forum <span class="n">31</span></a>
+        <a class="tab" href="/fossil/dig/wiki" data-fossil-path="/wiki">Wiki <span class="n">@@WIKI_EVENTS@@</span></a>
+        <a class="tab" href="/fossil/dig/reportlist" data-fossil-path="/reportlist">Tickets <span class="n">@@OPEN_TICKETS@@ open</span></a>
+        <a class="tab" href="/fossil/dig/forum" data-fossil-path="/forum">Forum <span class="n">@@FORUM_EVENTS@@</span></a>
       </div>
     </div>
 
@@ -289,86 +292,8 @@
         </div>
 
         <div class="panel rv-panel">
-          <div class="rv-list">
-            <svg class="rv-svg" viewBox="0 0 56 600" aria-hidden="true">
-              <path d="M28 0V600" stroke="rgba(28,35,44,.45)" stroke-width="1.5" fill="none"/>
-              <path d="M28 66C40 74 46 92 46 112V338C46 360 39 372 30 378" stroke="#205297" stroke-width="1.5" fill="none"/>
-              <path d="M28 470C40 478 46 496 46 512L46 522" stroke="#2F6E5A" stroke-width="1.5" fill="none"/>
-              <circle cx="28" cy="66" r="4.5" fill="#205297"/>
-              <circle cx="46" cy="118" r="4.5" fill="#205297"/>
-              <circle cx="28" cy="170" r="4.5" fill="#A64B22"/>
-              <circle cx="46" cy="222" r="4.5" fill="#205297"/>
-              <circle cx="28" cy="274" r="4.5" fill="#2F6E5A"/>
-              <circle cx="28" cy="326" r="4.5" fill="#F4F5EC" stroke="#1C232C" stroke-width="1.4"/>
-              <circle cx="28" cy="378" r="6.5" fill="#F4F5EC" stroke="#1C232C" stroke-width="1.4"/>
-              <circle cx="28" cy="378" r="2.6" fill="#205297"/>
-              <circle cx="28" cy="470" r="4.5" fill="#205297"/>
-              <circle cx="46" cy="522" r="4" fill="none" stroke="#2F6E5A" stroke-width="1.4" stroke-dasharray="3 2.5"/>
-              <rect x="23.5" y="569.5" width="9" height="9" transform="rotate(45 28 574)" fill="#1C232C"/>
-            </svg>
-            <div class="day-h">TODAY — AUG 24</div>
-            <div class="rv-row">
-              <span class="rv-time">14:32</span>
-              <div><p class="rv-title">Add delta compression to bundle writer</p>
-              <p class="rv-meta">check-in · delta-v2</p></div>
-              <div class="rv-end"><span class="rv-hash">c-a17f3b</span><span class="rv-user">RH</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">13:07</span>
-              <div><p class="rv-title">Retry delta push with exponential backoff</p>
-              <p class="rv-meta">check-in · delta-v2</p></div>
-              <div class="rv-end"><span class="rv-hash">c-9f2e1a</span><span class="rv-user">DH</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">11:58</span>
-              <div><p class="rv-title">Sync stalls on flaky links</p>
-              <p class="rv-meta">ticket #42 · closed · linked c-9f2e1a</p></div>
-              <div class="rv-end"><span class="rv-hash">#42</span><span class="rv-user">RH</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">11:40</span>
-              <div><p class="rv-title">Wire backoff into the sync loop</p>
-              <p class="rv-meta">check-in · delta-v2</p></div>
-              <div class="rv-end"><span class="rv-hash">c-77b02d</span><span class="rv-user">MT</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">09:41</span>
-              <div><p class="rv-title">Embedded docs: rewrite the autosync intro</p>
-              <p class="rv-meta">wiki edit · www/autosync.wiki v214</p></div>
-              <div class="rv-end"><span class="rv-hash">v214</span><span class="rv-user">SL</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">09:12</span>
-              <div><p class="rv-title">Re: autosync vs explicit sync — which default?</p>
-              <p class="rv-meta">forum reply · thread 118</p></div>
-              <div class="rv-end"><span class="rv-hash">#118</span><span class="rv-user">PN</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">08:15</span>
-              <div><p class="rv-title">Merge delta-v2 backoff work into trunk</p>
-              <p class="rv-meta">check-in · merge of delta-v2</p></div>
-              <div class="rv-end"><span class="rv-hash">c-71aa90</span><span class="rv-user">DH</span></div>
-            </div>
-            <div class="day-h">YESTERDAY — AUG 23</div>
-            <div class="rv-row">
-              <span class="rv-time">19:03</span>
-              <div><p class="rv-title">Open branch “shale-experiments”</p>
-              <p class="rv-meta">check-in · branch point</p></div>
-              <div class="rv-end"><span class="rv-hash">c-b4001e</span><span class="rv-user">MT</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">17:44</span>
-              <div><p class="rv-title">Sketch layered-shader prototype</p>
-              <p class="rv-meta">check-in · shale-experiments</p></div>
-              <div class="rv-end"><span class="rv-hash">c-c91d77</span><span class="rv-user">MT</span></div>
-            </div>
-            <div class="rv-row">
-              <span class="rv-time">16:02</span>
-              <div><p class="rv-title">Tag release-2.26 added</p>
-              <p class="rv-meta">tag · points at c-5d88fa</p></div>
-              <div class="rv-end"><span class="rv-hash">v2.26</span><span class="rv-user">DH</span></div>
-            </div>
-          </div>
+          <!--SSR_TIMELINE_START-->
+          <!--SSR_TIMELINE_END-->
           <a class="deeper" href="/fossil/dig/timeline?n=200" data-fossil-path="/timeline?n=200">↓ OLDER — KEEP DIGGING</a>
         </div>
       </div>
@@ -377,40 +302,13 @@
         <div class="panel reveal">
           <div class="panel-head"><span class="fname">Composition</span></div>
           <div class="panel-body">
-            <div class="comp-seg" aria-hidden="true">
-              <span class="cb-code" style="width:62%"></span>
-              <span class="cb-wiki" style="width:18%"></span>
-              <span class="cb-tkt" style="width:12%"></span>
-              <span class="cb-forum" style="width:8%"></span>
-            </div>
-            <div class="comp-rows">
-              <div class="comp-row"><span class="l"><i class="cb-code"></i>source &amp; docs tree</span><span>792 artifacts</span></div>
-              <div class="comp-row"><span class="l"><i class="cb-wiki"></i>wiki pages</span><span>231 edits</span></div>
-              <div class="comp-row"><span class="l"><i class="cb-tkt"></i>ticket changes</span><span>154 events</span></div>
-              <div class="comp-row"><span class="l"><i class="cb-forum"></i>forum posts</span><span>107 posts</span></div>
-            </div>
-            <p class="comp-note">Four kinds of history, one stone — all versioned, all cloned together.</p>
+            <!--SSR_COMPOSITION_START-->
+            <!--SSR_COMPOSITION_END-->
           </div>
         </div>
 
-        <div class="panel reveal">
-          <div class="panel-head"><span class="fname">Branches</span></div>
-          <div class="panel-body">
-            <div class="br-row"><span class="swatch" style="background:rgba(28,35,44,.55)"></span><span class="br-name">trunk</span><span class="br-tip">c-a17f3b</span></div>
-            <div class="br-row"><span class="swatch" style="background:#205297"></span><span class="br-name">delta-v2</span><span class="br-tip">merged today</span></div>
-            <div class="br-row"><span class="swatch" style="background:#2F6E5A"></span><span class="br-name">shale-experiments</span><span class="br-tip">open · no merge</span></div>
-          </div>
-        </div>
-
-        <div class="panel reveal">
-          <div class="panel-head"><span class="fname">Autosync</span></div>
-          <div class="panel-body">
-            <div class="peer-row"><span class="peer-dot pulse" style="background:#2F6E5A"></span><span class="peer-name">fossilhub.org</span><span class="peer-state">primary · 41s ago</span></div>
-            <div class="peer-row"><span class="peer-dot" style="background:transparent;border:1.5px dashed #A64B22"></span><span class="peer-name">laptop-offline</span><span class="peer-state">will reconcile</span></div>
-            <div class="peer-row"><span class="peer-dot pulse" style="background:#2F6E5A"></span><span class="peer-name">workstation-2</span><span class="peer-state">2m ago</span></div>
-            <p class="sync-cap">Every commit is pushed as it happens; peers reconcile automatically when they reappear.</p>
-          </div>
-        </div>
+        <!--SSR_FACTS_START-->
+        <!--SSR_FACTS_END-->
       </aside>
     </div>
   </section>
@@ -483,3 +381,76 @@ themeBtn.addEventListener('click', () => {
 
 </body>
 </html>
+}
+}
+
+proc ::fossilhub::views::repositoryFacts {repository} {
+  return [format {
+        <div class="panel reveal">
+          <div class="panel-head"><span class="fname">Repository facts</span></div>
+          <div class="panel-body">
+            <div class="br-row"><span class="swatch" style="background:#205297"></span><span class="br-name">check-ins</span><span class="br-tip">%s</span></div>
+            <div class="br-row"><span class="swatch" style="background:#2F6E5A"></span><span class="br-name">repository file</span><span class="br-tip">%s</span></div>
+            <div class="br-row"><span class="swatch" style="background:#A64B22"></span><span class="br-name">latest event</span><span class="br-tip">%s</span></div>
+          </div>
+        </div>
+        <div class="panel reveal">
+          <div class="panel-head"><span class="fname">Native Fossil</span></div>
+          <div class="panel-body">
+            <div class="peer-row"><span class="peer-dot" style="background:#205297"></span><a class="peer-name" href="/fossil/dig/timeline" data-fossil-path="/timeline">Timeline</a><span class="peer-state">live</span></div>
+            <div class="peer-row"><span class="peer-dot" style="background:#2F6E5A"></span><a class="peer-name" href="/fossil/dig/tree" data-fossil-path="/tree">Files</a><span class="peer-state">trunk</span></div>
+            <div class="peer-row"><span class="peer-dot" style="background:#A64B22"></span><a class="peer-name" href="/fossil/dig/stat" data-fossil-path="/stat">Repository stats</a><span class="peer-state">Fossil</span></div>
+            <p class="sync-cap">These links open Fossil's native UI for the same repository queried by this Tcl page.</p>
+          </div>
+        </div>} \
+    [::fossilhub::view::formatCount [dict get $repository checkins]] \
+    [::fossilhub::view::escape [::fossilhub::view::formatBytes \
+      [dict get $repository bytes]]] \
+    [::fossilhub::view::escape [::fossilhub::view::relativeTime \
+      [dict get $repository latest_epoch]]]]
+}
+
+proc ::fossilhub::views::renderRepository {repository} {
+  variable repositoryTemplate
+  set latest [dict get $repository latest_epoch]
+  set page [string map [list \
+    @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $repository slug]] \
+    @@REPOSITORY_NAME@@ [::fossilhub::view::escape [dict get $repository name]] \
+    @@REPOSITORY_UPPER@@ [::fossilhub::view::escape \
+      [string toupper [dict get $repository name]]] \
+    @@DESCRIPTION@@ [::fossilhub::view::escape \
+      [::fossilhub::view::repositoryDescription $repository]] \
+    @@ZIP_NAME@@ [::fossilhub::view::escape [dict get $repository slug]] \
+    @@RELATIVE_TIME@@ [::fossilhub::view::escape \
+      [::fossilhub::view::relativeTime $latest]] \
+    @@PROJECT_ID@@ [::fossilhub::view::escape \
+      [::fossilhub::view::projectId $repository]] \
+    @@PROJECT_NAME@@ [::fossilhub::view::escape \
+      [dict get $repository project_name]] \
+    @@OPENED_DATE@@ [::fossilhub::view::escape \
+      [::fossilhub::view::formatDate [dict get $repository opened_epoch]]] \
+    @@LAST_FIND@@ [::fossilhub::view::escape \
+      "[::fossilhub::view::formatDate $latest] [::fossilhub::view::formatTime $latest]"] \
+    @@ARTIFACTS@@ [::fossilhub::view::formatCount \
+      [dict get $repository artifacts]] \
+    @@DEPTH@@ [::fossilhub::view::escape [::fossilhub::view::formatBytes \
+      [dict get $repository bytes]]] \
+    @@WIKI_EVENTS@@ [::fossilhub::view::formatCount \
+      [dict get $repository wiki_events]] \
+    @@OPEN_TICKETS@@ [::fossilhub::view::formatCount \
+      [dict get $repository open_tickets]] \
+    @@CONTRIBUTORS@@ [::fossilhub::view::formatCount \
+      [dict get $repository contributors]] \
+    @@FORUM_EVENTS@@ [::fossilhub::view::formatCount \
+      [dict get $repository forum_events]]] \
+    $repositoryTemplate]
+  set page [::fossilhub::view::replaceRegion $page \
+    <!--SSR_TIMELINE_START--> <!--SSR_TIMELINE_END--> \
+    [::fossilhub::view::repositoryTimeline $repository]]
+  set page [::fossilhub::view::replaceRegion $page \
+    <!--SSR_COMPOSITION_START--> <!--SSR_COMPOSITION_END--> \
+    [::fossilhub::view::composition $repository]]
+  return [::fossilhub::view::replaceRegion $page \
+    <!--SSR_FACTS_START--> <!--SSR_FACTS_END--> \
+    [::fossilhub::views::repositoryFacts $repository]]
+}
