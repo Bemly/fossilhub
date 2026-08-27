@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        FOSSILHUB_REVISION: ${FOSSILHUB_REVISION:-unknown}
     image: fossilhub:0.2.0-beta.1
     container_name: fossilhub
     restart: unless-stopped

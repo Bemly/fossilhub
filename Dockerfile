@@ -53,9 +53,12 @@ RUN make althttpd \
 
 FROM ubuntu:24.04
 
+ARG FOSSILHUB_REVISION=unknown
+
 LABEL org.opencontainers.image.title="FossilHub" \
       org.opencontainers.image.description="Tcl 9.1/Wapp hub with native Fossil repositories served by althttpd" \
-      org.opencontainers.image.version="0.2.0-beta.1"
+      org.opencontainers.image.version="0.2.0-beta.1" \
+      org.opencontainers.image.revision="${FOSSILHUB_REVISION}"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
