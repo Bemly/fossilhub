@@ -128,11 +128,18 @@ browser
   -> persistent `/data/repositories/dig.fossil`
 ```
 
-- `app/fossilhub.tcl` owns Wapp routing and trusted UTF-8 template delivery.
-- `app/templates/` contains the three reference-derived pages.
+- `app/fossilhub.tcl` owns Wapp routing and Tcl SSR response delivery.
+- `app/lib/fossil-model.tcl` discovers trusted repository names and queries
+  Fossil through its `sql --readonly` interface. Query values are hex-encoded
+  before crossing the process boundary and decoded in Tcl.
+- `app/lib/view.tcl` owns HTML escaping, formatting, and reusable repository,
+  catalogue, composition, and timeline renderers.
+- `app/views/` contains Tcl view modules for the reference-derived home,
+  Explore, and repository pages. Runtime `.html` templates do not exist.
 - `app/public/fh.css` is the shared design system.
 - `app/public/fossilhub-live.js` derives the runtime mount prefix and rewrites
-  clone and native Fossil links.
+  clone and native Fossil links. It reads the active repository slug from the
+  server-rendered `body` data attribute.
 - `app/cgi/fossil` is Fossil's CGI directory-mode launcher.
 - `app/bin/fossilhub-entrypoint` idempotently creates the first real repository,
   seed check-in, Wiki page, Ticket, and administrator record. If
@@ -174,8 +181,15 @@ redirect or 404. The server cannot infer the external prefix.
   clipping or overflow. Existing intentional corrections are:
   - Explore language filters wrap below 640 px.
   - The long header clone command is hidden below 1100 px.
-- Keep templates valid UTF-8. Serve CSS as `text/css; charset=utf-8` and the
-  integration script as `text/javascript; charset=utf-8`.
+- Keep Tcl view modules valid UTF-8. Escape all Fossil-controlled values at the
+  final HTML boundary; only renderer-owned fragments may bypass escaping. Serve
+  CSS as `text/css; charset=utf-8` and the integration script as
+  `text/javascript; charset=utf-8`.
+- Repository reads must use Fossil's `sql --readonly` command. Do not open live
+  repository files with raw SQLite for application queries, and never mutate
+  Fossil-owned tables.
+- Runtime pages must be complete server-rendered HTML. Do not require JavaScript
+  to fetch repository identity, counts, cards, or timeline events.
 - Only serve files through trusted, fixed paths. Never concatenate an
   unvalidated request path into a filesystem path.
 - Keep mount-prefix knowledge in browser code. Do not hardcode the external
@@ -202,8 +216,9 @@ Before a production switch:
 1. Work from a committed revision; create the NAS build input with
    `git archive`, never from a dirty worktree.
 2. Run `git diff --check` and `node --check app/public/fossilhub-live.js`.
-3. Run `tests/routes.test.tcl` under the image's Tcl 9.1b0. macOS system Tcl may
-   be 8.5 and is not authoritative.
+3. Run `tests/routes.test.tcl`, `tests/model.test.tcl`, and
+   `tests/views.test.tcl` under the image's Tcl 9.1b0. macOS system Tcl may be
+   8.5 and is not authoritative.
 4. Build on the x86_64 NAS and confirm Tcl 9.1b0, Fossil 2.29, Wapp lint, and the
    OCI Git revision label.
 5. Start a uniquely named `fossilhub-beta-*` smoke container on a confirmed-free

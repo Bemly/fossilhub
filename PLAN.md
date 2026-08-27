@@ -17,7 +17,7 @@ browser
   -> althttpd :8080
   -> executable Wapp CGI for the reference hub UI
   -> Fossil CGI directory mode for live repositories
-  -> Tcl routing, trusted UTF-8 templates, and persistent Fossil artifacts
+  -> Tcl SSR routes, read-only Fossil queries, and persistent Fossil artifacts
 ```
 
 Althttpd serves fingerprintable static assets directly and treats the executable
@@ -98,17 +98,17 @@ containers. See `docs/validation-0.2.0-beta.1.md` for the evidence record.
 Requested 2026-08-27. This phase preserves the accepted reference design while
 replacing prototype repository facts with live Fossil data.
 
-- [ ] Add a Tcl repository model that discovers only trusted `.fossil` files
+- [x] Add a Tcl repository model that discovers only trusted `.fossil` files
   below `/data/repositories` and queries them with `fossil sql --readonly`.
-- [ ] Decode delimiter-safe query results and escape every repository value at
+- [x] Decode delimiter-safe query results and escape every repository value at
   the HTML boundary.
-- [ ] Render the home, Explore, and repository pages from Tcl view modules;
+- [x] Render the home, Explore, and repository pages from Tcl view modules;
   remove runtime dependence on static HTML templates.
-- [ ] Populate repository identity, counts, storage depth, contributors, open
+- [x] Populate repository identity, counts, storage depth, contributors, open
   tickets, and the unified event timeline from the live Fossil artifact.
-- [ ] Keep JavaScript limited to theme, reveal/rail effects, card motion, and
+- [x] Keep JavaScript limited to theme, reveal/rail effects, card motion, and
   public mount-prefix adaptation. Initial content must be complete without it.
-- [ ] Add model and render tests, including hostile repository text, empty data,
+- [x] Add model and render tests, including hostile repository text, empty data,
   missing repositories, and public subdirectory routes.
 - [ ] Build and smoke-test a committed x86_64 image against isolated data before
   proposing any production replacement.
