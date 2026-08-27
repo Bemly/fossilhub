@@ -15,8 +15,9 @@ browser
   -> host port (new, conflict-checked)
   -> fossilhub Ubuntu container
   -> althttpd :8080
-  -> executable Wapp CGI
-  -> Tcl routing and trusted UTF-8 templates
+  -> executable Wapp CGI for the reference hub UI
+  -> Fossil CGI directory mode for live repositories
+  -> Tcl routing, trusted UTF-8 templates, and persistent Fossil artifacts
 ```
 
 Althttpd serves fingerprintable static assets directly and treats the executable
@@ -69,19 +70,24 @@ horizontal overflow without changing the desktop composition.
 Requested 2026-08-27. Release 0.1.2 remains the rollback baseline until every
 item below is complete.
 
-- [ ] Pin the latest official development snapshots of Wapp, Althttpd, and
+- [x] Pin the latest official development snapshots of Wapp, Althttpd, and
   Fossil by immutable Fossil check-in, plus the Tcl 9.1b0 source release.
-- [ ] Build Tcl 9.1b0, Wapp, Althttpd, and Fossil from source in a reproducible
+- [x] Build Tcl 9.1b0, Wapp, Althttpd, and Fossil from source in a reproducible
   multi-stage Ubuntu 24.04 image.
-- [ ] Add a persistent `/data/repositories` directory and idempotently bootstrap
+- [x] Add a persistent `/data/repositories` directory and idempotently bootstrap
   a real `dig.fossil` repository without exposing its setup password in logs.
-- [ ] Serve the repository through Althttpd and Fossil's documented CGI
+- [x] Serve the repository through Althttpd and Fossil's documented CGI
   `directory:` mode under `/fossil/dig/`.
-- [ ] Preserve the reference UI composition while wiring repository navigation
+- [x] Preserve the reference UI composition while wiring repository navigation
   to live Timeline, Files, Docs, Wiki, Tickets, Forum, clone, and sync surfaces.
-- [ ] Keep public access read-only by default; retain Fossil's own authenticated
+- [x] Keep public access read-only by default; retain Fossil's own authenticated
   permission model for repository writes and administration.
-- [ ] Verify a real HTTP clone, a pull/sync round trip, repository persistence
+- [x] Verify a real HTTP clone, a pull/sync round trip, repository persistence
   across restart, CGI writes under UID/GID 10001, and all prior visual checks.
 - [ ] Deploy only after smoke tests pass, retaining the current 0.1.2 container
   as the immediate rollback target and documenting credential recovery.
+
+The 0.2.0-beta.1 candidate at revision `188b918` passed all pre-deployment
+checks on NAS port 6082. Production port 6080 remains on 0.1.2 until the
+production container replacement is explicitly approved. See
+`docs/validation-0.2.0-beta.1.md` for the evidence record.
