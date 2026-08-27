@@ -74,6 +74,10 @@ COPY --from=althttpd-builder /build/althttpd/althttpd /usr/local/bin/althttpd
 COPY --from=tcl-builder /opt/tcl /opt/tcl
 COPY --from=fossil-builder /build/fossil/fossil /usr/local/bin/fossil
 COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
+COPY app/bin/fossilhub-entrypoint /usr/local/bin/fossilhub-entrypoint
+COPY app/cgi/fossil /srv/www/default.website/fossil
+COPY app/seed/ /opt/fossilhub/seed/
+COPY app/seed-wiki.md /opt/fossilhub/seed-wiki.md
 COPY app/fossilhub.tcl /srv/www/default.website/index
 COPY app/templates/ /srv/www/default.website/templates/
 COPY app/public/ /srv/www/default.website/public/
@@ -83,8 +87,14 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
     && chmod 0555 \
       /usr/local/bin/althttpd \
       /usr/local/bin/fossil \
+      /usr/local/bin/fossilhub-entrypoint \
+      /srv/www/default.website/fossil \
       /srv/www/default.website/index \
     && chmod 0444 /opt/fossilhub/wapp.tcl \
+      /opt/fossilhub/seed-wiki.md \
+      /opt/fossilhub/seed/README.md \
+      /opt/fossilhub/seed/docs/ARCHITECTURE.md \
+      /opt/fossilhub/seed/src/hello.tcl \
       /srv/www/default.website/fh.css \
       /srv/www/default.website/public/fh.css \
       /srv/www/default.website/templates/*.html \
@@ -99,6 +109,8 @@ WORKDIR /srv/www
 
 EXPOSE 8080
 VOLUME ["/data"]
+
+ENTRYPOINT ["/usr/local/bin/fossilhub-entrypoint"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl --fail --silent --show-error http://127.0.0.1:8080/healthz || exit 1

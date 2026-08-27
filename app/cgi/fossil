@@ -1,0 +1,5 @@
+#!/usr/local/bin/fossil
+directory: /data/repositories
+repolist
+errorlog: /data/fossil-cgi-error.log
+HOME: /data
