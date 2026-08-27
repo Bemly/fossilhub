@@ -105,6 +105,14 @@ Before running this sequence, confirm that the rollback container still exists
 and that no container already has the proposed `fossilhub-failed-0ac4dff` name.
 Reversing a rollback follows the same stop-and-rename pattern.
 
+## Post-deployment cleanup
+
+On 2026-08-27, the six stopped `fossilhub-beta-*` smoke, persistence, and
+responsive-hotfix containers were removed after production verification. The
+production container and all four `fossilhub-rollback-*` containers were
+preserved. No image, production data, rollback data, NAS build directory, or
+temporary smoke-test data directory was removed as part of that cleanup.
+
 ## Upgrade procedure
 
 1. Commit the complete release in this repository and record the revision.
