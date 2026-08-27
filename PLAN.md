@@ -144,7 +144,7 @@ candidate passes every smoke and browser gate.
 - [x] Stop creating the demonstration repository on a clean data directory.
   Preserve any existing `dig.fossil` and bootstrap record as legacy data, but
   do not include them in the public catalogue.
-- [ ] Build and smoke-test the committed x86_64 CalVer image on port 6082 with
+- [x] Build and smoke-test the committed x86_64 CalVer image on port 6082 with
   ten isolated blank repositories, including search, each styled repository
   surface, clone/sync, persistence, permissions, responsive layouts, and the
   public subdirectory prefix.
