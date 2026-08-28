@@ -393,6 +393,7 @@ body,.topbar,.panel,.term,.cmd-chip,.searchbar,.pill,.feat-card,.tabbar,.rail,.s
 .account-nav button:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .account-main{padding-block:clamp(52px,8vw,96px)}
 .account-grid{display:grid;grid-template-columns:minmax(0,.88fr) minmax(360px,1.12fr);gap:clamp(36px,7vw,96px);align-items:start}
+.account-grid>*{min-width:0}
 .account-intro{position:sticky;top:112px}
 .account-intro h1{
   margin-top:18px;font-family:var(--font-display);font-size:clamp(3.2rem,6vw,5.8rem);
@@ -407,7 +408,7 @@ body,.topbar,.panel,.term,.cmd-chip,.searchbar,.pill,.feat-card,.tabbar,.rail,.s
 .identity-strata span:nth-child(1){border-left:8px solid var(--azurite)}
 .identity-strata span:nth-child(2){border-left:14px solid var(--verdi)}
 .identity-strata span:nth-child(3){border-left:20px solid var(--iron);border-bottom:0}
-.account-panel{border:1px solid var(--line);background:var(--card);padding:clamp(24px,4vw,46px);box-shadow:8px 10px 0 color-mix(in srgb,var(--ink) 9%,transparent)}
+.account-panel{min-width:0;border:1px solid var(--line);background:var(--card);padding:clamp(24px,4vw,46px);box-shadow:8px 10px 0 color-mix(in srgb,var(--ink) 9%,transparent)}
 .account-panel h2{
   margin-bottom:18px;font-family:var(--font-display);font-size:2rem;
   text-transform:uppercase;line-height:1
@@ -501,6 +502,22 @@ body,.topbar,.panel,.term,.cmd-chip,.searchbar,.pill,.feat-card,.tabbar,.rail,.s
 .health-grid article:nth-child(2n){border-right:0}.health-grid article:nth-last-child(-n+2){border-bottom:0}
 .health-grid article>span:first-child{font-size:11px;color:var(--ink-2)}
 .health-grid article>b{font-family:var(--font-mono);font-size:10px;overflow-wrap:anywhere}
+.maintenance-banner{display:flex;justify-content:center;gap:10px;position:relative;z-index:25;padding:9px 18px;border-bottom:1px solid color-mix(in srgb,var(--iron) 50%,var(--line));background:color-mix(in srgb,var(--iron) 12%,var(--paper));font-size:12px;line-height:1.4;text-align:center}
+.maintenance-banner b{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--iron)}
+.public-page-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;margin:-12px -14px 30px;padding:0 14px;border-bottom:1px solid var(--line)}
+.public-page-nav a{padding:11px 7px;font-size:10px;color:var(--ink-2);text-align:center}
+.public-page-nav a[aria-current=page]{border-bottom:3px solid var(--azurite);color:var(--ink);font-weight:600}
+.public-document{display:grid;gap:30px}
+.public-document section+section{padding-top:28px;border-top:1px solid var(--line)}
+.public-document h1,.public-document h2,.public-document h3{margin:0 0 12px;font-family:var(--font-display);text-transform:uppercase;line-height:1}
+.public-document h1{font-size:2.5rem}.public-document h2{font-size:1.75rem}.public-document h3{font-size:1.3rem}
+.public-document p,.public-document li{font-size:14px;line-height:1.75;color:var(--ink-2)}
+.public-document ul{display:grid;gap:7px;padding-left:20px}
+.public-document code{font-family:var(--font-mono);font-size:.86em;color:var(--azurite-deep);overflow-wrap:anywhere}
+.public-status-summary{margin-bottom:24px;padding:18px;border:1px solid var(--line);border-left:8px solid var(--azurite);background:var(--paper)}
+.public-status-summary>span{display:block;margin-bottom:8px;font-family:var(--font-mono);font-size:9px;text-transform:uppercase;color:var(--ink-2)}
+.public-status-summary p{margin-top:12px;font-size:13px;color:var(--ink-2)}
+.public-safety-note{margin-top:18px;font-family:var(--font-mono);font-size:9px;line-height:1.6;color:var(--ink-2)}
 @media (max-width:820px){
   .account-grid{grid-template-columns:1fr}
   .account-intro{position:static}
@@ -526,6 +543,8 @@ body,.topbar,.panel,.term,.cmd-chip,.searchbar,.pill,.feat-card,.tabbar,.rail,.s
   .admin-definition>div,.health-grid article{border-right:0!important;border-bottom:1px solid var(--line)!important}
   .admin-definition>div:last-child,.health-grid article:last-child{border-bottom:0!important}
   .admin-record,.admin-heading,.admin-repository-list li{align-items:flex-start;flex-direction:column}
+  .maintenance-banner{align-items:center;flex-direction:column;gap:3px}
+  .public-page-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
 /* Repository custody and permission strata */

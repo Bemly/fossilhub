@@ -24,6 +24,7 @@ foreach sourceFile {
   views/repository.tcl
   views/account.tcl
   views/admin.tcl
+  views/public.tcl
   views/repository-management.tcl
   views/mutations.tcl
   lib/account-controller.tcl
@@ -181,6 +182,10 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)admin/?$} $clean]} {
     return admin-overview
   }
+  if {[regexp {(^|/)(manual|hosting|upstream|releases|rules|status|privacy|security|contact)/?$} \
+      $clean -> _ page]} {
+    return [list public-information $page]
+  }
   if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
   }
@@ -306,7 +311,102 @@ proc ::fossilhub::renderPage {content} {
   ::fossilhub::htmlPolicy
   wapp-mimetype "text/html; charset=utf-8"
   wapp-cache-control no-cache
-  wapp-unsafe $content
+  wapp-unsafe [::fossilhub::decoratePage $content]
+}
+
+proc ::fossilhub::maintenanceBanner {} {
+  if {![file isfile [::fossilhub::platform::databasePath]]} {
+    return ""
+  }
+  return [::fossilhub::platform::setting maintenance_banner ""]
+}
+
+proc ::fossilhub::decoratePage {content} {
+  set banner [::fossilhub::maintenanceBanner]
+  if {$banner eq ""} {
+    return $content
+  }
+  set body [string first {<body} $content]
+  if {$body < 0} {
+    return $content
+  }
+  set finish [string first > $content $body]
+  if {$finish < 0} {
+    return $content
+  }
+  set notice [format {<div class="maintenance-banner" role="status"><b>Maintenance notice</b><span>%s</span></div>} \
+    [::fossilhub::view::escape $banner]]
+  return [string replace $content $finish $finish ">$notice"]
+}
+
+proc ::fossilhub::version {} {
+  if {[info exists ::env(FOSSILHUB_VERSION)] &&
+      [regexp {^[A-Za-z0-9._-]{1,80}$} $::env(FOSSILHUB_VERSION)]} {
+    return $::env(FOSSILHUB_VERSION)
+  }
+  variable root
+  set candidate [file normalize [file join $root .. VERSION]]
+  if {[file isfile $candidate]} {
+    set channel [open $candidate r]
+    try {
+      set value [string trim [read $channel 100]]
+    } finally {
+      close $channel
+    }
+    if {[regexp {^[A-Za-z0-9._-]{1,80}$} $value]} {
+      return $value
+    }
+  }
+  return development
+}
+
+proc ::fossilhub::releaseNotes {} {
+  variable root
+  foreach candidate [list \
+      [file normalize [file join $root .. docs releases.md]] \
+      /opt/fossilhub/releases.md] {
+    if {[file isfile $candidate]} {
+      set channel [open $candidate r]
+      fconfigure $channel -encoding utf-8 -translation lf
+      try {
+        return [read $channel]
+      } finally {
+        close $channel
+      }
+    }
+  }
+  return {# Release notes unavailable
+
+The maintained release document is not present in this runtime image.}
+}
+
+proc ::fossilhub::handlePublicInformation {context slug} {
+  if {[string toupper [wapp-param REQUEST_METHOD GET]] ne "GET"} {
+    wapp-reply-code "405 Method Not Allowed"
+    ::fossilhub::placeholder {Method not allowed — FossilHub} \
+      {Information pages are read-only.}
+    return
+  }
+  set context [::fossilhub::account::withLogoutChallenge $context]
+  if {$slug eq "releases"} {
+    set page [::fossilhub::views::renderReleases $context \
+      [::fossilhub::releaseNotes] [::fossilhub::version]]
+  } elseif {$slug eq "status"} {
+    set page [::fossilhub::views::renderPublicStatus $context \
+      [::fossilhub::admin::health] [::fossilhub::version] \
+      [::fossilhub::maintenanceBanner]]
+  } else {
+    set definition [::fossilhub::views::publicDefinition $slug]
+    if {$definition eq ""} {
+      wapp-reply-code "404 Not Found"
+      ::fossilhub::placeholder {Not found — FossilHub} \
+        {That information layer is unavailable.}
+      return
+    }
+    set page [::fossilhub::views::renderPublicInformation \
+      $context $slug $definition]
+  }
+  ::fossilhub::renderPage $page
 }
 
 proc ::fossilhub::catalogOptions {} {
@@ -696,6 +796,9 @@ proc wapp-default {} {
     }
     admin-reauth {
       ::fossilhub::adminController::handleReauth $accountContext
+    }
+    public-information {
+      ::fossilhub::handlePublicInformation $accountContext [lindex $route 1]
     }
     repository-workspace {
       ::fossilhub::repositoryController::handleWorkspace $accountContext

@@ -42,6 +42,12 @@ catalogue and timeline on the server.
 | `/repo/<name>.fossil/wiki` | — | Styled Wiki history |
 | `/repo/<name>.fossil/tickets` | — | Styled ticket index |
 | `/repo/<name>.fossil/forum` | — | Styled forum activity |
+| `/register`, `/login`, `/logout` | — | Central identity and sessions |
+| `/dashboard`, `/users/<username>`, `/settings` | — | User workspace and public profile |
+| `/repositories/new`, `/account/repositories/*` | — | Repository creation and custody |
+| `/admin/*` | — | Administrator workspace and policy |
+| `/manual`, `/hosting`, `/upstream`, `/releases` | — | Public product information |
+| `/rules`, `/status`, `/privacy`, `/security`, `/contact` | — | Public policy, health, and contact |
 | `/healthz` | — | Container health check |
 
 ## Milestones
@@ -163,3 +169,10 @@ The dependency-ordered, auditable checklist and acceptance gates are maintained
 in [docs/platform-roadmap.md](docs/platform-roadmap.md). Production port 6080
 must remain on its current release until the new platform candidate passes that
 roadmap and receives separate switch authorization.
+
+Implementation phases A through H are complete: platform data, identity,
+repository lifecycle, browser writes, complete first-party reads, user and
+administrator workspaces, and public information/navigation are present in the
+source candidate. Phase I validation, the committed NAS image, isolated smoke
+container, restart/migration matrix, and separately authorized production
+switch remain.

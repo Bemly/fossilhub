@@ -232,15 +232,15 @@ high-risk actions remain explicit, recoverable, and attributable.
 
 ### Phase H — public information and navigation
 
-- [ ] Replace every placeholder footer link with a real first-party route:
+- [x] Replace every placeholder footer link with a real first-party route:
   field manual, hosting, upstream projects, releases, rules, status, privacy,
   security, and contact.
-- [ ] Generate the status page from safe application health summaries without
+- [x] Generate the status page from safe application health summaries without
   exposing paths, credentials, private repository names, or logs.
-- [ ] Add release notes sourced from a maintained application document.
-- [ ] Ensure authenticated navigation exposes Dashboard, New repository,
+- [x] Add release notes sourced from a maintained application document.
+- [x] Ensure authenticated navigation exposes Dashboard, New repository,
   Profile, Settings, and Sign out; administrators additionally see Admin.
-- [ ] Verify every link directly and below the simulated public subdirectory.
+- [x] Verify every link directly and below the simulated public subdirectory.
 
 Acceptance: there are no `href="#"` or self-anchor placeholders presented as
 working product navigation.

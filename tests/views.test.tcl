@@ -9,6 +9,7 @@ source [file join $projectRoot app views repository-sections.tcl]
 source [file join $projectRoot app views repository.tcl]
 source [file join $projectRoot app views account.tcl]
 source [file join $projectRoot app views admin.tcl]
+source [file join $projectRoot app views public.tcl]
 source [file join $projectRoot app views repository-management.tcl]
 source [file join $projectRoot app views mutations.tcl]
 
@@ -420,5 +421,31 @@ set reauthPage [::fossilhub::views::renderAdminReauth $adminContext \
   [string repeat 3 64] users/user-1]
 assertContains $reauthPage {autocomplete="current-password"} \
   "administrator reauthentication password field"
+
+set manualPage [::fossilhub::views::renderPublicInformation $anonymousContext \
+  manual [::fossilhub::views::publicDefinition manual]]
+assertContains $manualPage {data-hub-path="/status"} \
+  "public information navigation"
+assertContains $manualPage {Read the strata} "field manual heading"
+
+set releasesPage [::fossilhub::views::renderReleases $anonymousContext \
+  {# Release <unsafe>
+
+- Fixed **safe** rendering.} 2026.08.27-test]
+assertContains $releasesPage {Release &lt;unsafe&gt;} \
+  "release notes markup escaped"
+assertNotContains $releasesPage {Release <unsafe>} \
+  "release notes raw markup hidden"
+
+set publicStatusPage [::fossilhub::views::renderPublicStatus $anonymousContext \
+  [dict create platform_database ok catalogue_database ok repository_count 10 \
+    readable_repositories 10 file_modes_ok 1 storage_status ok \
+    catalogue_indexed_epoch 1787788800] 2026.08.27-test {Notice <unsafe>}]
+assertContains $publicStatusPage {Notice &lt;unsafe&gt;} \
+  "public status maintenance notice escaped"
+assertNotContains $publicStatusPage {/data/} \
+  "public status omits filesystem paths"
+assertNotContains $publicStatusPage {repository_slug} \
+  "public status omits repository identities"
 
 puts "view tests passed"

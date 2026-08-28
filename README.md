@@ -86,6 +86,14 @@ minutes plus a route-scoped one-time CSRF challenge. Registration, repository
 defaults, per-user counts, per-repository quotas, and the maintenance banner are
 enforced from the application-owned settings table.
 
+The public-information slice replaces the prototype footer placeholders with
+first-party `/manual`, `/hosting`, `/upstream`, `/releases`, `/rules`, `/status`,
+`/privacy`, `/security`, and `/contact` routes. Release notes come from the
+maintained source document, the public status board exposes only aggregated
+health, and an escaped maintenance notice can be published from administrator
+settings. Versioned CSS and JavaScript URLs keep direct and externally mounted
+pages from reusing stale assets after an update.
+
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.

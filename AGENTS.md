@@ -222,6 +222,10 @@ browser
   catalogue, composition, and timeline renderers.
 - `app/views/` contains Tcl view modules for the reference-derived home,
   Explore, and repository pages. Runtime `.html` templates do not exist.
+- `app/views/public.tcl` owns the first-party manual, hosting, upstream,
+  releases, rules, status, privacy, security, and contact pages. Its public
+  health renderer may expose only aggregate status and the release version;
+  never pass through paths, logs, private repository names, or revisions.
 - `app/public/fh.css` is the shared design system.
 - `app/views/repository-sections.tcl` renders the first-party Timeline, Files,
   Docs, Wiki, Tickets, and Forum surfaces. Browser navigation must not link to
@@ -327,8 +331,9 @@ Before a production switch:
    `tests/history-model.test.tcl`, `tests/repository-service.test.tcl`,
    `tests/mutation-service.test.tcl`, `tests/fossil-transport.test.tcl`,
    `tests/workspace.test.tcl`, `tests/admin.test.tcl`, and
-   `tests/views.test.tcl` under the
-   image's Tcl 9.1b0. The authentication suite
+   `tests/views.test.tcl` under the image's Tcl 9.1b0. Run
+   `node tests/live-script.test.js` for direct and mounted-prefix URL rewriting.
+   The authentication suite
    must also exercise the packaged Argon2 binary. macOS system Tcl may be 8.5
    and is not authoritative.
 4. Build on the x86_64 NAS and confirm Tcl 9.1b0, Fossil 2.29, Wapp lint, and the

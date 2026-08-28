@@ -8,6 +8,13 @@ proc assertEqual {actual expected label} {
   }
 }
 
+proc assertContains {document needle label} {
+  if {[string first $needle $document] < 0} {
+    puts stderr "$label: missing '$needle'"
+    exit 1
+  }
+}
+
 assertEqual [::fossilhub::routeForPath /] home "root route"
 assertEqual [::fossilhub::routeForPath /explore] explore "explore route"
 assertEqual [::fossilhub::routeForPath /explore.html] explore "legacy explore route"
@@ -133,6 +140,13 @@ assertEqual [::fossilhub::routeForPath /admin/settings] admin-settings \
   "administrator settings route"
 assertEqual [::fossilhub::routeForPath /admin/reauth] admin-reauth \
   "administrator reauthentication route"
+foreach page {manual hosting upstream releases rules status privacy security contact} {
+  assertEqual [::fossilhub::routeForPath "/$page"] \
+    [list public-information $page] "public $page route"
+  assertEqual [::fossilhub::routeForPath \
+    "/bemly-moe/app/fossilhub/$page"] [list public-information $page] \
+    "mounted public $page route"
+}
 assertEqual [::fossilhub::routeForPath \
   /bemly-moe/app/fossilhub/admin/repositories/bedrock] \
   {admin-repository bedrock} "mounted administrator repository route"
@@ -180,6 +194,16 @@ assertEqual [::fossilhub::routeForPath /repo/fossilhub-live.js] \
   live-script "nested live integration script route"
 assertEqual [::fossilhub::routeForPath /repo/catalog-search.js] \
   catalog-script "nested catalog script route"
+
+rename ::fossilhub::maintenanceBanner ::fossilhub::realMaintenanceBanner
+proc ::fossilhub::maintenanceBanner {} { return {Window <unsafe>} }
+set decorated [::fossilhub::decoratePage \
+  {<!doctype html><html><body><main>safe</main></body></html>}]
+assertContains $decorated {Window &lt;unsafe&gt;} \
+  "maintenance banner escaped"
+assertContains $decorated {role="status"} "maintenance banner landmark"
+rename ::fossilhub::maintenanceBanner {}
+rename ::fossilhub::realMaintenanceBanner ::fossilhub::maintenanceBanner
 assertEqual [::fossilhub::routeForPath /missing] not-found "not-found route"
 assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/explore] \
   explore "mounted explore route"

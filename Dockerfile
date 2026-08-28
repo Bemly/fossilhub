@@ -56,6 +56,9 @@ FROM ubuntu:24.04
 ARG FOSSILHUB_REVISION=unknown
 ARG FOSSILHUB_VERSION=2026.08.27-beta.3
 
+ENV FOSSILHUB_REVISION="${FOSSILHUB_REVISION}" \
+    FOSSILHUB_VERSION="${FOSSILHUB_VERSION}"
+
 LABEL org.opencontainers.image.title="FossilHub" \
       org.opencontainers.image.description="Tcl 9.1/Wapp hub with native Fossil repositories served by althttpd" \
       org.opencontainers.image.version="${FOSSILHUB_VERSION}" \
@@ -80,6 +83,7 @@ COPY --from=althttpd-builder /build/althttpd/althttpd /usr/local/bin/althttpd
 COPY --from=tcl-builder /opt/tcl /opt/tcl
 COPY --from=fossil-builder /build/fossil/fossil /usr/local/bin/fossil
 COPY vendor/wapp/wapp.tcl /opt/fossilhub/wapp.tcl
+COPY docs/releases.md /opt/fossilhub/releases.md
 COPY app/bin/fossilhub-entrypoint /usr/local/bin/fossilhub-entrypoint
 COPY app/bin/fossilhub-index /usr/local/bin/fossilhub-index
 COPY app/bin/fossilhub-init /usr/local/bin/fossilhub-init
@@ -104,6 +108,7 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
       /srv/www/default.website/fossil \
       /srv/www/default.website/index \
     && chmod 0444 /opt/fossilhub/wapp.tcl \
+      /opt/fossilhub/releases.md \
       /srv/www/default.website/fh.css \
       /srv/www/default.website/public/fh.css \
       /srv/www/default.website/lib/*.tcl \

@@ -35,7 +35,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="fh.css">
+<link rel="stylesheet" href="fh.css?v=20260828-3">
 </head>
 <body class="account-body">
 <div class="rail account-rail" aria-hidden="true"><div class="rail-track"></div><span class="rail-label" style="top:16%%">ID</span><span class="rail-label" style="top:49%%">ACL</span><span class="rail-label" style="top:82%%">LOG</span></div>
@@ -62,7 +62,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
     <section class="account-panel">%s</section>
   </div>
 </main>
-<script src="fossilhub-live.js"></script>
+<script src="fossilhub-live.js?v=20260828-3"></script>
 <script>const b=document.getElementById('themeBtn');if(b)b.addEventListener('click',()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('fh-theme',n)});</script>
 </body>
 </html>} \

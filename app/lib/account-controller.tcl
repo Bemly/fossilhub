@@ -4,7 +4,7 @@ proc ::fossilhub::account::renderPage {content} {
   ::fossilhub::htmlPolicy
   wapp-mimetype "text/html; charset=utf-8"
   wapp-reply-extra Cache-Control {no-store, private}
-  wapp-unsafe $content
+  wapp-unsafe [::fossilhub::decoratePage $content]
 }
 
 proc ::fossilhub::account::cookieValue {name} {

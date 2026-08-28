@@ -1,33 +1,11 @@
 (() => {
   const pathname = window.location.pathname.replace(/\/+$/, "");
-  const pageSuffixes = [
-    "/account/session/revoke",
-    "/account/security",
-    "/register",
-    "/logout",
-    "/login",
-    "/repo.html",
-    "/explore.html",
-    "/explore",
-    "/index.html",
-  ];
-
   let hubBase = pathname;
-  const repositoryWorkspacePage = pathname.match(
-    /\/account\/repositories(?:\/[^/]+(?:\/(?:settings|member|member-remove|transfer|archive|restore))?|\/new)?$/,
+  const applicationRoute = pathname.match(
+    /\/(?:account(?:\/.*)?|admin(?:\/.*)?|users\/[^/]+|settings(?:\/.*)?|repositories\/new|repo\/[^/]+(?:\/.*)?|dashboard|register|logout|login|repo\.html|explore(?:\.html)?|index\.html|manual|hosting|upstream|releases|rules|status|privacy|security|contact)$/,
   );
-  if (repositoryWorkspacePage) {
-    hubBase = pathname.slice(0, -repositoryWorkspacePage[0].length);
-  }
-  const repositoryPage = pathname.match(/\/repo\/[^/]+(?:\/.*)?$/);
-  if (repositoryPage) {
-    hubBase = pathname.slice(0, -repositoryPage[0].length);
-  }
-  for (const suffix of pageSuffixes) {
-    if (pathname.endsWith(suffix)) {
-      hubBase = pathname.slice(0, -suffix.length);
-      break;
-    }
+  if (applicationRoute) {
+    hubBase = pathname.slice(0, -applicationRoute[0].length);
   }
 
   const repositorySlug = document.body.dataset.repositorySlug || "dig";

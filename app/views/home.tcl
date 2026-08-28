@@ -11,7 +11,7 @@ variable homeTemplate {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>document.documentElement.dataset.theme=localStorage.getItem("fh-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script>
-<link rel="stylesheet" href="fh.css">
+<link rel="stylesheet" href="fh.css?v=20260828-3">
 </head>
 <body data-repository-slug="@@REPOSITORY_SLUG@@">
 
@@ -276,37 +276,37 @@ $ <span data-clone-command>fossil clone /fossil/dig</span>
       <div>
         <h4>Start a dig</h4>
         <ul>
-          <li><a href="#timeline">Browse repositories</a></li>
-          <li><a href="#engine">Field manual</a></li>
-          <li><a href="#wiki">Hosting plans</a></li>
+          <li><a href="explore" data-hub-path="/explore">Browse repositories</a></li>
+          <li><a href="manual" data-hub-path="/manual">Field manual</a></li>
+          <li><a href="hosting" data-hub-path="/hosting">Hosting</a></li>
         </ul>
         <span class="clone-dark"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
       </div>
       <div>
         <h4>Upstream</h4>
         <ul>
-          <li><a href="#top">fossil-scm.org</a></li>
-          <li><a href="#top">SQLite, the sibling project</a></li>
-          <li><a href="#top">Release history</a></li>
+          <li><a href="upstream#fossil" data-hub-path="/upstream#fossil">Fossil SCM</a></li>
+          <li><a href="upstream#sqlite" data-hub-path="/upstream#sqlite">SQLite, the sibling project</a></li>
+          <li><a href="releases" data-hub-path="/releases">Release history</a></li>
         </ul>
       </div>
       <div>
         <h4>The hub</h4>
         <ul>
-          <li><a href="#top">Site rules</a></li>
-          <li><a href="#top">Status board</a></li>
-          <li><a href="#top">Contact the wardens</a></li>
+          <li><a href="rules" data-hub-path="/rules">Site rules</a></li>
+          <li><a href="status" data-hub-path="/status">Status board</a></li>
+          <li><a href="contact" data-hub-path="/contact">Contact the wardens</a></li>
         </ul>
       </div>
     </div>
     <div class="bedrock-bottom">
       <span>© 2026 FOSSILHUB — SURVEY DRAWING NO. FH-26-08</span>
-      <span>SET IN BIG SHOULDERS &amp; IBM PLEX · DRAWN AT 1:1 SCALE</span>
+      <span><a href="privacy" data-hub-path="/privacy">Privacy</a> · <a href="security" data-hub-path="/security">Security</a> · SET IN BIG SHOULDERS &amp; IBM PLEX</span>
     </div>
   </div>
 </footer>
 
-<script src="fossilhub-live.js"></script>
+<script src="fossilhub-live.js?v=20260828-3"></script>
 <script>
 document.documentElement.classList.add('js');
 const io = new IntersectionObserver((entries) => {
