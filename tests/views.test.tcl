@@ -308,4 +308,39 @@ assertContains $settings {data-hub-action="/account/repositories/fossil-tools/ar
 assertNotContains $settings {Fossil <Tools>} \
   "repository settings title cannot inject markup"
 
+set dashboardData [dict create owned [list $managedRepository] \
+  collaborations {} tickets [list [dict create uuid [string repeat 6 40] \
+    title {Fix <unsafe>} status Open epoch 1787788800 \
+    repository_slug fossil-tools repository_title {Fossil <Tools>}]] \
+  activity [list [dict create action repository.file-edit outcome success \
+    target README.md epoch 1787788800 repository_slug fossil-tools \
+    repository_title {Fossil <Tools>}]]]
+set dashboardPage [::fossilhub::views::renderDashboard $ownerContext \
+  $dashboardData]
+assertContains $dashboardPage {data-hub-path="/repositories/new"} \
+  "dashboard new repository action"
+assertContains $dashboardPage {Fix &lt;unsafe&gt;} \
+  "dashboard Ticket title escaped"
+assertNotContains $dashboardPage {Fossil <Tools>} \
+  "dashboard repository content escaped"
+
+set profilePage [::fossilhub::views::renderPublicProfile $ownerContext \
+  [dict create user [dict replace $owner biography {Bio <unsafe>} \
+    website https://example.test location Ridge] \
+    repositories [list $managedRepository] activity {}]]
+assertContains $profilePage {Bio &lt;unsafe&gt;} \
+  "public profile biography escaped"
+assertContains $profilePage {rel="nofollow me"} \
+  "public profile website relationship"
+
+set settingsPage [::fossilhub::views::renderSettings $ownerContext \
+  [string repeat 7 64] [string repeat 8 64] {Saved <now>} \
+  [dict replace $owner biography {Bio <unsafe>} website {} location {}]]
+assertContains $settingsPage {Saved &lt;now&gt;} \
+  "profile settings notice escaped"
+assertContains $settingsPage {data-hub-action="/settings/deactivate"} \
+  "account deactivation action"
+assertContains $settingsPage {data-theme-choice="system"} \
+  "account theme preference"
+
 puts "view tests passed"

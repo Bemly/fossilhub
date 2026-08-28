@@ -92,6 +92,18 @@ assertEqual [::fossilhub::routeForPath /catalog-fragment] \
 assertEqual [::fossilhub::routeForPath /login] login "login route"
 assertEqual [::fossilhub::routeForPath /register] register "register route"
 assertEqual [::fossilhub::routeForPath /logout] logout "logout route"
+assertEqual [::fossilhub::routeForPath /dashboard] dashboard \
+  "dashboard route"
+assertEqual [::fossilhub::routeForPath /users/alice] \
+  {public-profile alice} "public profile route"
+assertEqual [::fossilhub::routeForPath /settings] account-settings \
+  "account settings route"
+assertEqual [::fossilhub::routeForPath /settings/security] account-security \
+  "account security alias route"
+assertEqual [::fossilhub::routeForPath /settings/session/revoke] \
+  account-session-revoke "settings session revoke route"
+assertEqual [::fossilhub::routeForPath /settings/deactivate] \
+  account-deactivate "account deactivation route"
 assertEqual [::fossilhub::routeForPath /account/security] \
   account-security "account security route"
 assertEqual [::fossilhub::routeForPath /account/session/revoke] \
@@ -100,6 +112,8 @@ assertEqual [::fossilhub::routeForPath /account/repositories] \
   repository-workspace "repository workspace route"
 assertEqual [::fossilhub::routeForPath /account/repositories/new] \
   repository-new "new repository route"
+assertEqual [::fossilhub::routeForPath /repositories/new] \
+  repository-new "new repository shortcut route"
 assertEqual [::fossilhub::routeForPath \
   /account/repositories/fossil-tools/settings] \
   {repository-settings fossil-tools} "repository settings route"
@@ -114,6 +128,9 @@ assertEqual [::fossilhub::routeForPath \
 assertEqual [::fossilhub::routeForPath \
   /bemly-moe/app/fossilhub/account/security] account-security \
   "mounted account security route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/users/alice] {public-profile alice} \
+  "mounted public profile route"
 assertEqual [::fossilhub::routeForPath \
   /bemly-moe/app/fossilhub/account/repositories/fossil-tools/archive] \
   {repository-management-action fossil-tools archive} \

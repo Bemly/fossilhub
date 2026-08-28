@@ -100,7 +100,7 @@ proc ::fossilhub::account::method {} {
 
 proc ::fossilhub::account::renderLogin {context {message ""} {login ""}} {
   if {[dict get $context authenticated]} {
-    wapp-redirect account/security
+    wapp-redirect dashboard
     return
   }
   set csrf [::fossilhub::auth::issueChallenge login]
@@ -150,12 +150,12 @@ proc ::fossilhub::account::handleLogin {context} {
     [::fossilhub::account::requestAgent] $address]
   ::fossilhub::auth::audit user.login success [dict get $user id]
   ::fossilhub::account::setSessionCookie [dict get $session token] 604800
-  wapp-redirect account/security
+  wapp-redirect dashboard
 }
 
 proc ::fossilhub::account::renderRegister {context {message ""} {values {}}} {
   if {[dict get $context authenticated]} {
-    wapp-redirect account/security
+    wapp-redirect dashboard
     return
   }
   if {![::fossilhub::auth::registrationOpen]} {
@@ -222,7 +222,7 @@ proc ::fossilhub::account::handleRegister {context} {
     [::fossilhub::account::requestAgent] \
     [::fossilhub::account::requestAddress]]
   ::fossilhub::account::setSessionCookie [dict get $session token] 604800
-  wapp-redirect account/security
+  wapp-redirect dashboard
 }
 
 proc ::fossilhub::account::handleLogout {context} {
@@ -257,6 +257,142 @@ proc ::fossilhub::account::requireUser {context} {
   }
   wapp-redirect ../login
   return 0
+}
+
+proc ::fossilhub::account::handleDashboard {context} {
+  if {![::fossilhub::account::requireUser $context]} {
+    return
+  }
+  if {[::fossilhub::account::method] ne "GET"} {
+    wapp-reply-code "405 Method Not Allowed"
+    ::fossilhub::placeholder {Method not allowed — FossilHub} \
+      {The dashboard is read-only.}
+    return
+  }
+  set userId [dict get [dict get $context user] id]
+  set data [::fossilhub::workspace::dashboard $userId]
+  set context [::fossilhub::account::withLogoutChallenge $context]
+  ::fossilhub::account::renderPage \
+    [::fossilhub::views::renderDashboard $context $data]
+}
+
+proc ::fossilhub::account::handlePublicProfile {context username} {
+  if {[::fossilhub::account::method] ne "GET"} {
+    wapp-reply-code "405 Method Not Allowed"
+    ::fossilhub::placeholder {Method not allowed — FossilHub} \
+      {Public profiles are read-only.}
+    return
+  }
+  set profile [::fossilhub::workspace::publicProfile $username]
+  if {$profile eq ""} {
+    wapp-reply-code "404 Not Found"
+    ::fossilhub::placeholder {Profile not found — FossilHub} \
+      {That active field record is not available.}
+    return
+  }
+  set context [::fossilhub::account::withLogoutChallenge $context]
+  ::fossilhub::account::renderPage \
+    [::fossilhub::views::renderPublicProfile $context $profile]
+}
+
+proc ::fossilhub::account::renderSettings {context {message ""} {values ""}} {
+  set user [dict get $context user]
+  if {$values eq ""} {
+    set values $user
+  }
+  set context [::fossilhub::account::withLogoutChallenge $context]
+  set profileCsrf [::fossilhub::auth::issueChallenge account-profile \
+    [dict get $context session_hash]]
+  set deactivateCsrf [::fossilhub::auth::issueChallenge account-deactivate \
+    [dict get $context session_hash]]
+  ::fossilhub::account::renderPage [::fossilhub::views::renderSettings \
+    $context $profileCsrf $deactivateCsrf $message $values]
+}
+
+proc ::fossilhub::account::handleSettings {context} {
+  if {![::fossilhub::account::requireUser $context]} {
+    return
+  }
+  set method [::fossilhub::account::method]
+  if {$method eq "GET"} {
+    set message [expr {[wapp-param updated ""] eq "1" ?
+      "Profile settings saved." : ""}]
+    ::fossilhub::account::renderSettings $context $message
+    return
+  }
+  if {$method ne "POST"} {
+    wapp-reply-code "405 Method Not Allowed"
+    ::fossilhub::placeholder {Method not allowed — FossilHub} \
+      {Account settings accept GET and POST requests only.}
+    return
+  }
+  set values [dict create \
+    display_name [string range [wapp-param display_name ""] 0 160] \
+    email [string range [wapp-param email ""] 0 300] \
+    biography [string range [wapp-param biography ""] 0 2000] \
+    website [string range [wapp-param website ""] 0 500] \
+    location [string range [wapp-param location ""] 0 200]]
+  if {![::fossilhub::auth::consumeChallenge [wapp-param csrf ""] \
+      account-profile [dict get $context session_hash]]} {
+    wapp-reply-code "403 Forbidden"
+    ::fossilhub::account::renderSettings $context \
+      {This profile form expired. Try again.} $values
+    return
+  }
+  if {[catch {::fossilhub::workspace::updateProfile \
+      [dict get [dict get $context user] id] $values} message]} {
+    wapp-reply-code "422 Unprocessable Content"
+    if {[regexp {^(Display name|Enter a valid|Biography|Website|Location)} \
+        $message]} {
+      set publicMessage $message
+    } else {
+      set publicMessage {Those profile settings could not be saved.}
+    }
+    ::fossilhub::account::renderSettings $context $publicMessage $values
+    return
+  }
+  wapp-redirect {settings?updated=1}
+}
+
+proc ::fossilhub::account::handleDeactivate {context} {
+  if {![::fossilhub::account::requireUser $context]} {
+    return
+  }
+  if {[::fossilhub::account::method] ne "POST"} {
+    wapp-reply-code "405 Method Not Allowed"
+    ::fossilhub::placeholder {Method not allowed — FossilHub} \
+      {Account deactivation requires a submitted form.}
+    return
+  }
+  if {![::fossilhub::auth::consumeChallenge [wapp-param csrf ""] \
+      account-deactivate [dict get $context session_hash]]} {
+    wapp-reply-code "403 Forbidden"
+    ::fossilhub::account::renderSettings $context \
+      {This deactivation form expired. Try again.}
+    return
+  }
+  if {[wapp-param confirmation ""] ne \
+      [dict get [dict get $context user] username]} {
+    wapp-reply-code "422 Unprocessable Content"
+    ::fossilhub::account::renderSettings $context \
+      {Type your username exactly to confirm deactivation.}
+    return
+  }
+  if {[catch {::fossilhub::workspace::deactivate \
+      [dict get [dict get $context user] id] \
+      [wapp-param current_password ""]} message]} {
+    wapp-reply-code "422 Unprocessable Content"
+    if {[string match {Current password*} $message] ||
+        [string match {The last active administrator*} $message]} {
+      set publicMessage $message
+    } else {
+      set publicMessage {The account could not be deactivated.}
+    }
+    ::fossilhub::account::renderSettings $context $publicMessage
+    return
+  }
+  ::fossilhub::account::clearSessionCookie
+  wapp-redirect ../
 }
 
 proc ::fossilhub::account::renderSecurity {context {message ""}} {

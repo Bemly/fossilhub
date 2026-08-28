@@ -69,6 +69,14 @@ statistics, version-selectable rendered Docs, safe Markdown/Fossil-Wiki,
 Wiki comparisons, Ticket history, and threaded Forum views. Browser pages use
 only FossilHub routes; the guarded Fossil CGI remains clone/sync transport only.
 
+The user-workspace slice adds `/dashboard`, `/users/<username>`, `/settings`,
+and `/repositories/new`. Signed-in users can review owned and collaborative
+repositories, open Tickets, and recent activity; publish an escaped public
+profile; update private contact details; change passwords; revoke sessions;
+choose a browser-local theme; and deactivate their account after password
+confirmation. The last active administrator cannot self-deactivate, and
+deactivation closes every session without deleting repository custody records.
+
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.

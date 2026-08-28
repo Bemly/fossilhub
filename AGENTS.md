@@ -193,6 +193,10 @@ browser
   and recoverable archive/restore. It serializes lifecycle mutations with
   atomic lock files, invokes Fossil with `--nocgi`, and compensates database,
   file, and catalogue state when a later step fails.
+- `app/lib/workspace-model.tcl` owns user dashboards, public profile summaries,
+  validated profile updates, accessible open-Ticket aggregation, and safe
+  account deactivation. It never invents Ticket assignment fields or mutates a
+  Fossil repository schema.
 - `app/lib/repository-controller.tcl` is the browser authorization and CSRF
   boundary for `/account/repositories`; do not bypass it with direct
   state-changing routes.
@@ -314,8 +318,8 @@ Before a production switch:
    `tests/catalog.test.tcl`, `tests/platform.test.tcl`,
    `tests/auth.test.tcl`, `tests/repository-data.test.tcl`,
    `tests/history-model.test.tcl`, `tests/repository-service.test.tcl`,
-   `tests/mutation-service.test.tcl`, `tests/fossil-transport.test.tcl`, and
-   `tests/views.test.tcl` under the
+   `tests/mutation-service.test.tcl`, `tests/fossil-transport.test.tcl`,
+   `tests/workspace.test.tcl`, and `tests/views.test.tcl` under the
    image's Tcl 9.1b0. The authentication suite
    must also exercise the packaged Argon2 binary. macOS system Tcl may be 8.5
    and is not authoritative.

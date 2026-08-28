@@ -4,14 +4,21 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
   set authenticated [dict get $context authenticated]
   if {$authenticated} {
     set user [dict get $context user]
+    set adminLink ""
+    if {[dict get $user role] eq "administrator"} {
+      set adminLink {<a href="#" data-hub-path="/admin">Admin</a>}
+    }
     set identity [format {
-      <a href="repositories" data-hub-path="/account/repositories">Repositories</a>
-      <a href="#" data-hub-path="/account/security">%s</a>
+      <a href="#" data-hub-path="/dashboard">Dashboard</a>
+      <a href="#" data-hub-path="/repositories/new">New repo</a>
+      <a href="#" data-hub-path="/users/%s">Profile</a>
+      <a href="#" data-hub-path="/settings">Settings</a>%s
       <form class="nav-form" action="logout" method="post" data-hub-action="/logout">
         <input type="hidden" name="csrf" value="%s">
         <button type="submit">Sign out</button>
       </form>} \
       [::fossilhub::view::escape [dict get $user username]] \
+      $adminLink \
       [::fossilhub::view::escape [dict get $context logout_token]]]
   } else {
     set identity {
@@ -73,6 +80,199 @@ proc ::fossilhub::views::accountNotice {message} {
     [::fossilhub::view::escape $message]]
 }
 
+proc ::fossilhub::views::activityLabel {action} {
+  set labels [dict create \
+    user.register {created an account} \
+    user.profile-update {updated their profile} \
+    repository.create {created a repository} \
+    repository.settings {updated repository settings} \
+    repository.member-add {added a collaborator} \
+    repository.member-remove {removed a collaborator} \
+    repository.transfer {transferred a repository} \
+    repository.archive {archived a repository} \
+    repository.restore {restored a repository} \
+    repository.file-create {created a file} \
+    repository.file-edit {updated a file} \
+    repository.file-delete {deleted a file} \
+    repository.wiki-create {created a Wiki page} \
+    repository.wiki-edit {updated a Wiki page} \
+    repository.ticket-create {opened a Ticket} \
+    repository.ticket-update {updated a Ticket} \
+    repository.forum-thread {opened a discussion} \
+    repository.forum-reply {replied to a discussion}]
+  if {[dict exists $labels $action]} {
+    return [dict get $labels $action]
+  }
+  return [string map {. { · } - { }} $action]
+}
+
+proc ::fossilhub::views::renderWorkspaceRepositories {repositories emptyText} {
+  if {[llength $repositories] == 0} {
+    return [format {<div class="workspace-empty"><p>%s</p></div>} \
+      [::fossilhub::view::escape $emptyText]]
+  }
+  set html {<div class="workspace-list">}
+  foreach repository $repositories {
+    set role "Owner"
+    if {[dict exists $repository membership_role]} {
+      set role [string totitle [dict get $repository membership_role]]
+    }
+    append html [format {
+      <article class="workspace-repository">
+        <div><div class="workspace-repo-title"><a href="#" data-hub-path="/repo/%s">%s</a><span class="repo-state repo-state-%s">%s</span></div>
+        <p>%s</p><small>%s · %s · updated %s</small></div>
+        <a class="btn btn-ghost btn-compact" href="#" data-hub-path="/repo/%s">Open</a>
+      </article>} \
+      [::fossilhub::view::escape [dict get $repository name]] \
+      [::fossilhub::view::escape [dict get $repository title]] \
+      [::fossilhub::view::escape [dict get $repository visibility]] \
+      [::fossilhub::view::escape [dict get $repository visibility]] \
+      [::fossilhub::view::escape [dict get $repository description]] \
+      [::fossilhub::view::escape $role] \
+      [::fossilhub::view::escape [dict get $repository state]] \
+      [::fossilhub::view::escape [::fossilhub::view::formatDate \
+        [dict get $repository updated_epoch]]] \
+      [::fossilhub::view::escape [dict get $repository name]]]
+  }
+  append html {</div>}
+  return $html
+}
+
+proc ::fossilhub::views::renderActivity {activity emptyText} {
+  if {[llength $activity] == 0} {
+    return [format {<div class="workspace-empty"><p>%s</p></div>} \
+      [::fossilhub::view::escape $emptyText]]
+  }
+  set html {<ol class="activity-list">}
+  foreach event $activity {
+    set repository [dict get $event repository_slug]
+    set context ""
+    if {$repository ne ""} {
+      set context [format { in <a href="#" data-hub-path="/repo/%s">%s</a>} \
+        [::fossilhub::view::escape "${repository}.fossil"] \
+        [::fossilhub::view::escape [dict get $event repository_title]]]
+    }
+    append html [format {
+      <li><span class="activity-mark" aria-hidden="true"></span><div><b>%s</b>%s<small>%s · %s</small></div></li>} \
+      [::fossilhub::view::escape [::fossilhub::views::activityLabel \
+        [dict get $event action]]] $context \
+      [::fossilhub::view::escape [dict get $event outcome]] \
+      [::fossilhub::view::escape [::fossilhub::view::formatDate \
+        [dict get $event epoch]]]]
+  }
+  append html {</ol>}
+  return $html
+}
+
+proc ::fossilhub::views::renderDashboard {context data} {
+  set tickets [dict get $data tickets]
+  if {[llength $tickets] == 0} {
+    set ticketHtml {<div class="workspace-empty"><p>No open Tickets in your repositories.</p></div>}
+  } else {
+    set ticketHtml {<div class="dashboard-tickets">}
+    foreach ticket $tickets {
+      append ticketHtml [format {
+        <a href="#" data-hub-path="/repo/%s.fossil/ticket/%s"><span>%s</span><b>%s</b><small>%s · %s</small></a>} \
+        [::fossilhub::view::escape [dict get $ticket repository_slug]] \
+        [::fossilhub::view::escape [dict get $ticket uuid]] \
+        [::fossilhub::view::escape [dict get $ticket repository_title]] \
+        [::fossilhub::view::escape [dict get $ticket title]] \
+        [::fossilhub::view::escape [dict get $ticket status]] \
+        [::fossilhub::view::escape [::fossilhub::view::formatDate \
+          [dict get $ticket epoch]]]]
+    }
+    append ticketHtml {</div>}
+  }
+  set content [format {
+    <div class="workspace-actions"><div><h2>Your repositories</h2><p>Owned strata and repositories where you collaborate.</p></div><a class="btn btn-primary" href="#" data-hub-path="/repositories/new">New repository</a></div>
+    <h3 class="workspace-section-title">Owned</h3>%s
+    <h3 class="workspace-section-title">Collaborations</h3>%s
+    <div class="section-rule"></div><h2>Open Tickets</h2><p class="section-copy">Open work across repositories you can access. FossilHub does not invent assignment fields that are absent from the repository.</p>%s
+    <div class="section-rule"></div><h2>Recent activity</h2>%s} \
+    [::fossilhub::views::renderWorkspaceRepositories [dict get $data owned] \
+      {You do not own a repository yet.}] \
+    [::fossilhub::views::renderWorkspaceRepositories \
+      [dict get $data collaborations] {No collaboration invitations yet.}] \
+    $ticketHtml [::fossilhub::views::renderActivity [dict get $data activity] \
+      {Your activity ledger is empty.}]]
+  return [::fossilhub::views::accountFrame {Dashboard} {Field workspace} \
+    {Survey your work} \
+    {Repositories, open work, and recent changes gathered in one place.} \
+    $content $context]
+}
+
+proc ::fossilhub::views::renderPublicProfile {context profile} {
+  set user [dict get $profile user]
+  set facts ""
+  if {[dict get $user location] ne ""} {
+    append facts [format {<span>%s</span>} \
+      [::fossilhub::view::escape [dict get $user location]]]
+  }
+  if {[dict get $user website] ne ""} {
+    append facts [format {<a href="%s" rel="nofollow me">Website</a>} \
+      [::fossilhub::view::escape [dict get $user website]]]
+  }
+  append facts [format {<span>Joined %s</span>} \
+    [::fossilhub::view::escape [::fossilhub::view::formatDate \
+      [dict get $user created_epoch]]]]
+  set content [format {
+    <div class="profile-record"><div class="profile-monogram" aria-hidden="true">%s</div><div><h2>%s</h2><code>@%s</code></div></div>
+    <p class="profile-biography">%s</p><div class="profile-facts">%s</div>
+    <div class="section-rule"></div><h2>Public repositories</h2>%s
+    <div class="section-rule"></div><h2>Public activity</h2>%s} \
+    [::fossilhub::view::escape [string toupper [string index \
+      [dict get $user display_name] 0]]] \
+    [::fossilhub::view::escape [dict get $user display_name]] \
+    [::fossilhub::view::escape [dict get $user username]] \
+    [::fossilhub::view::escape [expr {[dict get $user biography] eq "" ?
+      "No biography recorded." : [dict get $user biography]}]] $facts \
+    [::fossilhub::views::renderWorkspaceRepositories \
+      [dict get $profile repositories] {No public repositories yet.}] \
+    [::fossilhub::views::renderActivity [dict get $profile activity] \
+      {No public repository activity yet.}]]
+  return [::fossilhub::views::accountFrame \
+    "[dict get $user display_name] · profile" {Public field record} \
+    [dict get $user display_name] \
+    {A public identity, repository record, and activity summary.} \
+    $content $context]
+}
+
+proc ::fossilhub::views::renderSettings {context profileCsrf deactivateCsrf \
+    message values} {
+  set user [dict get $context user]
+  set content [format {%s
+    <div class="settings-tabs" aria-label="Settings sections"><a aria-current="page" href="#" data-hub-path="/settings">Profile</a><a href="#" data-hub-path="/settings/security">Password &amp; sessions</a></div>
+    <h2>Public profile</h2>
+    <form class="field-form" action="settings" method="post" data-hub-action="/settings">
+      <input type="hidden" name="csrf" value="%s">
+      <label>Display name<input name="display_name" autocomplete="name" maxlength="80" value="%s" required></label>
+      <label>Email<input name="email" type="email" autocomplete="email" maxlength="254" value="%s" required><small>Email is private and is never shown on your public profile.</small></label>
+      <label>Biography<textarea name="biography" maxlength="1000" rows="5">%s</textarea></label>
+      <div class="field-pair"><label>Website<input name="website" type="url" inputmode="url" maxlength="240" placeholder="https://example.com" value="%s"></label><label>Location<input name="location" maxlength="100" value="%s"></label></div>
+      <button class="btn btn-primary" type="submit">Save profile</button>
+    </form>
+    <div class="section-rule"></div><h2>Appearance</h2><p class="section-copy">Theme is stored only in this browser. System mode follows your device preference.</p>
+    <div class="theme-settings" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light">Light</button><button type="button" data-theme-choice="dark">Dark</button><button type="button" data-theme-choice="system">System</button></div>
+    <div class="section-rule"></div><section class="danger-section"><h2>Deactivate account</h2><p>Signing in will be blocked and every active session will close. Repository custody remains intact for administrator review.</p>
+    <form class="field-form compact-form" action="deactivate" method="post" data-hub-action="/settings/deactivate">
+      <input type="hidden" name="csrf" value="%s"><label>Type <code>%s</code> to confirm<input name="confirmation" autocomplete="off" required></label><label>Current password<input name="current_password" type="password" autocomplete="current-password" required></label><button class="btn btn-danger" type="submit">Deactivate account</button>
+    </form></section>
+    <script>document.querySelectorAll('[data-theme-choice]').forEach(x=>x.addEventListener('click',()=>{const v=x.dataset.themeChoice;if(v==='system'){delete document.documentElement.dataset.theme;localStorage.removeItem('fh-theme')}else{document.documentElement.dataset.theme=v;localStorage.setItem('fh-theme',v)}}));</script>} \
+    [::fossilhub::views::accountNotice $message] \
+    [::fossilhub::view::escape $profileCsrf] \
+    [::fossilhub::view::escape [dict get $values display_name]] \
+    [::fossilhub::view::escape [dict get $values email]] \
+    [::fossilhub::view::escape [dict get $values biography]] \
+    [::fossilhub::view::escape [dict get $values website]] \
+    [::fossilhub::view::escape [dict get $values location]] \
+    [::fossilhub::view::escape $deactivateCsrf] \
+    [::fossilhub::view::escape [dict get $user username]]]
+  return [::fossilhub::views::accountFrame {Account settings} \
+    {Identity · preferences} {Shape your field record} \
+    {Manage the public details and local appearance attached to your account.} \
+    $content $context]
+}
+
 proc ::fossilhub::views::renderLogin {context csrf {message ""} {login ""}} {
   set content [format {%s
     <form class="field-form" action="login" method="post" data-hub-action="/login">
@@ -129,7 +329,7 @@ proc ::fossilhub::views::renderSecurity {context passwordCsrf sessions message} 
     append rows [format {
       <div class="session-row">
         <div><b>%s</b><small>Last seen %s · expires %s · mark %s</small></div>
-        <form action="revoke" method="post" data-hub-action="/account/session/revoke">
+        <form action="revoke" method="post" data-hub-action="/settings/session/revoke">
           <input type="hidden" name="csrf" value="%s"><input type="hidden" name="session" value="%s">
           <button class="btn btn-ghost btn-compact" type="submit">%s</button>
         </form>
@@ -145,9 +345,10 @@ proc ::fossilhub::views::renderSecurity {context passwordCsrf sessions message} 
       [expr {$current ? "Sign out" : "Revoke"}]]
   }
   set content [format {%s
+    <div class="settings-tabs" aria-label="Settings sections"><a href="#" data-hub-path="/settings">Profile</a><a aria-current="page" href="#" data-hub-path="/settings/security">Password &amp; sessions</a></div>
     <div class="account-label"><span>Signed in as</span><b>%s</b><small>%s · %s</small></div>
     <h2>Change password</h2>
-    <form class="field-form compact-form" action="security" method="post" data-hub-action="/account/security">
+    <form class="field-form compact-form" action="security" method="post" data-hub-action="/settings/security">
       <input type="hidden" name="csrf" value="%s">
       <label>Current password<input name="current_password" type="password" autocomplete="current-password" maxlength="1024" required></label>
       <label>New password<input name="new_password" type="password" autocomplete="new-password" minlength="12" maxlength="1024" required></label>

@@ -197,15 +197,15 @@ clone/sync remains the only public `/fossil/*` use.
 
 ### Phase F — user workspace
 
-- [ ] Add a signed-in dashboard with owned repositories, collaborations, recent
+- [x] Add a signed-in dashboard with owned repositories, collaborations, recent
   activity, assigned/open Tickets, and useful empty states.
-- [ ] Add public profiles with display name, biography, links, join date, and
+- [x] Add public profiles with display name, biography, links, join date, and
   public repository/activity summaries.
-- [ ] Add account settings for profile, password, active sessions, theme, and
+- [x] Add account settings for profile, password, active sessions, theme, and
   account deactivation.
 - [x] Add repository creation, collaboration, archive, and transfer flows to the
   user workspace.
-- [ ] Add keyboard focus, screen-reader labels, responsive navigation, reduced
+- [x] Add keyboard focus, screen-reader labels, responsive navigation, reduced
   motion, validation summaries, and no-JavaScript form paths.
 
 Acceptance: an ordinary user can manage the full lifecycle of an account and

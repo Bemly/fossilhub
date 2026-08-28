@@ -13,6 +13,7 @@ foreach sourceFile {
   lib/auth-model.tcl
   lib/catalog-model.tcl
   lib/repository-service.tcl
+  lib/workspace-model.tcl
   lib/mutation-service.tcl
   lib/view.tcl
   lib/markup.tcl
@@ -90,6 +91,13 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)logout/?$} $clean]} {
     return logout
   }
+  if {[regexp {(^|/)dashboard/?$} $clean]} {
+    return dashboard
+  }
+  if {[regexp {(^|/)users/([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)/?$} \
+      $clean -> _ username]} {
+    return [list public-profile $username]
+  }
   if {[regexp {(^|/)account/security/?$} $clean]} {
     return account-security
   }
@@ -97,6 +105,9 @@ proc ::fossilhub::routeForPath {path} {
     return account-session-revoke
   }
   if {[regexp {(^|/)account/repositories/new/?$} $clean]} {
+    return repository-new
+  }
+  if {[regexp {(^|/)repositories/new/?$} $clean]} {
     return repository-new
   }
   if {[regexp {(^|/)account/repositories/([^/]+)/(member-remove|member|transfer|archive|restore)/?$} \
@@ -109,6 +120,19 @@ proc ::fossilhub::routeForPath {path} {
   }
   if {[regexp {(^|/)account/repositories/?$} $clean]} {
     return repository-workspace
+  }
+  if {[regexp {(^|/)settings/?$} $clean] ||
+      [regexp {(^|/)settings/profile/?$} $clean]} {
+    return account-settings
+  }
+  if {[regexp {(^|/)settings/security/?$} $clean]} {
+    return account-security
+  }
+  if {[regexp {(^|/)settings/session/revoke/?$} $clean]} {
+    return account-session-revoke
+  }
+  if {[regexp {(^|/)settings/deactivate/?$} $clean]} {
+    return account-deactivate
   }
   if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
@@ -565,11 +589,24 @@ proc wapp-default {} {
     logout {
       ::fossilhub::account::handleLogout $accountContext
     }
+    dashboard {
+      ::fossilhub::account::handleDashboard $accountContext
+    }
+    public-profile {
+      ::fossilhub::account::handlePublicProfile $accountContext \
+        [lindex $route 1]
+    }
+    account-settings {
+      ::fossilhub::account::handleSettings $accountContext
+    }
     account-security {
       ::fossilhub::account::handleSecurity $accountContext
     }
     account-session-revoke {
       ::fossilhub::account::handleSessionRevoke $accountContext
+    }
+    account-deactivate {
+      ::fossilhub::account::handleDeactivate $accountContext
     }
     repository-workspace {
       ::fossilhub::repositoryController::handleWorkspace $accountContext
