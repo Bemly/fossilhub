@@ -5,7 +5,7 @@ FossilHub is a Tcl/Wapp port of the three-page UI prototype in
 
 The production target is an isolated Ubuntu 24.04 Docker container on fnOS.
 Althttpd terminates HTTP and launches the Wapp application as CGI. Candidate
-`2026.08.27-beta.3` uses an application-owned SQLite catalogue for search and
+`2026.08.28-beta.1` uses an application-owned SQLite catalogue for search and
 filters, then queries each repository through `fossil sql --readonly` for Tcl
 server-rendered Timeline, Files, Docs, Wiki, Tickets, and Forum surfaces. The
 browser receives complete HTML; JavaScript progressively enhances catalogue
@@ -25,7 +25,7 @@ Production remains 0.2.0-beta.1 until the Tcl SSR candidate completes the NAS
 smoke and transactional deployment gates.
 
 Candidate routes begin at `/explore` and `/repo/bedrock.fossil`. The image tag
-is `fossilhub:2026.08.27-beta.3`; [VERSION](VERSION) is the release source of
+is `fossilhub:2026.08.28-beta.1`; [VERSION](VERSION) is the release source of
 truth.
 
 Phase 5 development adds a separate versioned platform database at

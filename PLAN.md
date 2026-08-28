@@ -130,9 +130,9 @@ it is not a runtime data source.
 
 ## Phase 4: SQLite catalogue and first-party repository surfaces
 
-Requested 2026-08-27. Releases in this phase use CalVer; the current candidate
-is `2026.08.27-beta.3`. The existing production image remains untouched until the
-candidate passes every smoke and browser gate.
+Requested 2026-08-27. Releases in this phase use CalVer; its validated candidate
+was `2026.08.27-beta.3`. The existing production image remains untouched until a
+later candidate passes every smoke and browser gate.
 
 - [x] Add an application-owned SQLite catalogue under `/data/catalog/`, built
   atomically from read-only Fossil metadata without altering Fossil schemas.
@@ -164,6 +164,8 @@ layer into a GitHub-like self-hosted platform with central accounts, repository
 ownership and permissions, browser writes, complete first-party repository
 navigation, user and administrator workspaces, and real public information
 pages.
+
+The source candidate for this phase is `2026.08.28-beta.1`.
 
 The dependency-ordered, auditable checklist and acceptance gates are maintained
 in [docs/platform-roadmap.md](docs/platform-roadmap.md). Production port 6080

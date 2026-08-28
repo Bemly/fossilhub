@@ -1,6 +1,6 @@
 # FossilHub release history
 
-## 2026.08.27-beta.3 · collaboration candidate
+## 2026.08.28-beta.1 · collaboration candidate
 
 - Added the application-owned catalogue and central platform registry.
 - Added Argon2id accounts, opaque sessions, one-time form challenges, public

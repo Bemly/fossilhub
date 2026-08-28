@@ -125,7 +125,7 @@ before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
-The source candidate is `2026.08.27-beta.3`. It is not production until its NAS
+The source candidate is `2026.08.28-beta.1`. It is not production until its NAS
 validation record and transactional port-6080 switch are complete.
 
 ## Runtime and source pins

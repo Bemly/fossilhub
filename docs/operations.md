@@ -38,7 +38,7 @@ Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
 
 ## CalVer candidate
 
-The source candidate is `2026.08.27-beta.3`; it is not the production image
+The source candidate is `2026.08.28-beta.1`; it is not the production image
 until the validation and transactional switch below are complete. Wapp request
 processes carry CGI environment variables, so application-side Fossil CLI
 queries must include Fossil's `--nocgi` global option. Its public
