@@ -79,6 +79,19 @@ the unpublished file into `/data/quarantine`; it is never silently deleted.
 Normal archive operations also move the exact repository file into that
 quarantine directory and retain a restorable registry record.
 
+Authenticated repository workbenches live below `/repo/<name>/files/new`,
+`/file/<artifact>/edit`, `/wiki/new`, `/wiki-page/<artifact>/edit`,
+`/tickets/new`, `/ticket/<id>`, `/forum/new`, and
+`/forum/<post>/reply`. File and Wiki writes require Writer; Ticket and Forum
+writes require Triage. Each operation consumes a one-time form challenge,
+serializes writes with a repository lock, records the central username as the
+Fossil artifact author, and atomically rebuilds the public catalogue. Central
+passwords are never copied into Fossil: managed Fossil users receive random,
+Fossil-only credentials, and Forum credentials are rotated for each internal
+submission. The default repository storage quota is 512 MiB and can be lowered
+or raised for a deployment with `FOSSILHUB_REPOSITORY_QUOTA_BYTES` (1 MiB to
+1 TiB); invalid values fail closed.
+
 On the first Phase 5 startup, `/usr/local/bin/fossilhub-bootstrap-admin`
 creates the central `warden` administrator and writes its one-time credential
 to:
@@ -107,6 +120,10 @@ HTTPS-only deployment; `never` is restricted to isolated HTTP smoke testing.
 | `/repo/bedrock.fossil/wiki` | FossilHub Wiki index |
 | `/repo/bedrock.fossil/tickets` | FossilHub ticket cabinet |
 | `/repo/bedrock.fossil/forum` | FossilHub forum activity |
+| `/repo/<name>/files/new` | Writer file-commit workbench |
+| `/repo/<name>/wiki/new` | Writer Wiki workbench |
+| `/repo/<name>/tickets/new` | Triage Ticket workbench |
+| `/repo/<name>/forum/new` | Triage Forum workbench |
 | `/account/repositories` | Signed-in repository workspace |
 | `/account/repositories/new` | Repository creation form |
 | `/account/repositories/<slug>/settings` | Role-protected repository management |

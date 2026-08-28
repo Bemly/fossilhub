@@ -190,6 +190,14 @@ browser
 - `app/lib/repository-controller.tcl` is the browser authorization and CSRF
   boundary for `/account/repositories`; do not bypass it with direct
   state-changing routes.
+- `app/lib/mutation-service.tcl` owns exact temporary checkouts, repository
+  write locks, central-to-Fossil author reconciliation, optimistic revision
+  checks, file/Wiki/Ticket/Forum mutations, quotas, audit records, and
+  post-mutation indexing. It uses only supported Fossil CLI and CGI interfaces.
+- `app/lib/mutation-controller.tcl` is the authenticated role and one-time-CSRF
+  boundary for browser repository writes. File and Wiki changes require Writer;
+  Ticket and Forum changes require Triage. Do not call the mutation service from
+  an unguarded Wapp route.
 - `app/lib/view.tcl` owns HTML escaping, formatting, and reusable repository,
   catalogue, composition, and timeline renderers.
 - `app/views/` contains Tcl view modules for the reference-derived home,
@@ -296,8 +304,9 @@ Before a production switch:
 3. Run `tests/routes.test.tcl`, `tests/model.test.tcl`,
    `tests/catalog.test.tcl`, `tests/platform.test.tcl`,
    `tests/auth.test.tcl`, `tests/repository-data.test.tcl`,
-   `tests/repository-service.test.tcl`, `tests/fossil-transport.test.tcl`, and
-   `tests/views.test.tcl` under the image's Tcl 9.1b0. The authentication suite
+   `tests/repository-service.test.tcl`, `tests/mutation-service.test.tcl`,
+   `tests/fossil-transport.test.tcl`, and `tests/views.test.tcl` under the
+   image's Tcl 9.1b0. The authentication suite
    must also exercise the packaged Argon2 binary. macOS system Tcl may be 8.5
    and is not authoritative.
 4. Build on the x86_64 NAS and confirm Tcl 9.1b0, Fossil 2.29, Wapp lint, and the

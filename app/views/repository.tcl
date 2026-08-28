@@ -468,6 +468,14 @@ proc ::fossilhub::views::renderRepository {repository {section timeline} {sectio
     set activeSection files
   } elseif {$activeSection eq "wiki-page"} {
     set activeSection wiki
+  } elseif {$activeSection eq "file-compose"} {
+    set activeSection files
+  } elseif {$activeSection eq "wiki-compose"} {
+    set activeSection wiki
+  } elseif {$activeSection in {ticket-compose ticket-workbench}} {
+    set activeSection tickets
+  } elseif {$activeSection eq "forum-compose"} {
+    set activeSection forum
   }
   set tabs [dict create timeline "" files "" docs "" wiki "" tickets "" forum ""]
   if {[dict exists $tabs $activeSection]} {

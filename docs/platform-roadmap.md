@@ -140,7 +140,7 @@ logs, generated HTML, test output, or Git.
 - [x] Add owner transfer with re-authentication and an explicit confirmation.
 - [x] Add recoverable archive/quarantine; do not implement routine permanent
   deletion in this milestone.
-- [ ] Reconcile central users with Fossil artifact authors without exposing or
+- [x] Reconcile central users with Fossil artifact authors without exposing or
   reusing central passwords as Fossil credentials.
 - [x] Add concurrent-create, path traversal, case collision, permission downgrade,
   private-route, archive, and recovery tests.
@@ -151,22 +151,23 @@ private resources without a grant.
 
 ### Phase D — safe browser write service
 
-- [ ] Add a per-repository mutation lock and exact temporary checkout service.
-- [ ] Add create/edit/delete/rename source-file workflows with branch selection,
+- [x] Add a per-repository mutation lock and exact temporary checkout service.
+- [x] Add create/edit/delete/rename source-file workflows with branch selection,
   commit message, author attribution, size limits, conflict detection, and
   guaranteed temporary cleanup.
-- [ ] Add Wiki create/edit with revision-aware conflict detection.
-- [ ] Add Ticket creation, field updates, comments, close/reopen, and history.
-- [ ] Add Forum thread creation, replies, and thread history using supported
-  Fossil interfaces.
-- [ ] Rebuild repository metadata and the public catalogue after every successful
+- [x] Add Wiki create/edit with revision-aware conflict detection.
+- [x] Add Ticket creation, field updates, comments, and close/reopen; the
+  first-party artifact history reader remains in Phase E.
+- [x] Add Forum thread creation and replies using supported Fossil interfaces;
+  the first-party threaded history reader remains in Phase E.
+- [x] Rebuild repository metadata and the public catalogue after every successful
   mutation; leave both unchanged on failure.
-- [ ] Record actor, repository, action, target, outcome, request identifier, and
+- [x] Record actor, repository, action, target, outcome, request identifier, and
   timestamp in the application audit log without recording submitted content or
   secrets.
-- [ ] Add mutation size/quota limits and validation for filenames, branch names,
+- [x] Add mutation size/quota limits and validation for filenames, branch names,
   artifact identifiers, Ticket fields, Wiki names, and Forum titles.
-- [ ] Add concurrent update, stale revision, rollback, malicious input, binary
+- [x] Add concurrent update, stale revision, rollback, malicious input, binary
   file, quota, and interrupted-operation tests.
 
 Acceptance: Writer-or-higher users can complete all four collaboration workflows

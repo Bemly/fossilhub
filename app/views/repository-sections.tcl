@@ -18,6 +18,13 @@ proc ::fossilhub::views::emptySection {title message} {
     [::fossilhub::view::escape $message]]
 }
 
+proc ::fossilhub::views::repositoryAction {repository suffix label} {
+  return [format {
+    <a class="btn btn-sm" href="#" data-hub-path="%s">%s</a>} \
+    [::fossilhub::views::repositoryPath $repository $suffix] \
+    [::fossilhub::view::escape $label]]
+}
+
 proc ::fossilhub::views::renderTimelineSection {repository data} {
   set filter [dict get $data event_filter]
   set filters [list \
@@ -98,9 +105,15 @@ proc ::fossilhub::views::renderFilesSection {repository data docsOnly} {
     set note "[llength $files] files read from Fossil's trunk manifest."
     set empty {No files are present on trunk.}
   }
+  set action ""
+  if {!$docsOnly && [dict exists $data can_write] &&
+      [dict get $data can_write]} {
+    set action [::fossilhub::views::repositoryAction \
+      $repository files/new {Add file}]
+  }
   return [format {
-    <div class="section-lede"><p class="eyebrow">%s</p><p>%s</p></div>%s} \
-    $title [::fossilhub::view::escape $note] \
+    <div class="section-lede section-lede-actions"><div><p class="eyebrow">%s</p><p>%s</p></div>%s</div>%s} \
+    $title [::fossilhub::view::escape $note] $action \
     [::fossilhub::views::renderFileRows $repository $files $empty]]
 }
 
@@ -120,28 +133,40 @@ proc ::fossilhub::views::renderFileSection {repository data} {
       %s<div class="panel source-panel"><pre><code>%s</code></pre></div>} \
       $truncation [::fossilhub::view::escape [dict get $record content]]]
   }
+  set editAction ""
+  if {[dict exists $data can_write] && [dict get $data can_write]} {
+    set editAction [::fossilhub::views::repositoryAction $repository \
+      "file/[dict get $record uuid]/edit" {Edit artifact}]
+  }
   return [format {
     <div class="section-lede">
       <a class="back-link" href="#" data-hub-path="%s">← trunk files</a>
       <p class="eyebrow">Artifact %s · %s</p>
-      <h2>%s</h2>
+      <div class="section-title-actions"><h2>%s</h2>%s</div>
     </div>%s} \
     $back \
     [::fossilhub::view::escape [string range [dict get $record uuid] 0 11]] \
     [::fossilhub::view::escape \
       [::fossilhub::view::formatBytes [dict get $record size]]] \
-    [::fossilhub::view::escape $filename] $body]
+    [::fossilhub::view::escape $filename] $editAction $body]
 }
 
 proc ::fossilhub::views::renderWikiSection {repository data} {
   set pages [dict get $data pages]
+  set action ""
+  if {[dict exists $data can_write] && [dict get $data can_write]} {
+    set action [::fossilhub::views::repositoryAction \
+      $repository wiki/new {New Wiki page}]
+  }
   if {[llength $pages] == 0} {
-    return [::fossilhub::views::emptySection \
-      {Wiki field notes} {No Wiki pages have been recorded in this repository.}]
+    return [format {
+      <div class="section-lede section-lede-actions"><p class="eyebrow">Wiki field notes</p>%s</div>
+      <div class="panel"><div class="panel-body empty-stratum">No Wiki pages have been recorded in this repository.</div></div>} \
+      $action]
   }
   set html [format {
-    <div class="section-lede"><p class="eyebrow">Wiki field notes</p><p>%d current pages, read from their latest Fossil artifacts.</p></div>
-    <div class="panel artifact-list">} [llength $pages]]
+    <div class="section-lede section-lede-actions"><div><p class="eyebrow">Wiki field notes</p><p>%d current pages, read from their latest Fossil artifacts.</p></div>%s</div>
+    <div class="panel artifact-list">} [llength $pages] $action]
   foreach page $pages {
     set path [::fossilhub::views::repositoryPath $repository \
       "wiki-page/[dict get $page uuid]"]
@@ -167,30 +192,42 @@ proc ::fossilhub::views::renderWikiSection {repository data} {
 proc ::fossilhub::views::renderWikiPage {repository data} {
   set page [dict get $data page]
   set back [::fossilhub::views::repositoryPath $repository wiki]
+  set editAction ""
+  if {[dict exists $data can_write] && [dict get $data can_write]} {
+    set editAction [::fossilhub::views::repositoryAction $repository \
+      "wiki-page/[dict get $page uuid]/edit" {Edit Wiki page}]
+  }
   return [format {
     <div class="section-lede">
       <a class="back-link" href="#" data-hub-path="%s">← wiki field notes</a>
       <p class="eyebrow">Wiki artifact %s · %s</p>
-      <h2>%s</h2>
+      <div class="section-title-actions"><h2>%s</h2>%s</div>
     </div>
     <article class="panel prose-artifact"><pre>%s</pre></article>} \
     $back \
     [::fossilhub::view::escape [string range [dict get $page uuid] 0 11]] \
     [::fossilhub::view::escape \
       [::fossilhub::view::formatDate [dict get $page epoch]]] \
-    [::fossilhub::view::escape [dict get $page title]] \
+    [::fossilhub::view::escape [dict get $page title]] $editAction \
     [::fossilhub::view::escape [dict get $page content]]]
 }
 
 proc ::fossilhub::views::renderTicketsSection {repository data} {
   set tickets [dict get $data tickets]
+  set action ""
+  if {[dict exists $data can_triage] && [dict get $data can_triage]} {
+    set action [::fossilhub::views::repositoryAction \
+      $repository tickets/new {Open ticket}]
+  }
   if {[llength $tickets] == 0} {
-    return [::fossilhub::views::emptySection \
-      {Ticket cabinet} {No tickets have been recorded in this repository.}]
+    return [format {
+      <div class="section-lede section-lede-actions"><p class="eyebrow">Ticket cabinet</p>%s</div>
+      <div class="panel"><div class="panel-body empty-stratum">No tickets have been recorded in this repository.</div></div>} \
+      $action]
   }
   set html [format {
-    <div class="section-lede"><p class="eyebrow">Ticket cabinet</p><p>%d tickets from Fossil's current ticket state.</p></div>
-    <div class="panel artifact-list">} [llength $tickets]]
+    <div class="section-lede section-lede-actions"><div><p class="eyebrow">Ticket cabinet</p><p>%d tickets from Fossil's current ticket state.</p></div>%s</div>
+    <div class="panel artifact-list">} [llength $tickets] $action]
   foreach ticket $tickets {
     set status [dict get $ticket status]
     set statusClass ticket-open
@@ -198,12 +235,14 @@ proc ::fossilhub::views::renderTicketsSection {repository data} {
       set statusClass ticket-closed
     }
     append html [format {
-      <div class="artifact-row ticket-row">
+      <a class="artifact-row ticket-row" href="#" data-hub-path="%s">
         <span class="ticket-state %s">%s</span>
         <span class="artifact-main"><b>%s</b><small>%s · %s · %s</small></span>
         <span class="artifact-size">%s</span>
         <span class="artifact-hash">%s</span>
-      </div>} \
+      </a>} \
+      [::fossilhub::views::repositoryPath $repository \
+        "ticket/[dict get $ticket uuid]"] \
       $statusClass [::fossilhub::view::escape $status] \
       [::fossilhub::view::escape [dict get $ticket title]] \
       [::fossilhub::view::escape [dict get $ticket type]] \
@@ -219,19 +258,33 @@ proc ::fossilhub::views::renderTicketsSection {repository data} {
 
 proc ::fossilhub::views::renderForumSection {repository data} {
   set posts [dict get $data posts]
+  set action ""
+  if {[dict exists $data can_triage] && [dict get $data can_triage]} {
+    set action [::fossilhub::views::repositoryAction \
+      $repository forum/new {New discussion}]
+  }
   if {[llength $posts] == 0} {
-    return [::fossilhub::views::emptySection \
-      {Forum boreholes} {No forum posts have been recorded in this repository.}]
+    return [format {
+      <div class="section-lede section-lede-actions"><p class="eyebrow">Forum boreholes</p>%s</div>
+      <div class="panel"><div class="panel-body empty-stratum">No forum posts have been recorded in this repository.</div></div>} \
+      $action]
   }
   set html [format {
-    <div class="section-lede"><p class="eyebrow">Forum boreholes</p><p>%d recent posts preserved as Fossil artifacts.</p></div>
-    <div class="panel forum-list">} [llength $posts]]
+    <div class="section-lede section-lede-actions"><div><p class="eyebrow">Forum boreholes</p><p>%d recent posts preserved as Fossil artifacts.</p></div>%s</div>
+    <div class="panel forum-list">} [llength $posts] $action]
   foreach post $posts {
+    set reply ""
+    if {[dict exists $data can_triage] && [dict get $data can_triage]} {
+      set reply [format {
+        <a class="back-link forum-reply" href="#" data-hub-path="%s">Reply</a>} \
+        [::fossilhub::views::repositoryPath $repository \
+          "forum/[dict get $post uuid]/reply"]]
+    }
     append html [format {
       <article class="forum-post">
         <div class="avatar" aria-hidden="true">%s</div>
         <div><h3>%s</h3><p>%s · <span class="hash">%s</span></p></div>
-        <time>%s</time>
+        <div class="forum-post-end"><time>%s</time>%s</div>
       </article>} \
       [::fossilhub::view::escape \
         [::fossilhub::view::initials [dict get $post user]]] \
@@ -239,7 +292,7 @@ proc ::fossilhub::views::renderForumSection {repository data} {
       [::fossilhub::view::escape [dict get $post user]] \
       [::fossilhub::view::escape [dict get $post uuid]] \
       [::fossilhub::view::escape \
-        [::fossilhub::view::formatDate [dict get $post epoch]]]]
+        [::fossilhub::view::formatDate [dict get $post epoch]]] $reply]
   }
   append html {</div>}
   return $html
@@ -255,6 +308,11 @@ proc ::fossilhub::views::renderRepositorySection {repository section data} {
     wiki-page { return [::fossilhub::views::renderWikiPage $repository $data] }
     tickets { return [::fossilhub::views::renderTicketsSection $repository $data] }
     forum { return [::fossilhub::views::renderForumSection $repository $data] }
+    file-compose - wiki-compose - ticket-compose - ticket-workbench -
+    forum-compose {
+      return [::fossilhub::views::renderMutationSection \
+        $repository $section $data]
+    }
   }
   error "unknown repository section"
 }

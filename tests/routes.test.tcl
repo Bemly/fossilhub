@@ -25,6 +25,38 @@ assertEqual [::fossilhub::routeForPath \
   /repo/sqlite.fossil/wiki-page/abcdef1234567890] \
   {repository sqlite.fossil wiki-page abcdef1234567890} \
   "repository wiki artifact route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/files/new] \
+  {repository-mutation sqlite.fossil file-new} \
+  "new file workbench route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/file/abcdef1234567890/edit] \
+  {repository-mutation sqlite.fossil file-edit abcdef1234567890} \
+  "file edit workbench route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/wiki/new] \
+  {repository-mutation sqlite.fossil wiki-new} \
+  "new Wiki workbench route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/wiki-page/abcdef1234567890/edit] \
+  {repository-mutation sqlite.fossil wiki-edit abcdef1234567890} \
+  "Wiki edit workbench route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/tickets/new] \
+  {repository-mutation sqlite.fossil ticket-new} \
+  "new Ticket workbench route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/ticket/abcdef1234567890abcdef1234567890abcdef12] \
+  {repository-mutation sqlite.fossil ticket abcdef1234567890abcdef1234567890abcdef12} \
+  "Ticket workbench route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/forum/new] \
+  {repository-mutation sqlite.fossil forum-new} \
+  "new Forum discussion route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/forum/abcdef1234/reply] \
+  {repository-mutation sqlite.fossil forum-reply abcdef1234} \
+  "Forum reply route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/repo/sqlite.fossil/files/new] \
+  {repository-mutation sqlite.fossil file-new} \
+  "mounted new file route"
 assertEqual [::fossilhub::routeForPath /repo.html] \
   {repository bedrock.fossil timeline} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /catalog-fragment] \
@@ -73,5 +105,16 @@ assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/explore] \
   explore "mounted explore route"
 assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/] \
   home "mounted home route"
+
+rename ::fossilhub::requestPath ::fossilhub::realRequestPath
+proc ::fossilhub::requestPath {} {
+  return /bemly-moe/app/fossilhub/repo/sqlite.fossil/files/new
+}
+assertEqual [::fossilhub::mutationController::relativeHubPath login] \
+  ../../../login "mounted mutation sign-in redirect"
+assertEqual [::fossilhub::mutationController::relativeRepositoryPath files] \
+  ../files "mounted mutation repository redirect"
+rename ::fossilhub::requestPath {}
+rename ::fossilhub::realRequestPath ::fossilhub::requestPath
 
 puts "route tests passed"

@@ -12,6 +12,7 @@ foreach sourceFile {
   lib/auth-model.tcl
   lib/catalog-model.tcl
   lib/repository-service.tcl
+  lib/mutation-service.tcl
   lib/view.tcl
   views/home.tcl
   views/explore.tcl
@@ -19,8 +20,10 @@ foreach sourceFile {
   views/repository.tcl
   views/account.tcl
   views/repository-management.tcl
+  views/mutations.tcl
   lib/account-controller.tcl
   lib/repository-controller.tcl
+  lib/mutation-controller.tcl
 } {
   source [file join $::fossilhub::root $sourceFile]
 }
@@ -110,6 +113,38 @@ proc ::fossilhub::routeForPath {path} {
   }
   if {[regexp {(^|/)repo\.html$} $clean]} {
     return [list repository bedrock.fossil timeline]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/files/new/?$} \
+      $clean -> _ repository]} {
+    return [list repository-mutation $repository file-new]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/file/([[:xdigit:]]{10,64})/edit/?$} \
+      $clean -> _ repository artifactId]} {
+    return [list repository-mutation $repository file-edit $artifactId]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/wiki/new/?$} \
+      $clean -> _ repository]} {
+    return [list repository-mutation $repository wiki-new]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/wiki-page/([[:xdigit:]]{10,64})/edit/?$} \
+      $clean -> _ repository artifactId]} {
+    return [list repository-mutation $repository wiki-edit $artifactId]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/tickets/new/?$} \
+      $clean -> _ repository]} {
+    return [list repository-mutation $repository ticket-new]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/ticket/([[:xdigit:]]{40,64})/?$} \
+      $clean -> _ repository ticketId]} {
+    return [list repository-mutation $repository ticket $ticketId]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/forum/new/?$} \
+      $clean -> _ repository]} {
+    return [list repository-mutation $repository forum-new]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/forum/([[:xdigit:]]{10,64})/reply/?$} \
+      $clean -> _ repository postId]} {
+    return [list repository-mutation $repository forum-reply $postId]
   }
   if {[regexp {(^|/)repo/([^/]+)/(file|wiki-page)/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository section artifactId]} {
@@ -318,6 +353,10 @@ proc wapp-default {} {
         }
       }
     }
+    repository-mutation {
+      ::fossilhub::mutationController::handle $accountContext \
+        [lindex $route 1] [lindex $route 2] [lindex $route 3]
+    }
     explore {
       set options [::fossilhub::catalogOptions]
       ::fossilhub::renderPage [::fossilhub::views::renderExplore \
@@ -352,6 +391,10 @@ proc wapp-default {} {
         dict set repository visibility [dict get $registry visibility]
         set sectionData [::fossilhub::repositorySectionData \
           $repository $section $route]
+        dict set sectionData can_write [::fossilhub::repositories::allows \
+          $registry $accountContext write]
+        dict set sectionData can_triage [::fossilhub::repositories::allows \
+          $registry $accountContext triage]
       } message]} {
         puts stderr "FossilHub: repository request failed for [file tail $name]: $message"
         wapp-reply-code "503 Service Unavailable"

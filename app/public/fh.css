@@ -487,10 +487,23 @@ body,.topbar,.panel,.term,.cmd-chip,.searchbar,.pill,.feat-card,.tabbar,.rail,.s
 .btn-danger{border-color:var(--iron);background:var(--iron);color:#fff}
 .btn-danger:hover{filter:brightness(.92)}
 .private-transport{display:inline-flex;align-items:center;border-left:5px solid var(--iron);padding:9px 12px;background:color-mix(in srgb,var(--iron) 8%,var(--paper));font-family:var(--font-mono);font-size:10px;color:var(--ink-2)}
+
+/* First-party Fossil mutation workbenches */
+.section-lede-actions,.section-title-actions{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.section-title-actions{align-items:flex-end}
+.mutation-lede{padding-bottom:6px;border-bottom:1px solid var(--line)}
+.mutation-form textarea,.mutation-stack textarea{font-family:var(--font-mono);font-size:12px;line-height:1.6;resize:vertical}
+.mutation-stack{margin-top:30px}
+.mutation-stack>h3{margin-bottom:12px;font-family:var(--font-display);font-size:1.45rem;text-transform:uppercase}
+.mutation-stack>p{margin-bottom:14px;color:var(--ink-2);font-size:13px}
+.ticket-detail{display:grid;gap:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.forum-post-end{display:grid;justify-items:end;gap:7px}
+.forum-reply{margin:0}
 @media (max-width:680px){
   .workspace-actions,.workspace-repository{align-items:flex-start;flex-direction:column}
   .field-pair,.member-form{grid-template-columns:1fr}
   .permission-layer{min-width:0;max-width:100%;width:100%}
   .member-ledger-row{grid-template-columns:1fr auto}
   .member-ledger-row form{grid-column:1/-1}
+  .section-lede-actions,.section-title-actions{align-items:flex-start;flex-direction:column}
 }

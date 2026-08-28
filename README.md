@@ -51,6 +51,17 @@ repository routes are resolved through the central registry and fail closed
 before Fossil reads the repository file. Created repository files are published
 atomically with mode 0600 and failed catalogue publications move to quarantine.
 
+The browser-write slice adds authenticated, role-checked workbenches directly
+under `/repo/<name>/`: Writer-or-higher users can create, edit, rename, and
+delete files on a selected branch and create or revise Wiki pages; Triage-or-
+higher users can create and update Tickets, comment, close/reopen, and publish
+Forum discussions and replies. Every form uses a one-time CSRF challenge and
+optimistic revision marker. Mutations are serialized per repository, attributed
+to the central username through a separate randomized Fossil-only credential,
+bounded by request and repository quotas, audited without submitted content,
+and followed by an atomic catalogue rebuild. A post-mutation indexing failure
+fails closed by quarantining the registry entry for administrator recovery.
+
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.

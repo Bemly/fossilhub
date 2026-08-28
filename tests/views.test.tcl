@@ -8,6 +8,7 @@ source [file join $projectRoot app views repository-sections.tcl]
 source [file join $projectRoot app views repository.tcl]
 source [file join $projectRoot app views account.tcl]
 source [file join $projectRoot app views repository-management.tcl]
+source [file join $projectRoot app views mutations.tcl]
 
 proc fail {message} {
   puts stderr $message
@@ -124,21 +125,77 @@ assertNotContains $privatePage {data-clone-command} \
 set files [list [dict create \
   filename {docs/<guide>.md} uuid abcdef1234567890 size 2048 extension .md]]
 set filesPage [::fossilhub::views::renderRepository $repository files \
-  [dict create files $files]]
+  [dict create files $files can_write 1]]
 assertContains $filesPage {docs/&lt;guide&gt;.md} "file name escaped"
 assertContains $filesPage {/repo/dig.fossil/file/abcdef1234567890} \
   "file artifact route"
 assertContains $filesPage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/files"} \
   "files tab active"
+assertContains $filesPage {data-hub-path="/repo/dig.fossil/files/new"} \
+  "file write action"
 
 set wikiPage [::fossilhub::views::renderRepository $repository wiki-page \
   [dict create page [dict create title {Welcome <all>} uuid abcdef1234567890 \
-    epoch 1787788800 content {# Hello <script>alert(1)</script>}]]]
+    epoch 1787788800 content {# Hello <script>alert(1)</script>}] \
+    can_write 1]]
 assertContains $wikiPage {Welcome &lt;all&gt;} "wiki title escaped"
 assertContains $wikiPage {&lt;script&gt;alert(1)&lt;/script&gt;} \
   "wiki content escaped"
 assertContains $wikiPage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/wiki"} \
   "wiki tab active"
+assertContains $wikiPage \
+  {data-hub-path="/repo/dig.fossil/wiki-page/abcdef1234567890/edit"} \
+  "Wiki edit action"
+
+set fileCompose [::fossilhub::views::renderRepository $repository \
+  file-compose [dict create operation create file "" message {Bad <path>} \
+    values [dict create filename {docs/<guide>.md} content {<script>x</script>} \
+      message {Add <guide>} branch trunk] head [string repeat a 40] \
+    branch trunk branches {feature trunk} \
+    csrf [string repeat b 64]]]
+assertContains $fileCompose {Bad &lt;path&gt;} \
+  "file workbench notice escaped"
+assertContains $fileCompose {docs/&lt;guide&gt;.md} \
+  "file workbench path escaped"
+assertContains $fileCompose {&lt;script&gt;x&lt;/script&gt;} \
+  "file workbench content escaped"
+assertContains $fileCompose {name="expected" value="aaaaaaaa} \
+  "file workbench optimistic revision"
+assertContains $fileCompose {<option value="trunk" selected>trunk</option>} \
+  "file workbench branch selection"
+assertContains $fileCompose \
+  {class="tab active" href="#" data-hub-path="/repo/dig.fossil/files"} \
+  "file workbench tab active"
+
+set binaryCompose [::fossilhub::views::renderRepository $repository \
+  file-compose [dict create operation edit message "" head [string repeat c 40] \
+    branch trunk branches {trunk} \
+    file [dict create filename specimen.bin uuid [string repeat d 40] text 0] \
+    values [dict create content "" message {Update binary} \
+      next_filename specimen.bin branch trunk] \
+    csrf_save [string repeat 1 64] csrf_rename [string repeat 2 64] \
+    csrf_delete [string repeat 3 64]]]
+assertContains $binaryCompose {Binary content cannot be edited in the browser} \
+  "binary artifact edit guard"
+assertNotContains $binaryCompose {name="operation" value="save"} \
+  "binary artifact has no save form"
+
+set ticketRecord [dict create uuid [string repeat c 40] \
+  title {Ticket <one>} status Open type Code_Defect severity Important \
+  epoch 1787788800 comment {Unsafe <comment>}]
+set ticketWorkbench [::fossilhub::views::renderRepository $repository \
+  ticket-workbench [dict create ticket $ticketRecord revision \
+    [string repeat d 40] message "" comment "" \
+    csrf_comment [string repeat e 64] csrf_status [string repeat f 64] \
+    csrf_update [string repeat 1 64]]]
+assertContains $ticketWorkbench {Ticket &lt;one&gt;} \
+  "Ticket workbench title escaped"
+assertContains $ticketWorkbench {Unsafe &lt;comment&gt;} \
+  "Ticket workbench comment escaped"
+assertContains $ticketWorkbench {name="action" value="comment"} \
+  "Ticket comment action"
+assertContains $ticketWorkbench {name="action" value="update"} \
+  "Ticket field update action"
 
 set anonymousContext [dict create \
   authenticated 0 user "" session_hash "" token "" logout_token ""]
