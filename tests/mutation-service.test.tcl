@@ -6,6 +6,7 @@ source [file join $projectRoot app lib catalog-model.tcl]
 source [file join $projectRoot app lib auth-model.tcl]
 source [file join $projectRoot app lib repository-service.tcl]
 source [file join $projectRoot app lib mutation-service.tcl]
+source [file join $projectRoot app lib history-model.tcl]
 
 proc fail {message} {
   puts stderr $message
@@ -173,6 +174,12 @@ try {
   set tickets [::fossilhub::model::tickets [dict get $repository name]]
   assertEqual [dict get [lindex $tickets 0] status] Open \
     "Ticket reopen published"
+  set ticketDetail [::fossilhub::history::ticket \
+    [dict get $repository name] $ticketId]
+  assertEqual [dict get $ticketDetail title] {Updated ticket title} \
+    "first-party Ticket detail"
+  assertEqual [llength [dict get $ticketDetail history]] 5 \
+    "first-party Ticket revision history"
 
   set threadId [::fossilhub::mutations::forumChange $repository $user thread \
     {First discussion} {Opening the discussion.} markdown {}]
@@ -185,6 +192,12 @@ try {
   assertEqual [llength $forum] 2 "Forum events indexed"
   assertEqual [dict get [lindex $forum 0] user] alice \
     "Forum author reconciled"
+  set thread [::fossilhub::history::forumThread \
+    [dict get $repository name] $replyId]
+  assertEqual [dict get $thread title] {First discussion} \
+    "first-party Forum thread title"
+  assertEqual [llength [dict get $thread posts]] 2 \
+    "first-party Forum threaded history"
 
   set ::env(FOSSILHUB_REPOSITORY_QUOTA_BYTES) \
     [expr {[file size $repositoryPath] + 1048576}]

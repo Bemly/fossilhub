@@ -171,6 +171,12 @@ browser
   Wiki artifacts, Tickets, and Forum activity through Fossil's
   `sql --readonly` interface. Query values are hex-encoded before crossing the
   process boundary and decoded in Tcl.
+- `app/lib/history-model.tcl` owns cursor-paginated repository history,
+  check-in relationships and diffs, branch/tag indexes, versioned trees, file
+  history and blame, Wiki/Ticket/Forum revision readers, archives, and
+  statistics. It uses only Fossil's read-only SQL and supported read commands;
+  temporary blame checkouts and archives must always use its exact cleanup
+  guards.
 - `app/lib/catalog-model.tcl` owns the separate application SQLite schema,
   literal search, filters, sorting, and atomic index replacement. It is one of
   the two application databases that may be opened with raw `sqlite3`.
@@ -304,8 +310,9 @@ Before a production switch:
 3. Run `tests/routes.test.tcl`, `tests/model.test.tcl`,
    `tests/catalog.test.tcl`, `tests/platform.test.tcl`,
    `tests/auth.test.tcl`, `tests/repository-data.test.tcl`,
-   `tests/repository-service.test.tcl`, `tests/mutation-service.test.tcl`,
-   `tests/fossil-transport.test.tcl`, and `tests/views.test.tcl` under the
+   `tests/history-model.test.tcl`, `tests/repository-service.test.tcl`,
+   `tests/mutation-service.test.tcl`, `tests/fossil-transport.test.tcl`, and
+   `tests/views.test.tcl` under the
    image's Tcl 9.1b0. The authentication suite
    must also exercise the packaged Argon2 binary. macOS system Tcl may be 8.5
    and is not authoritative.

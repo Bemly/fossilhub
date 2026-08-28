@@ -8,6 +8,7 @@ namespace eval ::fossilhub {
 foreach sourceFile {
   lib/repository-manifest.tcl
   lib/fossil-model.tcl
+  lib/history-model.tcl
   lib/platform-model.tcl
   lib/auth-model.tcl
   lib/catalog-model.tcl
