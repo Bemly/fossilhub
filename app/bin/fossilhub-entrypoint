@@ -23,4 +23,23 @@ chmod 0750 "${data_dir}" "${repository_dir}" "${catalog_dir}" "${platform_dir}"
 /usr/local/bin/fossilhub-bootstrap-admin
 /usr/local/bin/fossilhub-index
 
-exec "$@"
+child_pid=0
+
+forward_stop() {
+  if [ "${child_pid}" -gt 0 ]; then
+    kill -TERM "${child_pid}" 2>/dev/null || true
+  fi
+}
+
+trap forward_stop TERM INT
+
+"$@" &
+child_pid=$!
+set +e
+wait "${child_pid}"
+status=$?
+if kill -0 "${child_pid}" 2>/dev/null; then
+  wait "${child_pid}"
+  status=$?
+fi
+exit "${status}"
