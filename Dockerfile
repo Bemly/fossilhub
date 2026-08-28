@@ -118,6 +118,7 @@ RUN ln -s /opt/tcl/bin/tclsh9.1 /usr/bin/tclsh \
       /opt/fossilhub/releases.md \
       /srv/www/default.website/fh.css \
       /srv/www/default.website/public/fh.css \
+      /srv/www/default.website/public/*.js \
       /srv/www/default.website/lib/*.tcl \
       /srv/www/default.website/views/*.tcl \
     && ln /srv/www/default.website/index \
