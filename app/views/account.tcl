@@ -31,7 +31,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>%s — FossilHub</title>
-<script>try{const t=localStorage.getItem('fh-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{const t=localStorage.getItem('fh-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
@@ -257,7 +257,7 @@ proc ::fossilhub::views::renderSettings {context profileCsrf deactivateCsrf \
     <form class="field-form compact-form" action="deactivate" method="post" data-hub-action="/settings/deactivate">
       <input type="hidden" name="csrf" value="%s"><label>Type <code>%s</code> to confirm<input name="confirmation" autocomplete="off" required></label><label>Current password<input name="current_password" type="password" autocomplete="current-password" required></label><button class="btn btn-danger" type="submit">Deactivate account</button>
     </form></section>
-    <script>document.querySelectorAll('[data-theme-choice]').forEach(x=>x.addEventListener('click',()=>{const v=x.dataset.themeChoice;if(v==='system'){delete document.documentElement.dataset.theme;localStorage.removeItem('fh-theme')}else{document.documentElement.dataset.theme=v;localStorage.setItem('fh-theme',v)}}));</script>} \
+    <script>document.querySelectorAll('[data-theme-choice]').forEach(x=>x.addEventListener('click',()=>{const v=x.dataset.themeChoice;if(v==='system'){localStorage.removeItem('fh-theme');document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}else{document.documentElement.dataset.theme=v;localStorage.setItem('fh-theme',v)}}));</script>} \
     [::fossilhub::views::accountNotice $message] \
     [::fossilhub::view::escape $profileCsrf] \
     [::fossilhub::view::escape [dict get $values display_name]] \

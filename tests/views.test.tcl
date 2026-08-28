@@ -344,6 +344,8 @@ assertContains $settingsPage {data-hub-action="/settings/deactivate"} \
   "account deactivation action"
 assertContains $settingsPage {data-theme-choice="system"} \
   "account theme preference"
+assertContains $settingsPage {prefers-color-scheme: dark} \
+  "account system theme follows browser preference"
 
 set adminUser [dict replace $owner role administrator \
   email {admin@example.test}]
