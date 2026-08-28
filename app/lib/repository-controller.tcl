@@ -21,6 +21,7 @@ proc ::fossilhub::repositoryController::publicError {message fallback} {
     {A repository file with that name already exists.}
     {Repository is busy.*}
     {Repository catalogue update failed.}
+    {Repository account limit has been reached.}
     {Collaborator role is invalid.}
     {The repository owner already has full access.}
     {That user already owns the repository.}
@@ -120,6 +121,10 @@ proc ::fossilhub::repositoryController::handleWorkspace {context} {
 }
 
 proc ::fossilhub::repositoryController::renderNew {context message values} {
+  if {$values eq "" || [dict size $values] == 0} {
+    set values [dict create visibility \
+      [::fossilhub::platform::setting default_visibility public]]
+  }
   set context [::fossilhub::repositoryController::contextForPage $context]
   set challenge [::fossilhub::auth::issueChallenge repository-create \
     [dict get $context session_hash]]

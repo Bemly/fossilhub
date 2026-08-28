@@ -8,6 +8,7 @@ source [file join $projectRoot app views explore.tcl]
 source [file join $projectRoot app views repository-sections.tcl]
 source [file join $projectRoot app views repository.tcl]
 source [file join $projectRoot app views account.tcl]
+source [file join $projectRoot app views admin.tcl]
 source [file join $projectRoot app views repository-management.tcl]
 source [file join $projectRoot app views mutations.tcl]
 
@@ -342,5 +343,82 @@ assertContains $settingsPage {data-hub-action="/settings/deactivate"} \
   "account deactivation action"
 assertContains $settingsPage {data-theme-choice="system"} \
   "account theme preference"
+
+set adminUser [dict replace $owner role administrator \
+  email {admin@example.test}]
+set adminContext [dict replace $ownerContext user $adminUser]
+set auditEvent [dict create id [string repeat 9 32] \
+  action admin.settings outcome success target {} epoch 1787788800 \
+  actor alice repository_slug {}]
+set overviewPage [::fossilhub::views::renderAdminOverview $adminContext \
+  [dict create users 2 active_users 2 inactive_users 0 repositories 10 \
+    active_repositories 9 inactive_repositories 1 activity_24h 4 \
+    failures_24h 0 storage_bytes 4096 readable_repositories 9] \
+  [list $auditEvent]]
+assertContains $overviewPage {data-hub-path="/admin/users"} \
+  "administrator navigation"
+assertContains $overviewPage {Safe platform totals} \
+  "administrator overview summary"
+
+set listedAdmin [dict replace $adminUser repository_count 2 session_count 1]
+set usersPage [::fossilhub::views::renderAdminUsers $adminContext \
+  [list $listedAdmin] [dict create q {alice<script>} status all role all]]
+assertContains $usersPage {alice&lt;script&gt;} \
+  "administrator user query escaped"
+assertContains $usersPage {data-hub-path="/admin/users/user-1"} \
+  "administrator user detail link"
+
+set detailedAdmin [dict replace $adminUser repositories \
+  [list $managedRepository] sessions {} activity [list $auditEvent]]
+set adminUserPage [::fossilhub::views::renderAdminUser $adminContext \
+  $detailedAdmin [dict create role [string repeat a 64] \
+    status [string repeat b 64] sessions [string repeat c 64]]]
+assertContains $adminUserPage {data-hub-action="/admin/users/user-1/role"} \
+  "administrator user role action"
+assertContains $adminUserPage {Revoke all sessions} \
+  "administrator session revocation action"
+
+set adminRepository [dict replace $managedRepository owner_username alice \
+  owner_display_name Alice]
+set repositoriesPage [::fossilhub::views::renderAdminRepositories \
+  $adminContext [list $adminRepository] \
+  [dict create q {} state all visibility all]]
+assertContains $repositoriesPage {data-hub-path="/admin/repositories/fossil-tools"} \
+  "administrator repository detail link"
+set adminRepositoryPage [::fossilhub::views::renderAdminRepository \
+  $adminContext $adminRepository [dict create archive [string repeat d 64] \
+    restore [string repeat e 64] integrity [string repeat f 64]]]
+assertContains $adminRepositoryPage \
+  {data-hub-action="/admin/repositories/fossil-tools/integrity"} \
+  "administrator integrity action"
+
+set auditPage [::fossilhub::views::renderAdminAudit $adminContext \
+  [list $auditEvent] [dict create q {} outcome all action {}]]
+assertContains $auditPage {data-hub-path="/admin/audit.csv?} \
+  "administrator audit export route"
+assertNotContains $auditPage {request_id} \
+  "administrator audit request identifier hidden"
+
+set healthPage [::fossilhub::views::renderAdminHealth $adminContext \
+  [dict create platform_database ok catalogue_database ok repository_count 10 \
+    readable_repositories 10 file_modes_ok 1 file_ownership_ok 1 \
+    storage_bytes 1024 storage_capacity_bytes 2048 storage_status ok \
+    catalogue_indexed_epoch 1787788800 revision abc123] [string repeat 1 64]]
+assertContains $healthPage {data-hub-action="/admin/health/reindex"} \
+  "administrator catalogue rebuild action"
+
+set adminSettingsPage [::fossilhub::views::renderAdminSettings $adminContext \
+  [dict create registration open default_visibility public \
+    repositories_per_user 100 repository_quota_mb 512 \
+    maintenance_banner {Notice <unsafe>}] [string repeat 2 64]]
+assertContains $adminSettingsPage {Notice &lt;unsafe&gt;} \
+  "administrator maintenance banner escaped"
+assertNotContains $adminSettingsPage {password_hash} \
+  "administrator settings omit secrets"
+
+set reauthPage [::fossilhub::views::renderAdminReauth $adminContext \
+  [string repeat 3 64] users/user-1]
+assertContains $reauthPage {autocomplete="current-password"} \
+  "administrator reauthentication password field"
 
 puts "view tests passed"

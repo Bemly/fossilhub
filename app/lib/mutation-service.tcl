@@ -9,6 +9,13 @@ namespace eval ::fossilhub::mutations {
 proc ::fossilhub::mutations::repositoryQuotaBytes {} {
   variable defaultRepositoryQuotaBytes
   set quota $defaultRepositoryQuotaBytes
+  if {[file isfile [::fossilhub::platform::databasePath]]} {
+    set configured [::fossilhub::platform::setting repository_quota_mb 512]
+    if {[string is wideinteger -strict $configured] &&
+        $configured >= 1 && $configured <= 1048576} {
+      set quota [expr {$configured * 1048576}]
+    }
+  }
   if {[info exists ::env(FOSSILHUB_REPOSITORY_QUOTA_BYTES)] &&
       $::env(FOSSILHUB_REPOSITORY_QUOTA_BYTES) ne ""} {
     set quota $::env(FOSSILHUB_REPOSITORY_QUOTA_BYTES)

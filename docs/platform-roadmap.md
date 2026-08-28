@@ -213,18 +213,18 @@ owned repository without administrator help.
 
 ### Phase G — administrator workspace
 
-- [ ] Add an overview with user, repository, storage, activity, failure, and
+- [x] Add an overview with user, repository, storage, activity, failure, and
   catalogue-health summaries.
-- [ ] Add user search, detail, role change, disable/restore, and session
+- [x] Add user search, detail, role change, disable/restore, and session
   revocation with re-authentication and audit.
-- [ ] Add repository search, ownership/visibility inspection, archive/restore,
+- [x] Add repository search, ownership/visibility inspection, archive/restore,
   reindex, and integrity-check actions.
-- [ ] Add audit search/filter/export with secret and submitted-content redaction.
-- [ ] Add application health for database integrity, repository readability,
+- [x] Add audit search/filter/export with secret and submitted-content redaction.
+- [x] Add application health for database integrity, repository readability,
   catalogue freshness, data ownership/modes, version, and storage thresholds.
-- [ ] Add platform settings for registration policy, default visibility, limits,
+- [x] Add platform settings for registration policy, default visibility, limits,
   and maintenance banner; secrets are never editable or displayed in the UI.
-- [ ] Add tests proving administrators cannot bypass re-authentication, CSRF,
+- [x] Add tests proving administrators cannot bypass re-authentication, CSRF,
   audit, quarantine, or Fossil ownership boundaries.
 
 Acceptance: routine platform administration can be performed without SSH while

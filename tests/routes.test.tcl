@@ -104,6 +104,41 @@ assertEqual [::fossilhub::routeForPath /settings/session/revoke] \
   account-session-revoke "settings session revoke route"
 assertEqual [::fossilhub::routeForPath /settings/deactivate] \
   account-deactivate "account deactivation route"
+assertEqual [::fossilhub::routeForPath /admin] admin-overview \
+  "administrator overview route"
+assertEqual [::fossilhub::routeForPath /admin/users] admin-users \
+  "administrator users route"
+assertEqual [::fossilhub::routeForPath \
+  /admin/users/0123456789abcdef0123456789abcdef] \
+  {admin-user 0123456789abcdef0123456789abcdef} \
+  "administrator user detail route"
+assertEqual [::fossilhub::routeForPath \
+  /admin/users/0123456789abcdef0123456789abcdef/status] \
+  {admin-user-action 0123456789abcdef0123456789abcdef status} \
+  "administrator user status route"
+assertEqual [::fossilhub::routeForPath /admin/repositories] \
+  admin-repositories "administrator repositories route"
+assertEqual [::fossilhub::routeForPath /admin/repositories/bedrock/integrity] \
+  {admin-repository-action bedrock integrity} \
+  "administrator repository integrity route"
+assertEqual [::fossilhub::routeForPath /admin/audit] admin-audit \
+  "administrator audit route"
+assertEqual [::fossilhub::routeForPath /admin/audit.csv] admin-audit-export \
+  "administrator audit export route"
+assertEqual [::fossilhub::routeForPath /admin/health] admin-health \
+  "administrator health route"
+assertEqual [::fossilhub::routeForPath /admin/health/reindex] admin-reindex \
+  "administrator catalogue rebuild route"
+assertEqual [::fossilhub::routeForPath /admin/settings] admin-settings \
+  "administrator settings route"
+assertEqual [::fossilhub::routeForPath /admin/reauth] admin-reauth \
+  "administrator reauthentication route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/admin/repositories/bedrock] \
+  {admin-repository bedrock} "mounted administrator repository route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/admin/settings] admin-settings \
+  "mounted administrator settings route"
 assertEqual [::fossilhub::routeForPath /account/security] \
   account-security "account security route"
 assertEqual [::fossilhub::routeForPath /account/session/revoke] \

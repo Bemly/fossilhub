@@ -18,6 +18,11 @@ case "${1:-}" in
     ;;
   user|setting)
     ;;
+  test-integrity)
+    if [ "${FOSSILHUB_FAKE_INTEGRITY_FAIL:-0}" = "1" ]; then
+      exit 1
+    fi
+    ;;
   cgi)
     printf '%s\r\n' 'Status: 200 OK'
     printf '%s\r\n' 'Content-Type: text/plain; charset=utf-8'

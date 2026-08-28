@@ -14,6 +14,7 @@ foreach sourceFile {
   lib/catalog-model.tcl
   lib/repository-service.tcl
   lib/workspace-model.tcl
+  lib/admin-model.tcl
   lib/mutation-service.tcl
   lib/view.tcl
   lib/markup.tcl
@@ -22,9 +23,11 @@ foreach sourceFile {
   views/repository-sections.tcl
   views/repository.tcl
   views/account.tcl
+  views/admin.tcl
   views/repository-management.tcl
   views/mutations.tcl
   lib/account-controller.tcl
+  lib/admin-controller.tcl
   lib/repository-controller.tcl
   lib/mutation-controller.tcl
 } {
@@ -94,7 +97,8 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)dashboard/?$} $clean]} {
     return dashboard
   }
-  if {[regexp {(^|/)users/([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)/?$} \
+  if {![regexp {(^|/)admin/} $clean] &&
+      [regexp {(^|/)users/([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)/?$} \
       $clean -> _ username]} {
     return [list public-profile $username]
   }
@@ -121,8 +125,9 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)account/repositories/?$} $clean]} {
     return repository-workspace
   }
-  if {[regexp {(^|/)settings/?$} $clean] ||
-      [regexp {(^|/)settings/profile/?$} $clean]} {
+  if {![regexp {(^|/)admin/} $clean] &&
+      ([regexp {(^|/)settings/?$} $clean] ||
+      [regexp {(^|/)settings/profile/?$} $clean])} {
     return account-settings
   }
   if {[regexp {(^|/)settings/security/?$} $clean]} {
@@ -133,6 +138,48 @@ proc ::fossilhub::routeForPath {path} {
   }
   if {[regexp {(^|/)settings/deactivate/?$} $clean]} {
     return account-deactivate
+  }
+  if {[regexp {(^|/)admin/reauth/?$} $clean]} {
+    return admin-reauth
+  }
+  if {[regexp {(^|/)admin/users/([[:xdigit:]]{32})/(role|status|sessions)/?$} \
+      $clean -> _ id action]} {
+    return [list admin-user-action $id $action]
+  }
+  if {[regexp {(^|/)admin/users/([[:xdigit:]]{32})/?$} $clean -> _ id]} {
+    return [list admin-user $id]
+  }
+  if {[regexp {(^|/)admin/users/?$} $clean]} {
+    return admin-users
+  }
+  if {[regexp {(^|/)admin/repositories/([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)/(archive|restore|integrity)/?$} \
+      $clean -> _ slug action]} {
+    return [list admin-repository-action $slug $action]
+  }
+  if {[regexp {(^|/)admin/repositories/([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)/?$} \
+      $clean -> _ slug]} {
+    return [list admin-repository $slug]
+  }
+  if {[regexp {(^|/)admin/repositories/?$} $clean]} {
+    return admin-repositories
+  }
+  if {[regexp {(^|/)admin/audit\.csv$} $clean]} {
+    return admin-audit-export
+  }
+  if {[regexp {(^|/)admin/audit/?$} $clean]} {
+    return admin-audit
+  }
+  if {[regexp {(^|/)admin/health/reindex/?$} $clean]} {
+    return admin-reindex
+  }
+  if {[regexp {(^|/)admin/health/?$} $clean]} {
+    return admin-health
+  }
+  if {[regexp {(^|/)admin/settings/?$} $clean]} {
+    return admin-settings
+  }
+  if {[regexp {(^|/)admin/?$} $clean]} {
+    return admin-overview
   }
   if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
@@ -607,6 +654,48 @@ proc wapp-default {} {
     }
     account-deactivate {
       ::fossilhub::account::handleDeactivate $accountContext
+    }
+    admin-overview {
+      ::fossilhub::adminController::handleOverview $accountContext
+    }
+    admin-users {
+      ::fossilhub::adminController::handleUsers $accountContext
+    }
+    admin-user {
+      ::fossilhub::adminController::handleUser $accountContext [lindex $route 1]
+    }
+    admin-user-action {
+      ::fossilhub::adminController::handleUserAction $accountContext \
+        [lindex $route 1] [lindex $route 2]
+    }
+    admin-repositories {
+      ::fossilhub::adminController::handleRepositories $accountContext
+    }
+    admin-repository {
+      ::fossilhub::adminController::handleRepository $accountContext \
+        [lindex $route 1]
+    }
+    admin-repository-action {
+      ::fossilhub::adminController::handleRepositoryAction $accountContext \
+        [lindex $route 1] [lindex $route 2]
+    }
+    admin-audit {
+      ::fossilhub::adminController::handleAudit $accountContext 0
+    }
+    admin-audit-export {
+      ::fossilhub::adminController::handleAudit $accountContext 1
+    }
+    admin-health {
+      ::fossilhub::adminController::handleHealth $accountContext
+    }
+    admin-reindex {
+      ::fossilhub::adminController::handleReindex $accountContext
+    }
+    admin-settings {
+      ::fossilhub::adminController::handleSettings $accountContext
+    }
+    admin-reauth {
+      ::fossilhub::adminController::handleReauth $accountContext
     }
     repository-workspace {
       ::fossilhub::repositoryController::handleWorkspace $accountContext

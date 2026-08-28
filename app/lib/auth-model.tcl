@@ -646,8 +646,37 @@ proc ::fossilhub::auth::clearLoginFailures {login address} {
 }
 
 proc ::fossilhub::auth::registrationOpen {} {
-  set rows [::fossilhub::platform::sqlRows {
-    SELECT hex(value) FROM settings WHERE key='registration' LIMIT 1;
-  } 1]
-  expr {[llength $rows] == 1 && [lindex [lindex $rows 0] 0] eq "open"}
+  expr {[::fossilhub::platform::setting registration closed] eq "open"}
+}
+
+proc ::fossilhub::auth::reauthenticate {userId password sessionHash} {
+  if {![regexp {^[[:xdigit:]]{64}$} $sessionHash]} {
+    return 0
+  }
+  set user [::fossilhub::auth::userById $userId]
+  if {$user eq "" || [dict get $user status] ne "active"} {
+    return 0
+  }
+  set credential [::fossilhub::auth::userWithCredential \
+    [dict get $user username]]
+  if {$credential eq "" || ![::fossilhub::auth::verifyPassword \
+      $password [dict get $credential password_hash]]} {
+    ::fossilhub::auth::audit user.reauthenticate denied $userId
+    return 0
+  }
+  set now [clock seconds]
+  set output [::fossilhub::platform::execute \
+    [::fossilhub::platform::databasePath] [format {
+      BEGIN IMMEDIATE;
+      UPDATE sessions SET reauthenticated_epoch=%d
+       WHERE id_hash=%s AND user_id=%s;
+      SELECT changes();
+      COMMIT;
+    } $now [::fossilhub::platform::textLiteral [string tolower $sessionHash]] \
+      [::fossilhub::platform::textLiteral $userId]]]
+  if {[string trim $output] ne "1"} {
+    return 0
+  }
+  ::fossilhub::auth::audit user.reauthenticate success $userId
+  return 1
 }

@@ -366,8 +366,29 @@ proc ::fossilhub::platform::seedSql {} {
       $now $now 0]
     append sql "INSERT OR IGNORE INTO repositories VALUES([join $values ,]);\n"
   }
+  foreach {key value} {
+    repositories_per_user 100
+    repository_quota_mb 512
+  } {
+    append sql [format {INSERT OR IGNORE INTO settings VALUES(%s,%s,0);
+} [::fossilhub::platform::textLiteral $key] \
+      [::fossilhub::platform::textLiteral $value]]
+  }
   append sql "COMMIT;\nPRAGMA quick_check;\n"
   return $sql
+}
+
+proc ::fossilhub::platform::setting {key {fallback ""}} {
+  if {![regexp {^[a-z][a-z0-9_]{0,63}$} $key]} {
+    error "invalid platform setting key"
+  }
+  set rows [::fossilhub::platform::sqlRows [format {
+    SELECT hex(value) FROM settings WHERE key=%s LIMIT 1;
+  } [::fossilhub::platform::textLiteral $key]] 1]
+  if {[llength $rows] == 0} {
+    return $fallback
+  }
+  return [lindex [lindex $rows 0] 0]
 }
 
 proc ::fossilhub::platform::seedRepositories {{database ""}} {

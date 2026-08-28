@@ -77,6 +77,15 @@ choose a browser-local theme; and deactivate their account after password
 confirmation. The last active administrator cannot self-deactivate, and
 deactivation closes every session without deleting repository custody records.
 
+The administrator-workspace slice adds `/admin` with searchable user and
+repository ledgers, controlled role/status/session actions, recoverable archive
+and restore, Fossil integrity checks with fail-closed quarantine, catalogue
+reindexing, a redacted audit CSV, safe application health, and non-secret
+platform policy. Administrator writes require authentication from the last ten
+minutes plus a route-scoped one-time CSRF challenge. Registration, repository
+defaults, per-user counts, per-repository quotas, and the maintenance banner are
+enforced from the application-owned settings table.
+
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.

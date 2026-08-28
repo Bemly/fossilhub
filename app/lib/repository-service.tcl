@@ -290,6 +290,20 @@ proc ::fossilhub::repositories::create {owner slug title description visibility}
   set title [::fossilhub::repositories::validateTitle $title]
   set description [::fossilhub::repositories::validateDescription $description]
   set visibility [::fossilhub::repositories::validateVisibility $visibility]
+  set repositoryLimit [::fossilhub::platform::setting repositories_per_user 100]
+  if {![string is integer -strict $repositoryLimit] ||
+      $repositoryLimit < 1 || $repositoryLimit > 10000} {
+    error "Repository account limit configuration is invalid."
+  }
+  set ownedRows [::fossilhub::platform::sqlRows [format {
+    SELECT hex(CAST(COUNT(*) AS TEXT)) FROM repositories
+     WHERE owner_user_id=%s;
+  } [::fossilhub::platform::textLiteral [dict get $owner id]]] 1]
+  set ownedCount [expr {[llength $ownedRows] == 0 ? 0 :
+    [lindex [lindex $ownedRows 0] 0]}]
+  if {$ownedCount >= $repositoryLimit} {
+    error "Repository account limit has been reached."
+  }
   set fossilName "${slug}.fossil"
   if {[::fossilhub::repositories::bySlug $slug] ne ""} {
     error "A repository with that name already exists."
@@ -658,4 +672,62 @@ proc ::fossilhub::repositories::restore {repository actorId} {
     ::fossilhub::repositories::releaseLock $lock
   }
   return 1
+}
+
+proc ::fossilhub::repositories::quarantine {repository actorId reason} {
+  if {[dict get $repository state] ne "active"} {
+    error "Repository is not active."
+  }
+  if {![regexp {^[a-z][a-z0-9-]{0,39}$} $reason]} {
+    error "Repository quarantine reason is invalid."
+  }
+  set source [::fossilhub::model::repositoryPath [dict get $repository name]]
+  if {![file isfile $source]} {
+    error "Repository file is unavailable."
+  }
+  set lock [::fossilhub::repositories::acquireLock \
+    "quarantine-[dict get $repository slug]"]
+  set quarantine [::fossilhub::repositories::quarantineRoot]
+  file mkdir $quarantine
+  file attributes $quarantine -permissions 0750
+  set destination [file join $quarantine \
+    "quarantine-${reason}-[dict get $repository id]-[dict get $repository name]"]
+  if {[file exists $destination]} {
+    ::fossilhub::repositories::releaseLock $lock
+    error "Repository quarantine target already exists."
+  }
+  try {
+    file rename $source $destination
+    file attributes $destination -permissions 0600
+    set now [clock seconds]
+    ::fossilhub::platform::execute [::fossilhub::platform::databasePath] \
+      [format {
+        PRAGMA foreign_keys=ON;
+        BEGIN IMMEDIATE;
+        UPDATE repositories SET state='quarantined',archived_epoch=%d,
+          updated_epoch=%d WHERE id=%s;
+        INSERT INTO audit_events VALUES(%s,%s,%s,'repository.quarantine',%s,
+          'success','','',%d);
+        COMMIT;
+      } $now $now \
+        [::fossilhub::platform::textLiteral [dict get $repository id]] \
+        [::fossilhub::platform::textLiteral [::fossilhub::auth::randomToken 16]] \
+        [::fossilhub::platform::textLiteral $actorId] \
+        [::fossilhub::platform::textLiteral [dict get $repository id]] \
+        [::fossilhub::platform::textLiteral [dict get $repository slug]] $now]
+    if {[catch {::fossilhub::catalog::rebuild}]} {
+      ::fossilhub::auth::audit repository.quarantine-index failure $actorId \
+        [dict get $repository slug] [dict get $repository id]
+    }
+  } on error {message options} {
+    set current [::fossilhub::repositories::byName [dict get $repository name]]
+    if {[file isfile $destination] && ![file exists $source] &&
+        $current ne "" && [dict get $current state] eq "active"} {
+      file rename $destination $source
+    }
+    return -options $options $message
+  } finally {
+    ::fossilhub::repositories::releaseLock $lock
+  }
+  return $destination
 }
