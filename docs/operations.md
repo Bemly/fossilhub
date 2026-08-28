@@ -138,7 +138,9 @@ The image provides an idempotent `/usr/local/bin/fossilhub-init` command. It
 initializes each missing repository in a uniquely named temporary file before
 publishing it, applies mode 0600, and rebuilds the catalogue only after all ten
 operations succeed. Run it only with the exact FossilHub data mount and the
-same UID/GID as the service. Initialization output is deliberately suppressed
+same UID/GID as the service. The image supplies the required non-secret
+`HOME=/data` and `USER=fossilhub` environment for direct initializer runs.
+Initialization output is deliberately suppressed
 because Fossil prints a generated local administrator password; the initializer
 immediately removes that generated user's capabilities.
 

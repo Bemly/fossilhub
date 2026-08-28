@@ -83,6 +83,9 @@ RUN apt-get update \
       --shell /usr/sbin/nologin fossilhub \
     && install -d -o fossilhub -g fossilhub -m 0750 /data
 
+ENV HOME=/data \
+    USER=fossilhub
+
 COPY --from=althttpd-builder /build/althttpd/althttpd /usr/local/bin/althttpd
 COPY --from=tcl-builder /opt/tcl /opt/tcl
 COPY --from=fossil-builder /build/fossil/fossil /usr/local/bin/fossil
