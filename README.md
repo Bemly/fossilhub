@@ -62,6 +62,13 @@ bounded by request and repository quotas, audited without submitted content,
 and followed by an atomic catalogue rebuild. A post-mutation indexing failure
 fails closed by quarantining the registry entry for administrator recovery.
 
+The complete first-party reading slice adds cursor-paginated Timeline search,
+check-in relationships and unified diffs, branch/tag indexes, versioned source
+trees, raw downloads, file history and blame, ZIP snapshots, repository
+statistics, version-selectable rendered Docs, safe Markdown/Fossil-Wiki,
+Wiki comparisons, Ticket history, and threaded Forum views. Browser pages use
+only FossilHub routes; the guarded Fossil CGI remains clone/sync transport only.
+
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.

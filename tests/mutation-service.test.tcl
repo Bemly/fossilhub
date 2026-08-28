@@ -198,6 +198,11 @@ try {
     "first-party Forum thread title"
   assertEqual [llength [dict get $thread posts]] 2 \
     "first-party Forum threaded history"
+  set threads [::fossilhub::history::forumThreads \
+    [dict get $repository name]]
+  assertEqual [llength $threads] 1 "first-party Forum thread index"
+  assertEqual [dict get [lindex $threads 0] posts] 2 \
+    "Forum thread reply count"
 
   set ::env(FOSSILHUB_REPOSITORY_QUOTA_BYTES) \
     [expr {[file size $repositoryPath] + 1048576}]

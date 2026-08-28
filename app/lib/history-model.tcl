@@ -3,6 +3,8 @@ namespace eval ::fossilhub::history {
   variable maximumTreeEntries 5000
   variable maximumDiffBytes 2097152
   variable maximumRenderedBytes 524288
+  variable maximumRawBytes 16777216
+  variable maximumArchiveBytes 67108864
 }
 
 proc ::fossilhub::history::repository {name} {
@@ -87,6 +89,31 @@ proc ::fossilhub::history::resolveCheckin {name revision} {
   lassign [lindex $rows 0] rid uuid epoch user comment
   return [dict create rid $rid uuid $uuid epoch $epoch user $user \
     comment $comment]
+}
+
+proc ::fossilhub::history::branchHead {name branch} {
+  set repository [::fossilhub::history::repository $name]
+  set branch [::fossilhub::history::validateFilter $branch branch 160]
+  if {$branch eq ""} {
+    error "branch name is required"
+  }
+  set rows [::fossilhub::model::sqlRows $repository [format {
+    SELECT hex(CAST(e.objid AS TEXT)),hex(CAST(b.uuid AS TEXT)),
+           hex(CAST(CAST(strftime('%%s',e.mtime) AS INTEGER) AS TEXT)),
+           hex(CAST(COALESCE(e.euser,e.user,'') AS TEXT)),
+           hex(CAST(COALESCE(e.ecomment,e.comment,'') AS TEXT))
+      FROM event AS e JOIN blob AS b ON b.rid=e.objid
+      JOIN tagxref AS tx ON tx.rid=e.objid AND tx.tagtype>0
+      JOIN tag AS t ON t.tagid=tx.tagid AND t.tagname='branch'
+     WHERE e.type='ci' AND tx.value=%s COLLATE NOCASE
+     ORDER BY e.mtime DESC,e.objid DESC LIMIT 1;
+  } [::fossilhub::model::textLiteral $branch]] 5]
+  if {[llength $rows] != 1} {
+    error "branch not found"
+  }
+  lassign [lindex $rows 0] rid uuid epoch user comment
+  return [dict create rid $rid uuid $uuid epoch $epoch user $user \
+    comment $comment branch $branch]
 }
 
 proc ::fossilhub::history::normalizeTimelineOptions {options} {
@@ -457,6 +484,9 @@ proc ::fossilhub::history::tree {name revision {directory ""}} {
   variable maximumTreeEntries
   set repository [::fossilhub::history::repository $name]
   set checkin [::fossilhub::history::resolveCheckin $name $revision]
+  set labels [::fossilhub::history::checkinLabels $repository [dict get $checkin rid]]
+  dict set checkin branch [dict get $labels branch]
+  dict set checkin tags [dict get $labels symbols]
   set directory [::fossilhub::history::validatePath $directory 1]
   set uuid [dict get $checkin uuid]
   set rows [::fossilhub::model::sqlRows $repository [format {
@@ -509,6 +539,47 @@ proc ::fossilhub::history::tree {name revision {directory ""}} {
   return [dict create checkin $checkin directory $directory entries $entries]
 }
 
+proc ::fossilhub::history::filesAtRevision {name revision} {
+  variable maximumTreeEntries
+  set repository [::fossilhub::history::repository $name]
+  set checkin [::fossilhub::history::resolveCheckin $name $revision]
+  set rows [::fossilhub::model::sqlRows $repository [format {
+    SELECT hex(CAST(f.filename AS TEXT)),hex(CAST(f.uuid AS TEXT)),
+           hex(CAST(COALESCE(b.size,0) AS TEXT))
+      FROM files_of_checkin(%s) AS f JOIN blob AS b ON b.uuid=f.uuid
+     ORDER BY f.filename COLLATE NOCASE LIMIT %d;
+  } [::fossilhub::model::textLiteral [dict get $checkin uuid]] \
+    [expr {$maximumTreeEntries + 1}]] 3]
+  if {[llength $rows] > $maximumTreeEntries} {
+    error "repository tree exceeds the browsing entry budget"
+  }
+  set files {}
+  foreach row $rows {
+    lassign $row filename uuid size
+    lappend files [dict create filename $filename uuid $uuid size $size \
+      extension [string tolower [file extension $filename]]]
+  }
+  return [dict create checkin $checkin files $files]
+}
+
+proc ::fossilhub::history::documentationAtRevision {name revision} {
+  set result [::fossilhub::history::filesAtRevision $name $revision]
+  set documentation {}
+  foreach record [dict get $result files] {
+    set filename [dict get $record filename]
+    set tail [string tolower [file tail $filename]]
+    set extension [dict get $record extension]
+    if {[string match readme* $tail] || [string match license* $tail] ||
+        [string match {docs/*} [string tolower $filename]] ||
+        [string match {www/*} [string tolower $filename]] ||
+        $extension in {.md .markdown .wiki .txt .html}} {
+      lappend documentation $record
+    }
+  }
+  dict set result files $documentation
+  return $result
+}
+
 proc ::fossilhub::history::fileAtRevision {name revision artifactId \
     {maximumBytes 524288}} {
   set repository [::fossilhub::history::repository $name]
@@ -548,6 +619,19 @@ proc ::fossilhub::history::fileAtRevision {name revision artifactId \
   }
   dict set result content $content
   return $result
+}
+
+proc ::fossilhub::history::rawFile {name revision artifactId} {
+  variable maximumRawBytes
+  set repository [::fossilhub::history::repository $name]
+  set file [::fossilhub::history::fileAtRevision $name $revision $artifactId 1]
+  if {[dict get $file size] > $maximumRawBytes} {
+    error "file exceeds the direct download budget"
+  }
+  dict set file content [::fossilhub::model::artifactText \
+    $repository [dict get $file uuid]]
+  dict set file truncated 0
+  return $file
 }
 
 proc ::fossilhub::history::fileHistory {name revision artifactId {limit 100}} {
@@ -736,6 +820,32 @@ proc ::fossilhub::history::wikiHistory {name title {limit 100}} {
   return $result
 }
 
+proc ::fossilhub::history::wikiArtifact {name revision} {
+  set repository [::fossilhub::history::repository $name]
+  set revision [::fossilhub::history::validateRevision $revision]
+  set rows [::fossilhub::model::sqlRows $repository [format {
+    SELECT hex(CAST(substr(t.tagname,6) AS TEXT)),hex(CAST(b.uuid AS TEXT)),
+           hex(CAST(CAST(strftime('%%s',tx.mtime) AS INTEGER) AS TEXT)),
+           hex(CAST(COALESCE(e.euser,e.user,'') AS TEXT)),
+           hex(CAST(COALESCE(e.ecomment,e.comment,'') AS TEXT))
+      FROM tag AS t JOIN tagxref AS tx ON tx.tagid=t.tagid AND tx.tagtype>0
+      JOIN blob AS b ON b.rid=tx.rid LEFT JOIN event AS e ON e.objid=tx.rid
+     WHERE t.tagname GLOB 'wiki-*'
+       AND lower(b.uuid) GLOB (lower(%s) || '*') LIMIT 2;
+  } [::fossilhub::model::textLiteral $revision]] 5]
+  if {[llength $rows] != 1} {
+    error "wiki revision not found or identifier is ambiguous"
+  }
+  lassign [lindex $rows 0] title uuid epoch user comment
+  set artifact [::fossilhub::model::artifactText $repository $uuid]
+  set cards [::fossilhub::history::artifactCards $artifact]
+  set mimetype [expr {[dict exists $cards N] ? [lindex [dict get $cards N] 0] : \
+    "text/x-fossil-wiki"}]
+  return [dict create title $title uuid $uuid epoch $epoch user $user \
+    comment $comment mimetype $mimetype \
+    content [::fossilhub::history::artifactBody $artifact]]
+}
+
 proc ::fossilhub::history::wikiRevision {name title revision} {
   set repository [::fossilhub::history::repository $name]
   set revision [::fossilhub::history::validateRevision $revision]
@@ -748,6 +858,60 @@ proc ::fossilhub::history::wikiRevision {name title revision} {
     }
   }
   error "wiki revision not found"
+}
+
+proc ::fossilhub::history::compareLines {before after} {
+  set left [split $before "\n"]
+  set right [split $after "\n"]
+  if {[llength $left] > 300 || [llength $right] > 300} {
+    return [dict create too_large 1 lines {}]
+  }
+  set table [dict create]
+  for {set i [llength $left]} {$i >= 0} {incr i -1} {
+    for {set j [llength $right]} {$j >= 0} {incr j -1} {
+      if {$i == [llength $left] || $j == [llength $right]} {
+        dict set table "$i,$j" 0
+      } elseif {[lindex $left $i] eq [lindex $right $j]} {
+        dict set table "$i,$j" [expr {1 + [dict get $table \
+          "[expr {$i + 1}],[expr {$j + 1}]"]}]
+      } else {
+        dict set table "$i,$j" [expr {max(
+          [dict get $table "[expr {$i + 1}],$j"],
+          [dict get $table "$i,[expr {$j + 1}]"])}]
+      }
+    }
+  }
+  set lines {}
+  set i 0
+  set j 0
+  while {$i < [llength $left] || $j < [llength $right]} {
+    if {$i < [llength $left] && $j < [llength $right] &&
+        [lindex $left $i] eq [lindex $right $j]} {
+      lappend lines [dict create kind equal content [lindex $left $i]]
+      incr i
+      incr j
+    } elseif {$j < [llength $right] && ($i >= [llength $left] ||
+        [dict get $table "$i,[expr {$j + 1}]"] >
+        [dict get $table "[expr {$i + 1}],$j"])} {
+      lappend lines [dict create kind added content [lindex $right $j]]
+      incr j
+    } else {
+      lappend lines [dict create kind deleted content [lindex $left $i]]
+      incr i
+    }
+  }
+  return [dict create too_large 0 lines $lines]
+}
+
+proc ::fossilhub::history::wikiComparison {name beforeRevision afterRevision} {
+  set before [::fossilhub::history::wikiArtifact $name $beforeRevision]
+  set after [::fossilhub::history::wikiArtifact $name $afterRevision]
+  if {![string equal -nocase [dict get $before title] [dict get $after title]]} {
+    error "wiki revisions belong to different pages"
+  }
+  return [dict create before $before after $after comparison \
+    [::fossilhub::history::compareLines \
+      [dict get $before content] [dict get $after content]]]
 }
 
 proc ::fossilhub::history::validateTicketId {ticketId} {
@@ -853,6 +1017,41 @@ proc ::fossilhub::history::forumThread {name artifactId} {
   return [dict create uuid $rootUuid title $title posts $posts]
 }
 
+proc ::fossilhub::history::forumThreads {name {limit 100}} {
+  set repository [::fossilhub::history::repository $name]
+  set limit [::fossilhub::model::validatedLimit $limit 200]
+  set countRows [::fossilhub::model::sqlRows $repository {
+    SELECT hex(CAST(COUNT(*) AS TEXT)) FROM event WHERE type='f';
+  } 1]
+  if {[lindex [lindex $countRows 0] 0] == 0} {
+    return {}
+  }
+  set rows [::fossilhub::model::sqlRows $repository [format {
+    SELECT hex(CAST(root.uuid AS TEXT)),
+           hex(CAST(CAST(strftime('%%s',MAX(allposts.fmtime)) AS INTEGER) AS TEXT)),
+           hex(CAST(COUNT(allposts.fpid) AS TEXT)),
+           hex(CAST(COALESCE(e.euser,e.user,'') AS TEXT))
+      FROM forumpost AS first
+      JOIN blob AS root ON root.rid=first.fpid
+      JOIN forumpost AS allposts ON allposts.froot=first.fpid
+      LEFT JOIN event AS e ON e.objid=first.fpid
+     WHERE first.fpid=first.froot
+     GROUP BY first.fpid ORDER BY MAX(allposts.fmtime) DESC,first.fpid DESC
+     LIMIT %d;
+  } $limit] 4]
+  set result {}
+  foreach row $rows {
+    lassign $row uuid epoch postCount user
+    set artifact [::fossilhub::model::artifactText $repository $uuid]
+    set cards [::fossilhub::history::artifactCards $artifact]
+    set title [expr {[dict exists $cards H] ? [lindex [dict get $cards H] 0] :
+      "Untitled discussion"}]
+    lappend result [dict create uuid $uuid title $title epoch $epoch \
+      posts $postCount user $user]
+  }
+  return $result
+}
+
 proc ::fossilhub::history::statistics {name} {
   set repository [::fossilhub::history::repository $name]
   set rows [::fossilhub::model::sqlRows $repository {
@@ -879,8 +1078,18 @@ proc ::fossilhub::history::statistics {name} {
 }
 
 proc ::fossilhub::history::createArchive {name revision} {
+  variable maximumArchiveBytes
   set repository [::fossilhub::history::repository $name]
   set checkin [::fossilhub::history::resolveCheckin $name $revision]
+  set files [::fossilhub::history::filesAtRevision $name \
+    [dict get $checkin uuid]]
+  set total 0
+  foreach file [dict get $files files] {
+    incr total [dict get $file size]
+    if {$total > $maximumArchiveBytes} {
+      error "repository snapshot exceeds the archive download budget"
+    }
+  }
   set channel [file tempfile archive fossilhub-archive]
   close $channel
   file delete $archive

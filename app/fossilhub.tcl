@@ -15,6 +15,7 @@ foreach sourceFile {
   lib/repository-service.tcl
   lib/mutation-service.tcl
   lib/view.tcl
+  lib/markup.tcl
   views/home.tcl
   views/explore.tcl
   views/repository-sections.tcl
@@ -135,9 +136,13 @@ proc ::fossilhub::routeForPath {path} {
       $clean -> _ repository]} {
     return [list repository-mutation $repository ticket-new]
   }
-  if {[regexp {(^|/)repo/([^/]+)/ticket/([[:xdigit:]]{40,64})/?$} \
+  if {[regexp {(^|/)repo/([^/]+)/ticket/([[:xdigit:]]{40,64})/manage/?$} \
       $clean -> _ repository ticketId]} {
     return [list repository-mutation $repository ticket $ticketId]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/ticket/([[:xdigit:]]{40,64})/?$} \
+      $clean -> _ repository ticketId]} {
+    return [list repository-ticket $repository $ticketId]
   }
   if {[regexp {(^|/)repo/([^/]+)/forum/new/?$} \
       $clean -> _ repository]} {
@@ -147,11 +152,39 @@ proc ::fossilhub::routeForPath {path} {
       $clean -> _ repository postId]} {
     return [list repository-mutation $repository forum-reply $postId]
   }
+  if {[regexp {(^|/)repo/([^/]+)/archive/([[:xdigit:]]{10,64})\.zip$} \
+      $clean -> _ repository revision]} {
+    return [list repository $repository archive $revision]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/(tree|checkin)/([[:xdigit:]]{10,64})/?$} \
+      $clean -> _ repository section revision]} {
+    return [list repository $repository $section $revision]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/(blob|raw|history|blame|doc)/([[:xdigit:]]{10,64})/([[:xdigit:]]{10,64})/?$} \
+      $clean -> _ repository section revision artifactId]} {
+    return [list repository $repository $section $revision $artifactId]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/wiki-revision/([[:xdigit:]]{10,64})/(history)/?$} \
+      $clean -> _ repository revision section]} {
+    return [list repository $repository wiki-history $revision]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/wiki-revision/([[:xdigit:]]{10,64})/?$} \
+      $clean -> _ repository revision]} {
+    return [list repository $repository wiki-revision $revision]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/wiki-compare/([[:xdigit:]]{10,64})/([[:xdigit:]]{10,64})/?$} \
+      $clean -> _ repository before after]} {
+    return [list repository $repository wiki-compare $before $after]
+  }
+  if {[regexp {(^|/)repo/([^/]+)/discussion/([[:xdigit:]]{10,64})/?$} \
+      $clean -> _ repository revision]} {
+    return [list repository $repository discussion $revision]
+  }
   if {[regexp {(^|/)repo/([^/]+)/(file|wiki-page)/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository section artifactId]} {
     return [list repository $repository $section $artifactId]
   }
-  if {[regexp {(^|/)repo/([^/]+)/(timeline|files|docs|wiki|tickets|forum)/?$} \
+  if {[regexp {(^|/)repo/([^/]+)/(timeline|files|docs|wiki|tickets|forum|branches|tags|stats)/?$} \
       $clean -> _ repository section]} {
     return [list repository $repository $section]
   }
@@ -242,53 +275,272 @@ proc ::fossilhub::placeholder {title message} {
   }
 }
 
-proc ::fossilhub::repositorySectionData {repository section route} {
+proc ::fossilhub::dateFilterEpoch {value endOfDay} {
+  set value [string trim $value]
+  if {$value eq ""} {
+    return ""
+  }
+  if {![regexp {^[0-9]{4}-[0-9]{2}-[0-9]{2}$} $value] ||
+      [catch {set epoch [clock scan $value -format %Y-%m-%d]}]} {
+    error "invalid timeline date"
+  }
+  if {$endOfDay} {
+    incr epoch 86399
+  }
+  return $epoch
+}
+
+proc ::fossilhub::timelineRequestOptions {} {
+  set fromDate [string range [wapp-param from ""] 0 10]
+  set toDate [string range [wapp-param to ""] 0 10]
+  return [dict create \
+    q [string range [wapp-param q ""] 0 200] \
+    type [string range [wapp-param event all] 0 12] \
+    author [string range [wapp-param author ""] 0 160] \
+    branch [string range [wapp-param branch ""] 0 160] \
+    tag [string range [wapp-param tag ""] 0 160] \
+    from [::fossilhub::dateFilterEpoch $fromDate 0] \
+    to [::fossilhub::dateFilterEpoch $toDate 1] \
+    from_date $fromDate to_date $toDate \
+    cursor [string range [wapp-param cursor ""] 0 64] limit 30]
+}
+
+proc ::fossilhub::defaultCheckin {repository registry} {
+  set branch [dict get $registry default_branch]
+  if {[catch {set checkin [::fossilhub::history::branchHead \
+      [dict get $repository name] $branch]}]} {
+    set events [dict get [::fossilhub::history::timeline \
+      [dict get $repository name] [dict create type ci limit 1]] events]
+    if {[llength $events] == 0} {
+      error "repository has no check-in"
+    }
+    set checkin [::fossilhub::history::resolveCheckin \
+      [dict get $repository name] [dict get [lindex $events 0] uuid]]
+    dict set checkin branch $branch
+  }
+  return $checkin
+}
+
+proc ::fossilhub::repositorySectionData {repository registry section route} {
   set name [dict get $repository name]
   switch -- $section {
     timeline {
-      set filter [wapp-param event all]
-      if {$filter ni {all ci w t f}} {
-        set filter all
-      }
-      if {$filter ne "all"} {
-        set events {}
-        foreach event [dict get $repository events] {
-          if {[dict get $event type] eq $filter} {
-            lappend events $event
-          }
-        }
-        dict set repository events $events
-      }
-      return [dict create repository $repository event_filter $filter]
+      set requestOptions [::fossilhub::timelineRequestOptions]
+      set historyOptions [dict remove $requestOptions from_date to_date]
+      return [dict create timeline [::fossilhub::history::timeline \
+        $name $historyOptions] request_options $requestOptions \
+        branches [::fossilhub::history::branches $name] \
+        tags [::fossilhub::history::tags $name]]
     }
     files {
-      return [dict create files [::fossilhub::model::files $name]]
+      set checkin [::fossilhub::defaultCheckin $repository $registry]
+      return [dict create tree [::fossilhub::history::tree \
+        $name [dict get $checkin uuid]] branches \
+        [::fossilhub::history::branches $name]]
+    }
+    tree {
+      return [dict create tree [::fossilhub::history::tree $name \
+        [lindex $route 3] [string range [wapp-param path ""] 0 512]] \
+        branches [::fossilhub::history::branches $name]]
     }
     docs {
-      return [dict create files \
-        [::fossilhub::model::documentationFiles $name]]
+      set requested [string range [wapp-param revision ""] 0 64]
+      if {$requested eq ""} {
+        set requested [dict get [::fossilhub::defaultCheckin \
+          $repository $registry] uuid]
+      }
+      return [dict create documentation \
+        [::fossilhub::history::documentationAtRevision $name $requested] \
+        branches [::fossilhub::history::branches $name]]
     }
     file {
       return [dict create file [::fossilhub::model::fileRecord \
         $name [lindex $route 3]]]
     }
+    blob - doc {
+      return [dict create file [::fossilhub::history::fileAtRevision \
+        $name [lindex $route 3] [lindex $route 4]]]
+    }
+    history {
+      return [::fossilhub::history::fileHistory $name \
+        [lindex $route 3] [lindex $route 4]]
+    }
+    blame {
+      return [::fossilhub::history::blame $name \
+        [lindex $route 3] [lindex $route 4]]
+    }
+    checkin {
+      set checkin [::fossilhub::history::checkin $name [lindex $route 3]]
+      return [dict create checkin $checkin diff \
+        [::fossilhub::history::checkinDiff $name [dict get $checkin uuid]]]
+    }
+    branches {
+      return [dict create branches [::fossilhub::history::branches $name]]
+    }
+    tags {
+      return [dict create tags [::fossilhub::history::tags $name]]
+    }
+    stats {
+      set head [::fossilhub::defaultCheckin $repository $registry]
+      return [dict create statistics [::fossilhub::history::statistics $name] \
+        checkin $head]
+    }
     wiki {
       return [dict create pages [::fossilhub::model::wikiPages $name]]
     }
     wiki-page {
-      return [dict create page [::fossilhub::model::wikiContent \
-        $name [lindex $route 3]]]
+      set page [::fossilhub::history::wikiArtifact $name [lindex $route 3]]
+      set history [::fossilhub::history::wikiHistory $name [dict get $page title]]
+      dict set page latest [expr {[llength $history] > 0 && [string equal -nocase \
+        [dict get $page uuid] [dict get [lindex $history 0] uuid]]}]
+      return [dict create page $page]
+    }
+    wiki-revision {
+      set page [::fossilhub::history::wikiArtifact $name [lindex $route 3]]
+      set history [::fossilhub::history::wikiHistory $name [dict get $page title]]
+      dict set page latest [expr {[llength $history] > 0 && [string equal -nocase \
+        [dict get $page uuid] [dict get [lindex $history 0] uuid]]}]
+      return [dict create page $page]
+    }
+    wiki-history {
+      set page [::fossilhub::history::wikiArtifact $name [lindex $route 3]]
+      return [dict create page $page history [::fossilhub::history::wikiHistory \
+        $name [dict get $page title]]]
+    }
+    wiki-compare {
+      return [::fossilhub::history::wikiComparison $name \
+        [lindex $route 3] [lindex $route 4]]
     }
     tickets {
       return [dict create tickets [::fossilhub::model::tickets $name]]
     }
+    ticket-detail {
+      return [dict create ticket [::fossilhub::history::ticket \
+        $name [lindex $route 3]]]
+    }
     forum {
-      return [dict create posts [::fossilhub::model::forumPosts $name]]
+      return [dict create threads [::fossilhub::history::forumThreads $name]]
+    }
+    discussion {
+      return [dict create thread [::fossilhub::history::forumThread \
+        $name [lindex $route 3]]]
     }
     default {
       error "unknown repository section"
     }
   }
+}
+
+proc ::fossilhub::downloadName {filename fallback} {
+  set filename [file tail $filename]
+  regsub -all {[^A-Za-z0-9._-]} $filename _ filename
+  if {$filename eq "" || $filename in {. ..}} {
+    return $fallback
+  }
+  return [string range $filename 0 180]
+}
+
+proc ::fossilhub::serveRawFile {name revision artifactId} {
+  set file [::fossilhub::history::rawFile $name $revision $artifactId]
+  set filename [::fossilhub::downloadName [dict get $file filename] \
+    "artifact-[string range [dict get $file uuid] 0 11]"]
+  wapp-mimetype application/octet-stream
+  wapp-cache-control {no-store, private}
+  wapp-reply-extra X-Content-Type-Options nosniff
+  wapp-reply-extra Content-Disposition "attachment; filename=\"$filename\""
+  wapp-unsafe [dict get $file content]
+}
+
+proc ::fossilhub::serveArchive {name revision} {
+  set archive [::fossilhub::history::createArchive $name $revision]
+  set path [dict get $archive path]
+  try {
+    set channel [open $path rb]
+    try {
+      set content [read $channel]
+    } finally {
+      close $channel
+    }
+    set filename [::fossilhub::downloadName [dict get $archive filename] \
+      repository.zip]
+    wapp-mimetype application/zip
+    wapp-cache-control {no-store, private}
+    wapp-reply-extra X-Content-Type-Options nosniff
+    wapp-reply-extra Content-Disposition "attachment; filename=\"$filename\""
+    wapp-unsafe $content
+  } finally {
+    ::fossilhub::history::deleteArchive $path
+  }
+}
+
+proc ::fossilhub::handleRepositoryRead {accountContext route} {
+  set name [lindex $route 1]
+  set section [lindex $route 2]
+  set registry ""
+  if {[::fossilhub::model::validRepositoryName $name]} {
+    set registry [::fossilhub::repositories::byName $name]
+  }
+  if {$registry eq "" ||
+      ![::fossilhub::repositories::allows $registry $accountContext read] ||
+      ![file isfile [::fossilhub::model::repositoryPath $name]]} {
+    wapp-reply-code "404 Not Found"
+    ::fossilhub::placeholder \
+      "Repository not found — FossilHub" \
+      "That repository is not in this dig."
+    return
+  }
+  if {$section in {raw archive}} {
+    if {[catch {
+      if {$section eq "raw"} {
+        ::fossilhub::serveRawFile $name [lindex $route 3] [lindex $route 4]
+      } else {
+        ::fossilhub::serveArchive $name [lindex $route 3]
+      }
+    }]} {
+      puts stderr "FossilHub: repository download failed for [file tail $name]"
+      wapp-reply-code "503 Service Unavailable"
+      ::fossilhub::placeholder \
+        "Repository download unavailable — FossilHub" \
+        "Fossil could not prepare this download. Try again shortly."
+    }
+    return
+  }
+  if {[catch {
+    set repository [::fossilhub::model::repository $name 40]
+    dict set repository project_name [dict get $registry title]
+    dict set repository description [dict get $registry description]
+    dict set repository visibility [dict get $registry visibility]
+    set sectionData [::fossilhub::repositorySectionData \
+      $repository $registry $section $route]
+    dict set sectionData can_write [::fossilhub::repositories::allows \
+      $registry $accountContext write]
+    dict set sectionData can_triage [::fossilhub::repositories::allows \
+      $registry $accountContext triage]
+  } readError]} {
+    puts stderr "FossilHub: first-party repository read failed for [file tail $name]"
+    if {[regexp -nocase {invalid|not found|ambiguous|required} $readError]} {
+      wapp-reply-code "404 Not Found"
+      ::fossilhub::placeholder \
+        "Repository artifact not found — FossilHub" \
+        "That artifact is not present in this stratum."
+    } else {
+      wapp-reply-code "503 Service Unavailable"
+      ::fossilhub::placeholder \
+        "Repository unavailable — FossilHub" \
+        "Fossil could not read this stratum. Try again shortly."
+    }
+    return
+  }
+  if {[catch {set page [::fossilhub::views::renderRepository \
+      $repository $section $sectionData]}]} {
+    puts stderr "FossilHub: first-party repository render failed for [file tail $name]"
+    wapp-reply-code "503 Service Unavailable"
+    ::fossilhub::placeholder \
+      "Repository unavailable — FossilHub" \
+      "FossilHub could not render this stratum. Try again shortly."
+    return
+  }
+  ::fossilhub::renderPage $page
 }
 
 proc wapp-default {} {
@@ -358,6 +610,15 @@ proc wapp-default {} {
       ::fossilhub::mutationController::handle $accountContext \
         [lindex $route 1] [lindex $route 2] [lindex $route 3]
     }
+    repository-ticket {
+      if {[string toupper [wapp-param REQUEST_METHOD GET]] eq "GET"} {
+        ::fossilhub::handleRepositoryRead $accountContext [list repository \
+          [lindex $route 1] ticket-detail [lindex $route 2]]
+      } else {
+        ::fossilhub::mutationController::handle $accountContext \
+          [lindex $route 1] ticket [lindex $route 2]
+      }
+    }
     explore {
       set options [::fossilhub::catalogOptions]
       ::fossilhub::renderPage [::fossilhub::views::renderExplore \
@@ -372,41 +633,7 @@ proc wapp-default {} {
         [::fossilhub::catalog::repositories $options]]
     }
     repository {
-      set name [lindex $route 1]
-      set section [lindex $route 2]
-      set registry ""
-      if {[::fossilhub::model::validRepositoryName $name]} {
-        set registry [::fossilhub::repositories::byName $name]
-      }
-      if {$registry eq "" ||
-          ![::fossilhub::repositories::allows $registry $accountContext read] ||
-          ![file isfile [::fossilhub::model::repositoryPath $name]]} {
-        wapp-reply-code "404 Not Found"
-        ::fossilhub::placeholder \
-          "Repository not found — FossilHub" \
-          "That repository is not in this dig."
-      } elseif {[catch {
-        set repository [::fossilhub::model::repository $name 200]
-        dict set repository project_name [dict get $registry title]
-        dict set repository description [dict get $registry description]
-        dict set repository visibility [dict get $registry visibility]
-        set sectionData [::fossilhub::repositorySectionData \
-          $repository $section $route]
-        dict set sectionData can_write [::fossilhub::repositories::allows \
-          $registry $accountContext write]
-        dict set sectionData can_triage [::fossilhub::repositories::allows \
-          $registry $accountContext triage]
-      } message]} {
-        puts stderr "FossilHub: repository request failed for [file tail $name]: $message"
-        wapp-reply-code "503 Service Unavailable"
-        ::fossilhub::placeholder \
-          "Repository unavailable — FossilHub" \
-          "Fossil could not read this stratum. Try again shortly."
-      } else {
-        ::fossilhub::renderPage \
-          [::fossilhub::views::renderRepository \
-            $repository $section $sectionData]
-      }
+      ::fossilhub::handleRepositoryRead $accountContext $route
     }
     stylesheet {
       variable ::fossilhub::root

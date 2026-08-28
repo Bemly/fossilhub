@@ -44,8 +44,36 @@ assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/tickets/new] \
   "new Ticket workbench route"
 assertEqual [::fossilhub::routeForPath \
   /repo/sqlite.fossil/ticket/abcdef1234567890abcdef1234567890abcdef12] \
+  {repository-ticket sqlite.fossil abcdef1234567890abcdef1234567890abcdef12} \
+  "Ticket detail route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/ticket/abcdef1234567890abcdef1234567890abcdef12/manage] \
   {repository-mutation sqlite.fossil ticket abcdef1234567890abcdef1234567890abcdef12} \
   "Ticket workbench route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/checkin/abcdef1234567890] \
+  {repository sqlite.fossil checkin abcdef1234567890} \
+  "check-in detail route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/tree/abcdef1234567890] \
+  {repository sqlite.fossil tree abcdef1234567890} \
+  "versioned tree route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/blob/abcdef1234567890/1234567890abcdef] \
+  {repository sqlite.fossil blob abcdef1234567890 1234567890abcdef} \
+  "versioned file route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/archive/abcdef1234567890.zip] \
+  {repository sqlite.fossil archive abcdef1234567890} \
+  "repository archive route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/wiki-revision/abcdef1234567890/history] \
+  {repository sqlite.fossil wiki-history abcdef1234567890} \
+  "Wiki history route"
+assertEqual [::fossilhub::routeForPath \
+  /repo/sqlite.fossil/discussion/abcdef1234567890] \
+  {repository sqlite.fossil discussion abcdef1234567890} \
+  "Forum thread route"
 assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/forum/new] \
   {repository-mutation sqlite.fossil forum-new} \
   "new Forum discussion route"

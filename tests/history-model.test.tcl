@@ -100,6 +100,12 @@ try {
   commitFixture $fossil $checkout {Trunk work}
   exec $fossil --nocgi --chdir $checkout merge feature --user reader
   commitFixture $fossil $checkout {Merge feature}
+  for {set historyIndex 1} {$historyIndex <= 32} {incr historyIndex} {
+    set historyFile [format {history/record-%02d.txt} $historyIndex]
+    writeText [file join $checkout $historyFile] "history record $historyIndex\n"
+    exec $fossil --nocgi --chdir $checkout add $historyFile
+    commitFixture $fossil $checkout "History record $historyIndex"
+  }
   exec $fossil --nocgi tag add v1 trunk --repository $repository \
     --user reader
 
@@ -166,6 +172,8 @@ try {
   set tags [::fossilhub::history::tags history.fossil]
   assertTrue [expr {[lsearch -exact \
     [lmap tag $tags {dict get $tag name}] v1] >= 0}] "tag index"
+  assertEqual [dict get [::fossilhub::history::branchHead \
+    history.fossil trunk] branch] trunk "branch head resolution"
 
   set mergeEvent [lindex [dict get [::fossilhub::history::timeline \
     history.fossil [dict create q {Merge feature} type ci]] events] 0]
@@ -192,6 +200,10 @@ try {
     [dict get $merge uuid] [dict get $guide uuid]]
   assertTrue [expr {[string first {<script>} [dict get $guideFile content]] >= 0}] \
     "hostile source preserved for escaped rendering"
+  set documentation [::fossilhub::history::documentationAtRevision \
+    history.fossil [dict get $merge uuid]]
+  assertTrue [expr {[llength [dict get $documentation files]] >= 2}] \
+    "versioned documentation heuristic"
   set rootFiles [dict get $tree entries]
   set binaryEntry ""
   set renamedEntry ""
@@ -202,6 +214,10 @@ try {
   set binaryFile [::fossilhub::history::fileAtRevision history.fossil \
     [dict get $merge uuid] [dict get $binaryEntry uuid]]
   assertEqual [dict get $binaryFile text] 0 "binary file classification"
+  set rawBinary [::fossilhub::history::rawFile history.fossil \
+    [dict get $merge uuid] [dict get $binaryEntry uuid]]
+  assertEqual [string length [dict get $rawBinary content]] 5 \
+    "binary raw download content"
   set renamedHistory [::fossilhub::history::fileHistory history.fossil \
     [dict get $merge uuid] [dict get $renamedEntry uuid]]
   assertTrue [expr {[lsearch -exact [lmap item [dict get $renamedHistory history] {
@@ -218,6 +234,15 @@ try {
     [dict get [lindex $wikiHistory 0] uuid]]
   assertTrue [expr {[string first {Safe second revision} \
     [dict get $wikiRevision content]] >= 0}] "Wiki revision body"
+  set wikiArtifact [::fossilhub::history::wikiArtifact history.fossil \
+    [dict get [lindex $wikiHistory 0] uuid]]
+  assertEqual [dict get $wikiArtifact title] Home "Wiki artifact resolution"
+  set wikiComparison [::fossilhub::history::wikiComparison history.fossil \
+    [dict get [lindex $wikiHistory 1] uuid] \
+    [dict get [lindex $wikiHistory 0] uuid]]
+  assertTrue [expr {[lsearch -exact [lmap line \
+    [dict get $wikiComparison comparison lines] {dict get $line kind}] added] >= 0}] \
+    "Wiki revision comparison"
   set ticket [::fossilhub::history::ticket history.fossil $ticketId]
   assertEqual [dict get $ticket title] {History ticket} "Ticket detail"
   assertEqual [llength [dict get $ticket history]] 2 "Ticket history"

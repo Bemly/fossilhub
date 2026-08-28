@@ -1,5 +1,6 @@
 set projectRoot [file dirname [file dirname [file normalize [info script]]]]
 source [file join $projectRoot app lib view.tcl]
+source [file join $projectRoot app lib markup.tcl]
 source [file join $projectRoot app lib catalog-model.tcl]
 source [file join $projectRoot app lib repository-service.tcl]
 source [file join $projectRoot app views home.tcl]
@@ -112,6 +113,62 @@ assertNotContains $page {c-a17f3b} "repository prototype hash removed"
 assertNotContains $page {SSR_TIMELINE} "SSR implementation markers removed"
 assertNotContains $page {@@REPOSITORY_NAME@@} "SSR placeholders resolved"
 assertNotContains $page {@@VISIBILITY@@} "repository visibility placeholder resolved"
+
+set safeMarkup [::fossilhub::markup::render \
+  {# Heading
+
+<script>alert(1)</script>
+
+[safe](https://example.test) [unsafe](javascript:alert(1))} \
+  text/x-markdown]
+assertContains $safeMarkup {<h1>Heading</h1>} "Markdown heading rendered"
+assertContains $safeMarkup {href="https://example.test"} "safe markup link"
+assertContains $safeMarkup {&lt;script&gt;alert(1)&lt;/script&gt;} \
+  "raw markup escaped"
+assertNotContains $safeMarkup {href="javascript:} "unsafe markup scheme rejected"
+
+set timelineEvent [dict create rid 7 type ci epoch 1787788800 \
+  uuid [string repeat a 64] user alice comment {Check <safe>} branch trunk \
+  sort_milliseconds 1787788800000]
+set richTimeline [::fossilhub::views::renderRepository $repository timeline \
+  [dict create timeline [dict create events [list $timelineEvent] \
+      next_cursor 1787788800000:7 options {}] \
+    request_options [dict create q {<query>} type ci author alice branch trunk \
+      tag v1 from 0 to 0 from_date 2026-08-26 to_date 2026-08-27 cursor {} limit 30] \
+    branches [list [dict create name trunk uuid [string repeat a 64] \
+      epoch 1787788800 checkins 2]] \
+    tags [list [dict create name v1 uuid [string repeat a 64] \
+      epoch 1787788800 user alice comment release]]]]
+assertContains $richTimeline {name="q" value="&lt;query&gt;"} \
+  "timeline search escaped"
+assertContains $richTimeline {/repo/dig.fossil/checkin/aaaaaaaa} \
+  "timeline check-in link"
+
+set checkinFixture [dict create rid 7 uuid [string repeat a 64] \
+  epoch 1787788800 user alice comment {Merge <feature>} branch trunk tags {v1} \
+  additions 3 deletions 1 parents [list [dict create uuid [string repeat b 64] \
+    epoch 1 comment parent user alice primary 1]] children {} \
+  changes [list [dict create change modified filename README.md \
+    previous_filename {} uuid [string repeat c 64] previous_uuid [string repeat d 64] \
+    size 12 previous_size 8 permissions 0 additions 3 deletions 1]]]
+set treePage [::fossilhub::views::renderRepository $repository tree \
+  [dict create tree [dict create checkin $checkinFixture directory {} entries \
+      [list [dict create type directory name docs path docs uuid {} size 0] \
+        [dict create type file name README.md path README.md \
+          uuid [string repeat c 64] size 12]]] \
+    branches {} can_write 1]]
+assertContains $treePage {/repo/dig.fossil/tree/aaaaaaaa} \
+  "versioned tree route rendered"
+assertContains $treePage {Download ZIP} "tree archive action"
+assertContains $treePage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/files"} \
+  "tree keeps Files tab active"
+
+set checkinPage [::fossilhub::views::renderRepository $repository checkin \
+  [dict create checkin $checkinFixture diff [dict create \
+    content "--- README.md\n+++ README.md\n+<safe>\n" truncated 0 reason {}]]]
+assertContains $checkinPage {Merge &lt;feature&gt;} "check-in comment escaped"
+assertContains $checkinPage {+3 −1} "check-in line statistics"
+assertContains $checkinPage {+&lt;safe&gt;} "unified diff escaped"
 
 set privateRepository [dict merge $repository [dict create visibility private]]
 set privatePage [::fossilhub::views::renderRepository $privateRepository]

@@ -189,11 +189,57 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
 .prose-artifact pre{white-space:pre-wrap;overflow-wrap:anywhere}
 .content-note{margin:0 0 10px;font-family:var(--font-mono);font-size:10px;color:var(--iron)}
 .empty-stratum{color:var(--ink-2)}
+.section-lede-actions,.section-title-actions{display:flex;justify-content:space-between;gap:18px;align-items:flex-end}
+.section-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.timeline-filter-form{
+  display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr auto;
+  gap:10px;align-items:end;margin:0 0 16px;padding:14px;border:1px solid var(--line);
+  border-radius:5px;background:var(--card);
+}
+.timeline-filter-form label,.revision-selector label{
+  display:grid;gap:5px;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);
+}
+.timeline-filter-form input,.timeline-filter-form select,.revision-selector select{
+  width:100%;min-width:0;border:1px solid var(--line);border-radius:4px;
+  background:var(--paper);color:var(--ink);padding:8px 9px;font:11px var(--font-mono);
+}
+.timeline-results .artifact-mark{font-size:9px}
+.tree-crumbs{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:8px;font:12px var(--font-mono)}
+.revision-selector{display:flex;gap:8px;align-items:end;min-width:min(100%,310px)}
+.rendered-markup{padding:22px;line-height:1.7;overflow-wrap:anywhere}
+.rendered-markup h1,.rendered-markup h2,.rendered-markup h3,.rendered-markup h4,.rendered-markup h5,.rendered-markup h6{
+  margin:1.15em 0 .45em;font-family:var(--font-display);line-height:1.08;text-transform:none;
+}
+.rendered-markup h1:first-child,.rendered-markup h2:first-child,.rendered-markup h3:first-child{margin-top:0}
+.rendered-markup p,.rendered-markup ul,.rendered-markup ol,.rendered-markup blockquote,.rendered-markup pre{margin:.8em 0}
+.rendered-markup ul,.rendered-markup ol{padding-left:24px}
+.rendered-markup blockquote{border-left:3px solid var(--azurite);padding-left:14px;color:var(--ink-2)}
+.rendered-markup pre{padding:14px;background:var(--paper-2);overflow:auto}
+.relation-panel{display:grid;gap:12px}
+.relation-row{display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:start}
+.relation-row>div{display:flex;gap:7px;flex-wrap:wrap}
+.relation-chip{font:10px var(--font-mono);padding:5px 8px;border:1px solid var(--line);border-radius:4px}
+.muted-value{color:var(--ink-2)}
+.diff-line{display:block;min-height:1.5em}.diff-line i{display:inline-block;width:22px;font-style:normal;user-select:none}
+.diff-added{background:rgba(47,110,90,.12)}.diff-deleted{background:rgba(166,75,34,.12)}
+.ticket-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.ticket-facts>div,.stat-card{border:1px solid var(--line);background:var(--card);padding:12px;border-radius:4px}
+.ticket-facts span,.stat-card span{display:block;font:9px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.ticket-facts b,.stat-card b{display:block;margin-top:5px}
+.history-list{overflow:hidden}.history-event{padding:16px;border-top:1px dashed var(--line)}.history-event:first-child{border-top:0}
+.history-event header,.forum-thread-post header{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px}
+.history-event header span,.forum-thread-post header span{font:9.5px var(--font-mono);color:var(--ink-2)}
+.ticket-change+.ticket-change{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
+.forum-thread{overflow:hidden}.forum-thread-post{padding:18px;border-top:1px dashed var(--line)}.forum-thread-post:first-child{border-top:0}
+.forum-thread-post header{justify-content:flex-start;align-items:center}.forum-thread-post header>div:nth-child(2){display:grid}
+.statistics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .ticket-state{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;text-align:center}
 .ticket-open{color:var(--iron)}
 .ticket-closed{color:var(--verdi)}
 .forum-list{overflow:hidden}
 .forum-post{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:start;padding:16px;border-top:1px dashed var(--line)}
+.forum-post{color:inherit;text-decoration:none}.forum-post:hover{background:var(--paper-2);text-decoration:none}
 .forum-post:first-child{border-top:0}
 .forum-post h3{font-size:13.5px;line-height:1.45}
 .forum-post p,.forum-post time{margin-top:4px;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-2)}
@@ -217,6 +263,7 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
 @media (max-width:980px){
   .mast-grid{grid-template-columns:1fr}
   .label-card{max-width:380px}
+  .timeline-filter-form{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media (max-width:640px){
   .rv-row{grid-template-columns:56px 40px minmax(0,1fr) auto}
@@ -227,6 +274,11 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
   .artifact-hash{font-size:9px}
   .forum-post{grid-template-columns:32px minmax(0,1fr)}
   .forum-post time{grid-column:2}
+  .timeline-filter-form{grid-template-columns:1fr 1fr}
+  .timeline-filter-form label:first-of-type{grid-column:1/-1}
+  .section-lede-actions,.section-title-actions{align-items:flex-start;flex-direction:column}
+  .section-actions{justify-content:flex-start}
+  .revision-selector{width:100%}
 }
 </style>
 </head>
@@ -464,17 +516,21 @@ proc ::fossilhub::views::renderRepository {repository {section timeline} {sectio
     set sectionData [dict create repository $repository event_filter all]
   }
   set activeSection $section
-  if {$activeSection eq "file"} {
+  if {$activeSection in {file tree blob history blame branches tags stats}} {
     set activeSection files
-  } elseif {$activeSection eq "wiki-page"} {
+  } elseif {$activeSection eq "doc"} {
+    set activeSection docs
+  } elseif {$activeSection eq "checkin"} {
+    set activeSection timeline
+  } elseif {$activeSection in {wiki-page wiki-revision wiki-history wiki-compare}} {
     set activeSection wiki
   } elseif {$activeSection eq "file-compose"} {
     set activeSection files
   } elseif {$activeSection eq "wiki-compose"} {
     set activeSection wiki
-  } elseif {$activeSection in {ticket-compose ticket-workbench}} {
+  } elseif {$activeSection in {ticket-compose ticket-workbench ticket-detail}} {
     set activeSection tickets
-  } elseif {$activeSection eq "forum-compose"} {
+  } elseif {$activeSection in {forum-compose discussion}} {
     set activeSection forum
   }
   set tabs [dict create timeline "" files "" docs "" wiki "" tickets "" forum ""]

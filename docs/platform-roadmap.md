@@ -176,20 +176,20 @@ unindexed successful mutation, or unauthorized Fossil artifact.
 
 ### Phase E — complete first-party repository reading
 
-- [ ] Add searchable cursor pagination to the unified Timeline with event type,
+- [x] Add searchable cursor pagination to the unified Timeline with event type,
   author, branch/tag, and time filters.
-- [ ] Add check-in detail with parents, children, branches/tags, changed files,
+- [x] Add check-in detail with parents, children, branches/tags, changed files,
   additions/deletions, and safely rendered unified diffs.
-- [ ] Add branch and tag indexes plus per-branch history.
-- [ ] Replace the flat trunk file list with a navigable directory tree at any
+- [x] Add branch and tag indexes plus per-branch history.
+- [x] Replace the flat trunk file list with a navigable directory tree at any
   check-in, breadcrumbs, raw/download responses, file history, and blame.
-- [ ] Add repository archive download and first-party repository statistics.
-- [ ] Keep the Docs index heuristic, then add a rendered document view and
+- [x] Add repository archive download and first-party repository statistics.
+- [x] Keep the Docs index heuristic, then add a rendered document view and
   check-in selector.
-- [ ] Add safe Fossil-Wiki/Markdown rendering with a strict HTML allow-list,
+- [x] Add safe Fossil-Wiki/Markdown rendering with a strict HTML allow-list,
   Wiki revision history, and revision comparison.
-- [ ] Add Ticket detail/history and Forum thread/body/reply views.
-- [ ] Add empty, large-history, merge, rename, binary, Unicode, hostile markup,
+- [x] Add Ticket detail/history and Forum thread/body/reply views.
+- [x] Add empty, large-history, merge, rename, binary, Unicode, hostile markup,
   private repository, and pagination tests.
 
 Acceptance: browser navigation has no dependency on Fossil's built-in HTML UI;

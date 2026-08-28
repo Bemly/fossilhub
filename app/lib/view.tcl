@@ -24,6 +24,23 @@ proc ::fossilhub::view::escape {value} {
     ' &#39\;] $value]
 }
 
+proc ::fossilhub::view::queryEncode {value} {
+  binary scan [encoding convertto utf-8 $value] c* bytes
+  set result ""
+  foreach byte $bytes {
+    set unsigned [expr {$byte & 0xff}]
+    if {($unsigned >= 0x41 && $unsigned <= 0x5a) ||
+        ($unsigned >= 0x61 && $unsigned <= 0x7a) ||
+        ($unsigned >= 0x30 && $unsigned <= 0x39) ||
+        $unsigned in {45 46 95 126}} {
+      append result [format %c $unsigned]
+    } else {
+      append result %[format %02X $unsigned]
+    }
+  }
+  return $result
+}
+
 proc ::fossilhub::view::formatCount {value} {
   if {![string is wideinteger -strict $value]} {
     return 0

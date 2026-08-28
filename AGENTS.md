@@ -204,6 +204,9 @@ browser
   boundary for browser repository writes. File and Wiki changes require Writer;
   Ticket and Forum changes require Triage. Do not call the mutation service from
   an unguarded Wapp route.
+- `app/lib/markup.tcl` renders Markdown and Fossil Wiki by construction from a
+  fixed HTML element set. Raw repository markup is always escaped, and links
+  must pass its protocol allow-list; never replace it with passthrough HTML.
 - `app/lib/view.tcl` owns HTML escaping, formatting, and reusable repository,
   catalogue, composition, and timeline renderers.
 - `app/views/` contains Tcl view modules for the reference-derived home,
