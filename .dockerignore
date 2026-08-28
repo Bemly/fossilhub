@@ -4,6 +4,6 @@
 .runtime
 dist
 reference
-docs
+docs/*
+!docs/releases.md
 *.log
-
