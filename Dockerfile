@@ -1,6 +1,8 @@
 FROM ubuntu:24.04 AS build-base
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -64,7 +66,9 @@ LABEL org.opencontainers.image.title="FossilHub" \
       org.opencontainers.image.version="${FOSSILHUB_VERSION}" \
       org.opencontainers.image.revision="${FOSSILHUB_REVISION}"
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

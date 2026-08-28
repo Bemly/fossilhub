@@ -291,6 +291,8 @@ redirect or 404. The server cannot infer the external prefix.
   final HTML boundary; only renderer-owned fragments may bypass escaping. Serve
   CSS as `text/css; charset=utf-8` and the integration script as
   `text/javascript; charset=utf-8`.
+- Keep the runtime locale at `C.UTF-8`; Tcl and Fossil must preserve non-ASCII
+  repository paths in checkouts, history reads, archives, and browser writes.
 - Repository reads must use Fossil's `sql --readonly` command. Do not open live
   repository files with raw SQLite for application queries, and never mutate
   Fossil-owned tables. Raw `sqlite3` access is restricted to the application-owned
