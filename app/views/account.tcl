@@ -5,6 +5,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
   if {$authenticated} {
     set user [dict get $context user]
     set identity [format {
+      <a href="repositories" data-hub-path="/account/repositories">Repositories</a>
       <a href="#" data-hub-path="/account/security">%s</a>
       <form class="nav-form" action="logout" method="post" data-hub-action="/logout">
         <input type="hidden" name="csrf" value="%s">

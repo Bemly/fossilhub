@@ -1,5 +1,92 @@
-#!/usr/local/bin/fossil
-directory: /data/repositories
-repolist
-errorlog: /data/fossil-cgi-error.log
-HOME: /data
+#!/usr/bin/tclsh
+
+namespace eval ::fossilhub {
+  variable cgiRoot [file dirname [file normalize [info script]]]
+  variable cgiLibRoot ""
+}
+
+foreach candidate [list \
+    [file join $::fossilhub::cgiRoot lib] \
+    [file normalize [file join $::fossilhub::cgiRoot .. lib]]] {
+  if {[file isfile [file join $candidate platform-model.tcl]]} {
+    set ::fossilhub::cgiLibRoot $candidate
+    break
+  }
+}
+if {$::fossilhub::cgiLibRoot eq ""} {
+  error "FossilHub public transport libraries are unavailable"
+}
+source [file join $::fossilhub::cgiLibRoot platform-model.tcl]
+source [file join $::fossilhub::cgiLibRoot fossil-model.tcl]
+
+proc ::fossilhub::cgiReply {status message} {
+  set body "$message\n"
+  puts -nonewline "Status: $status\r\n"
+  puts -nonewline "Content-Type: text/plain; charset=utf-8\r\n"
+  puts -nonewline "Cache-Control: no-store\r\n"
+  puts -nonewline "X-Content-Type-Options: nosniff\r\n"
+  puts -nonewline "Content-Length: [string length \
+    [encoding convertto utf-8 $body]]\r\n\r\n"
+  puts -nonewline $body
+}
+
+proc ::fossilhub::publicTransportRequest {} {
+  set pathInfo "/"
+  if {[info exists ::env(PATH_INFO)] && $::env(PATH_INFO) ne ""} {
+    set pathInfo $::env(PATH_INFO)
+  }
+  if {![regexp {^/([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)(/.*)?$} \
+      $pathInfo -> slug remainder] || [string first -- $slug] >= 0} {
+    ::fossilhub::cgiReply {404 Not Found} {Repository not found}
+    return
+  }
+  set name "${slug}.fossil"
+  if {![::fossilhub::platform::publicContains $name]} {
+    ::fossilhub::cgiReply {404 Not Found} {Repository not found}
+    return
+  }
+  set repository [::fossilhub::model::repositoryPath $name]
+  if {![file isfile $repository]} {
+    ::fossilhub::cgiReply {404 Not Found} {Repository not found}
+    return
+  }
+  if {$remainder eq ""} {
+    set remainder "/"
+  }
+  set scriptName ""
+  if {[info exists ::env(SCRIPT_NAME)]} {
+    set scriptName [string trimright $::env(SCRIPT_NAME) /]
+  }
+  set ::env(SCRIPT_NAME) "$scriptName/$slug"
+  set ::env(PATH_INFO) $remainder
+
+  set channel [file tempfile configuration fossilhub-public-cgi]
+  set nullChannel ""
+  try {
+    fconfigure $channel -encoding utf-8 -translation lf
+    puts $channel "repository: $repository"
+    puts $channel {HOME: /data}
+    close $channel
+    set channel ""
+    file attributes $configuration -permissions 0600
+    set nullChannel [open /dev/null w]
+    flush stdout
+    exec [::fossilhub::model::fossilBinary] --nocgi cgi $configuration \
+      >@ stdout 2>@ $nullChannel
+  } on error {} {
+    puts stderr {FossilHub: public Fossil transport request failed}
+  } finally {
+    if {$channel ne ""} {
+      catch {close $channel}
+    }
+    if {$nullChannel ne ""} {
+      catch {close $nullChannel}
+    }
+    if {[file exists $configuration] &&
+        [string match fossilhub-public-cgi* [file tail $configuration]]} {
+      file delete -force $configuration
+    }
+  }
+}
+
+::fossilhub::publicTransportRequest

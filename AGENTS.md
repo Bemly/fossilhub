@@ -154,7 +154,7 @@ browser
   -> althttpd :8080
      -> executable Wapp CGI for the reference hub UI
      -> Tcl SSR repository surfaces and SQLite catalogue search
-     -> Fossil CGI `directory:` mode only for clone/sync transport
+     -> registry-gated Fossil CGI only for public clone/sync transport
   -> `/data/catalog/fossilhub.sqlite`
   -> `/data/platform/fossilhub.sqlite`
   -> ten manifest-listed blank `.fossil` repositories under `/data/repositories`
@@ -182,6 +182,14 @@ browser
   Passwords go to Argon2id only through standard input. Raw session and
   challenge tokens must never be stored, logged, or returned outside their
   intended browser response.
+- `app/lib/repository-service.tcl` owns validated repository creation,
+  visibility capabilities, role evaluation, collaborators, ownership transfer,
+  and recoverable archive/restore. It serializes lifecycle mutations with
+  atomic lock files, invokes Fossil with `--nocgi`, and compensates database,
+  file, and catalogue state when a later step fails.
+- `app/lib/repository-controller.tcl` is the browser authorization and CSRF
+  boundary for `/account/repositories`; do not bypass it with direct
+  state-changing routes.
 - `app/lib/view.tcl` owns HTML escaping, formatting, and reusable repository,
   catalogue, composition, and timeline renderers.
 - `app/views/` contains Tcl view modules for the reference-derived home,
@@ -195,15 +203,20 @@ browser
   active repository slug from the server-rendered `body` data attribute.
 - `app/public/catalog-search.js` progressively enhances the complete Explore
   SSR form with debounced HTML-fragment replacement.
-- `app/cgi/fossil` is Fossil's CGI directory-mode launcher.
+- `app/cgi/fossil` is a Tcl public-transport gate. It accepts only an active,
+  public registry slug, rewrites the remaining path for a single-repository
+  Fossil CGI invocation, and never exposes a directory-mode repository list.
+  Private repository names and files must return the same generic 404 as an
+  unknown repository.
 - `app/bin/fossilhub-init` idempotently and atomically initializes the ten
   manifest repositories, sets mode 0600, removes capabilities from Fossil's
   generated local user, and rebuilds the catalogue. Fossil initialization
   output must remain suppressed because it contains an automatically generated
   password.
 - `app/bin/fossilhub-entrypoint` never clones or creates repositories. It only
-  creates the data subdirectories and rebuilds the catalogue from official
-  repository files already present on the mount.
+  creates the data subdirectories, initializes/migrates the platform database,
+  performs the one-time central administrator bootstrap, and rebuilds the
+  catalogue from official repository files already present on the mount.
 - Fossil owns its repository SQLite schema. Do not manually alter internal
   Fossil tables to implement application features.
 
@@ -282,7 +295,8 @@ Before a production switch:
    `app/public/`.
 3. Run `tests/routes.test.tcl`, `tests/model.test.tcl`,
    `tests/catalog.test.tcl`, `tests/platform.test.tcl`,
-   `tests/auth.test.tcl`, `tests/repository-data.test.tcl`, and
+   `tests/auth.test.tcl`, `tests/repository-data.test.tcl`,
+   `tests/repository-service.test.tcl`, `tests/fossil-transport.test.tcl`, and
    `tests/views.test.tcl` under the image's Tcl 9.1b0. The authentication suite
    must also exercise the packaged Argon2 binary. macOS system Tcl may be 8.5
    and is not authoritative.

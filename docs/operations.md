@@ -68,6 +68,17 @@ and are never command arguments or log fields. Session identifiers and form
 challenges are random; only their SHA-256 hashes are stored. Password changes
 revoke every existing session and issue a new session cookie.
 
+The repository workspace is available at `/account/repositories`. Authenticated
+users can create public or private repositories, manage metadata and
+collaborators according to their repository role, and archive or restore owned
+repositories. Repository creation uses a per-name atomic lock, initializes a
+same-directory temporary Fossil file, removes the generated local
+administrator's capabilities, applies mode 0600, then publishes the file and
+registry record. Catalogue failure removes the public registry record and moves
+the unpublished file into `/data/quarantine`; it is never silently deleted.
+Normal archive operations also move the exact repository file into that
+quarantine directory and retain a restorable registry record.
+
 On the first Phase 5 startup, `/usr/local/bin/fossilhub-bootstrap-admin`
 creates the central `warden` administrator and writes its one-time credential
 to:
@@ -96,10 +107,15 @@ HTTPS-only deployment; `never` is restricted to isolated HTTP smoke testing.
 | `/repo/bedrock.fossil/wiki` | FossilHub Wiki index |
 | `/repo/bedrock.fossil/tickets` | FossilHub ticket cabinet |
 | `/repo/bedrock.fossil/forum` | FossilHub forum activity |
+| `/account/repositories` | Signed-in repository workspace |
+| `/account/repositories/new` | Repository creation form |
+| `/account/repositories/<slug>/settings` | Role-protected repository management |
 
 Browser pages do not link to Fossil's built-in web UI. The `/fossil/<slug>`
-endpoint remains enabled only because Fossil clients require it for clone and
-sync.
+endpoint remains enabled only for clone and sync of active public registry
+entries. `/fossil/` does not list repositories, and private or unknown slugs
+receive the same generic 404 before Fossil opens a repository file. Private
+repository pages therefore do not render a clone command.
 
 The image provides an idempotent `/usr/local/bin/fossilhub-init` command. It
 initializes each missing repository in a uniquely named temporary file before

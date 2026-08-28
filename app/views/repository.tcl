@@ -230,7 +230,7 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
 }
 </style>
 </head>
-<body data-repository-slug="@@REPOSITORY_SLUG@@">
+<body data-repository-slug="@@REPOSITORY_SLUG@@" data-repository-visibility="@@VISIBILITY@@">
 
 <div class="rail" aria-hidden="true">
   <div class="rail-track"></div>
@@ -262,7 +262,7 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
     </button>
-    <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
+    @@HEADER_TRANSPORT@@
   </div>
 </header>
 
@@ -272,7 +272,7 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
     <div class="wrap">
       <div class="crumb-row">
         <p class="crumb">FOSSILHUB ▸ DIGS ▸ <b>@@REPOSITORY_UPPER@@</b></p>
-        <span class="chip chip-plain"><span class="sdot"></span>PUBLIC · LIVE FOSSIL 2.29</span>
+        <span class="chip chip-plain"><span class="sdot"></span>@@VISIBILITY_UPPER@@ · LIVE FOSSIL 2.29</span>
       </div>
       <div class="mast-grid">
         <div class="repo-title">
@@ -284,7 +284,7 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
             <span class="chip chip-plain"><span class="sdot"></span>updated @@RELATIVE_TIME@@</span>
           </div>
           <div class="clone-row">
-            <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
+            @@MAIN_TRANSPORT@@
             <a class="btn btn-ghost btn-sm" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">Survey trunk files</a>
           </div>
         </div>
@@ -356,7 +356,7 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
           <li><a href="#" data-hub-path="/#engine">Field manual</a></li>
           <li><a href="#about">Hosting plans</a></li>
         </ul>
-        <span class="clone-dark"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>
+        @@FOOTER_TRANSPORT@@
       </div>
       <div>
         <h4>Upstream</h4>
@@ -413,8 +413,24 @@ themeBtn.addEventListener('click', () => {
 }
 }
 
+proc ::fossilhub::views::repositoryTransport {visibility} {
+  if {$visibility eq "private"} {
+    return [dict create header "" footer "" main {
+      <span class="private-transport">Private repository · browser members only</span>}]
+  }
+  set command {
+    <span class="cmd-chip"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>}
+  return [dict create header $command main $command footer {
+    <span class="clone-dark"><span class="p">$</span><span class="u" data-clone-command>fossil clone /fossil/dig</span></span>}]
+}
+
 proc ::fossilhub::views::repositoryFacts {repository} {
   set repositoryName [dict get $repository name]
+  set visibility [expr {[dict exists $repository visibility] ?
+    [dict get $repository visibility] : "public"}]
+  set transportNote [expr {$visibility eq "private" ?
+    "Private transport is disabled; authorized members use first-party browser workflows." :
+    "Browser navigation stays in FossilHub. Fossil's endpoint is retained only for clone and sync clients."}]
   return [format {
         <div class="panel reveal">
           <div class="panel-head"><span class="fname">Repository facts</span></div>
@@ -430,7 +446,7 @@ proc ::fossilhub::views::repositoryFacts {repository} {
             <div class="peer-row"><span class="peer-dot" style="background:#205297"></span><a class="peer-name" href="#" data-hub-path="/repo/%s/timeline">Timeline</a><span class="peer-state">SSR</span></div>
             <div class="peer-row"><span class="peer-dot" style="background:#2F6E5A"></span><a class="peer-name" href="#" data-hub-path="/repo/%s/files">Files</a><span class="peer-state">trunk</span></div>
             <div class="peer-row"><span class="peer-dot" style="background:#A64B22"></span><a class="peer-name" href="#" data-hub-path="/repo/%s/docs">Docs</a><span class="peer-state">indexed</span></div>
-            <p class="sync-cap">Browser navigation stays in FossilHub. Fossil's endpoint is retained only for clone and sync clients.</p>
+            <p class="sync-cap">%s</p>
           </div>
         </div>} \
     [::fossilhub::view::formatCount [dict get $repository checkins]] \
@@ -438,7 +454,8 @@ proc ::fossilhub::views::repositoryFacts {repository} {
       [dict get $repository bytes]]] \
     [::fossilhub::view::escape [::fossilhub::view::relativeTime \
       [dict get $repository latest_epoch]]] \
-    $repositoryName $repositoryName $repositoryName]
+    $repositoryName $repositoryName $repositoryName \
+    [::fossilhub::view::escape $transportNote]]
 }
 
 proc ::fossilhub::views::renderRepository {repository {section timeline} {sectionData ""}} {
@@ -457,11 +474,20 @@ proc ::fossilhub::views::renderRepository {repository {section timeline} {sectio
     dict set tabs $activeSection active
   }
   set latest [dict get $repository latest_epoch]
+  set visibility [expr {[dict exists $repository visibility] ?
+    [dict get $repository visibility] : "public"}]
+  set transport [::fossilhub::views::repositoryTransport $visibility]
   set page [string map [list \
     @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $repository slug]] \
     @@REPOSITORY_NAME@@ [::fossilhub::view::escape [dict get $repository name]] \
     @@REPOSITORY_UPPER@@ [::fossilhub::view::escape \
       [string toupper [dict get $repository name]]] \
+    @@VISIBILITY@@ [::fossilhub::view::escape $visibility] \
+    @@VISIBILITY_UPPER@@ [::fossilhub::view::escape \
+      [string toupper $visibility]] \
+    @@HEADER_TRANSPORT@@ [dict get $transport header] \
+    @@MAIN_TRANSPORT@@ [dict get $transport main] \
+    @@FOOTER_TRANSPORT@@ [dict get $transport footer] \
     @@TAB_TIMELINE@@ [dict get $tabs timeline] \
     @@TAB_FILES@@ [dict get $tabs files] \
     @@TAB_DOCS@@ [dict get $tabs docs] \

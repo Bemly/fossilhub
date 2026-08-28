@@ -317,11 +317,15 @@ proc ::fossilhub::catalog::rebuild {} {
     foreach key {slug source_url category language featured} {
       dict set repository $key [dict get $entry $key]
     }
-    if {[string trim [dict get $repository project_name]] in {
+    if {[dict exists $entry id]} {
+      dict set repository project_name [dict get $entry title]
+      dict set repository description [dict get $entry description]
+    } elseif {[string trim [dict get $repository project_name]] in {
         {} {Untitled Fossil repository}}} {
       dict set repository project_name [dict get $entry title]
     }
-    if {[string trim [dict get $repository description]] eq ""} {
+    if {![dict exists $entry id] &&
+        [string trim [dict get $repository description]] eq ""} {
       dict set repository description [dict get $entry description]
     }
     lappend repositories $repository

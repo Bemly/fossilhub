@@ -113,7 +113,7 @@ database usable.
 - [x] Add opaque server-side sessions with rotation, idle and absolute expiry,
   `HttpOnly` and `SameSite` cookies, secure-cookie enforcement behind HTTPS,
   and no browser storage of credentials.
-- [ ] Add per-session CSRF tokens, recent re-authentication for sensitive
+- [x] Add per-session CSRF tokens, recent re-authentication for sensitive
   actions, generic login failures, and bounded login throttling.
 - [ ] Add centralized request guards for anonymous, authenticated, repository
   role, and administrator access.
@@ -129,20 +129,20 @@ logs, generated HTML, test output, or Git.
 
 ### Phase C — repository lifecycle and access control
 
-- [ ] Replace the fixed public-only routing check with a dynamic registry lookup
+- [x] Replace the fixed public-only routing check with a dynamic registry lookup
   that enforces visibility and membership before touching a repository file.
-- [ ] Add repository creation with validated slugs, atomic Fossil initialization,
+- [x] Add repository creation with validated slugs, atomic Fossil initialization,
   owner membership, default branch metadata, catalogue publication, and audit.
-- [ ] Add repository settings for name, description, visibility, default branch,
+- [x] Add repository settings for name, description, visibility, default branch,
   and archive state.
-- [ ] Add collaborator invitation/removal and Reader, Triage, Writer, and
+- [x] Add collaborator invitation/removal and Reader, Triage, Writer, and
   Maintainer role changes.
-- [ ] Add owner transfer with re-authentication and an explicit confirmation.
-- [ ] Add recoverable archive/quarantine; do not implement routine permanent
+- [x] Add owner transfer with re-authentication and an explicit confirmation.
+- [x] Add recoverable archive/quarantine; do not implement routine permanent
   deletion in this milestone.
 - [ ] Reconcile central users with Fossil artifact authors without exposing or
   reusing central passwords as Fossil credentials.
-- [ ] Add concurrent-create, path traversal, case collision, permission downgrade,
+- [x] Add concurrent-create, path traversal, case collision, permission downgrade,
   private-route, archive, and recovery tests.
 
 Acceptance: two ordinary users can own separate public/private repositories,
@@ -202,7 +202,7 @@ clone/sync remains the only public `/fossil/*` use.
   public repository/activity summaries.
 - [ ] Add account settings for profile, password, active sessions, theme, and
   account deactivation.
-- [ ] Add repository creation, collaboration, archive, and transfer flows to the
+- [x] Add repository creation, collaboration, archive, and transfer flows to the
   user workspace.
 - [ ] Add keyboard focus, screen-reader labels, responsive navigation, reduced
   motion, validation summaries, and no-JavaScript form paths.

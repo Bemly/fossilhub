@@ -229,6 +229,19 @@ proc ::fossilhub::auth::userById {id} {
   return [::fossilhub::auth::userFromRow [lindex $rows 0]]
 }
 
+proc ::fossilhub::auth::userByUsername {username} {
+  set username [string tolower [string trim $username]]
+  set rows [::fossilhub::platform::sqlRows [format {
+    SELECT %s FROM users AS u
+     WHERE u.username=%s COLLATE NOCASE AND u.status='active' LIMIT 1;
+  } [::fossilhub::auth::userSelect] \
+    [::fossilhub::platform::textLiteral $username]] 13]
+  if {[llength $rows] == 0} {
+    return ""
+  }
+  return [::fossilhub::auth::userFromRow [lindex $rows 0]]
+}
+
 proc ::fossilhub::auth::userWithCredential {login} {
   set login [string tolower [string trim $login]]
   set rows [::fossilhub::platform::sqlRows [format {

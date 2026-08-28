@@ -13,7 +13,9 @@ search, theme, motion, and public mount-prefix adaptation.
 
 The catalogue contains ten clean local Fossil repositories with no imported or
 demonstration history. Fossil's CGI endpoint remains available for clone and
-sync transport, but browser navigation stays inside FossilHub's visual system.
+sync transport on active public registry entries, but browser navigation stays
+inside FossilHub's visual system. The transport gate has no repository-list
+response and returns the same generic 404 for private and unknown names.
 The previous generated `dig.fossil` is no longer created or indexed.
 
 Production is available on the NAS at `http://192.168.1.162:6080/`; its health
@@ -40,6 +42,14 @@ are opaque, server-side, expiring, rotated after password changes, and protected
 by one-time CSRF form challenges. A clean data directory receives a one-time
 `warden` administrator whose initial credential is written only to the
 protected platform bootstrap record and must be changed after first sign-in.
+
+The repository-lifecycle slice adds `/account/repositories` and a complete
+server-rendered workflow for creating public or private repositories, changing
+metadata, assigning Reader/Triage/Writer/Maintainer collaborators, transferring
+ownership, and recoverably archiving or restoring repositories. Private
+repository routes are resolved through the central registry and fail closed
+before Fossil reads the repository file. Created repository files are published
+atomically with mode 0600 and failed catalogue publications move to quarantine.
 
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,

@@ -13,6 +13,12 @@
   ];
 
   let hubBase = pathname;
+  const repositoryWorkspacePage = pathname.match(
+    /\/account\/repositories(?:\/[^/]+(?:\/(?:settings|member|member-remove|transfer|archive|restore))?|\/new)?$/,
+  );
+  if (repositoryWorkspacePage) {
+    hubBase = pathname.slice(0, -repositoryWorkspacePage[0].length);
+  }
   const repositoryPage = pathname.match(/\/repo\/[^/]+(?:\/.*)?$/);
   if (repositoryPage) {
     hubBase = pathname.slice(0, -repositoryPage[0].length);

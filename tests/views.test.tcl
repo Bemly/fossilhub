@@ -1,11 +1,13 @@
 set projectRoot [file dirname [file dirname [file normalize [info script]]]]
 source [file join $projectRoot app lib view.tcl]
 source [file join $projectRoot app lib catalog-model.tcl]
+source [file join $projectRoot app lib repository-service.tcl]
 source [file join $projectRoot app views home.tcl]
 source [file join $projectRoot app views explore.tcl]
 source [file join $projectRoot app views repository-sections.tcl]
 source [file join $projectRoot app views repository.tcl]
 source [file join $projectRoot app views account.tcl]
+source [file join $projectRoot app views repository-management.tcl]
 
 proc fail {message} {
   puts stderr $message
@@ -108,6 +110,16 @@ assertNotContains $page {<script>alert("x")</script>} \
 assertNotContains $page {c-a17f3b} "repository prototype hash removed"
 assertNotContains $page {SSR_TIMELINE} "SSR implementation markers removed"
 assertNotContains $page {@@REPOSITORY_NAME@@} "SSR placeholders resolved"
+assertNotContains $page {@@VISIBILITY@@} "repository visibility placeholder resolved"
+
+set privateRepository [dict merge $repository [dict create visibility private]]
+set privatePage [::fossilhub::views::renderRepository $privateRepository]
+assertContains $privatePage {PRIVATE · LIVE FOSSIL 2.29} \
+  "private repository visibility label"
+assertContains $privatePage {Private repository · browser members only} \
+  "private repository transport notice"
+assertNotContains $privatePage {data-clone-command} \
+  "private repository hides clone transport"
 
 set files [list [dict create \
   filename {docs/<guide>.md} uuid abcdef1234567890 size 2048 extension .md]]
@@ -145,5 +157,41 @@ set registerPage [::fossilhub::views::renderRegister \
 assertContains $registerPage {minlength="12"} "registration password policy"
 assertContains $registerPage {Passwords are stored with Argon2id.} \
   "registration password storage notice"
+
+set owner [dict create id user-1 username alice email alice@example.test \
+  display_name Alice biography "" website "" location "" role user \
+  status active created_epoch 1 updated_epoch 1 last_login_epoch 1 \
+  must_change_password 0]
+set ownerContext [dict create authenticated 1 user $owner session_hash \
+  [string repeat c 64] token [string repeat d 64] logout_token \
+  [string repeat e 64] reauthenticated_epoch 1787788800]
+set managedRepository [dict create id repository-1 slug fossil-tools \
+  name fossil-tools.fossil title {Fossil <Tools>} \
+  description {Collaboration & source} source_url "" category project \
+  language Tcl visibility private state active owner_user_id user-1 \
+  default_branch trunk featured 0 created_epoch 1 updated_epoch 1 \
+  archived_epoch 0]
+set member [dict create id user-1 username alice display_name Alice \
+  role owner created_epoch 1]
+set challenges [dict create settings [string repeat f 64] \
+  member [string repeat 1 64] transfer [string repeat 2 64] \
+  archive [string repeat 3 64] restore [string repeat 4 64] \
+  remove:user-1 [string repeat 5 64]]
+set workspace [::fossilhub::views::renderRepositoryWorkspace \
+  $ownerContext [list $managedRepository]]
+assertContains $workspace {Fossil &lt;Tools&gt;} \
+  "repository workspace title escaped"
+assertContains $workspace {data-hub-path="/account/repositories/new"} \
+  "repository workspace new route"
+set settings [::fossilhub::views::renderRepositorySettings $ownerContext \
+  $managedRepository [list $member] $challenges {Saved <now>} {}]
+assertContains $settings {Saved &lt;now&gt;} \
+  "repository settings notice escaped"
+assertContains $settings {class="permission-layer permission-owner"} \
+  "stratigraphic permission layer"
+assertContains $settings {data-hub-action="/account/repositories/fossil-tools/archive"} \
+  "repository archive form route"
+assertNotContains $settings {Fossil <Tools>} \
+  "repository settings title cannot inject markup"
 
 puts "view tests passed"

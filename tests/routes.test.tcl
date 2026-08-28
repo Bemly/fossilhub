@@ -36,9 +36,28 @@ assertEqual [::fossilhub::routeForPath /account/security] \
   account-security "account security route"
 assertEqual [::fossilhub::routeForPath /account/session/revoke] \
   account-session-revoke "session revoke route"
+assertEqual [::fossilhub::routeForPath /account/repositories] \
+  repository-workspace "repository workspace route"
+assertEqual [::fossilhub::routeForPath /account/repositories/new] \
+  repository-new "new repository route"
+assertEqual [::fossilhub::routeForPath \
+  /account/repositories/fossil-tools/settings] \
+  {repository-settings fossil-tools} "repository settings route"
+assertEqual [::fossilhub::routeForPath \
+  /account/repositories/fossil-tools/member-remove] \
+  {repository-management-action fossil-tools member-remove} \
+  "repository member removal route"
+assertEqual [::fossilhub::routeForPath \
+  /account/repositories/fossil-tools/transfer] \
+  {repository-management-action fossil-tools transfer} \
+  "repository transfer route"
 assertEqual [::fossilhub::routeForPath \
   /bemly-moe/app/fossilhub/account/security] account-security \
   "mounted account security route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/account/repositories/fossil-tools/archive] \
+  {repository-management-action fossil-tools archive} \
+  "mounted repository archive route"
 assertEqual [::fossilhub::routeForPath /bemly-moe/app/fossilhub/login] \
   login "mounted login route"
 assertEqual [::fossilhub::routeForPath /healthz] health "health route"

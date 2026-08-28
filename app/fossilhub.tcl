@@ -11,13 +11,16 @@ foreach sourceFile {
   lib/platform-model.tcl
   lib/auth-model.tcl
   lib/catalog-model.tcl
+  lib/repository-service.tcl
   lib/view.tcl
   views/home.tcl
   views/explore.tcl
   views/repository-sections.tcl
   views/repository.tcl
   views/account.tcl
+  views/repository-management.tcl
   lib/account-controller.tcl
+  lib/repository-controller.tcl
 } {
   source [file join $::fossilhub::root $sourceFile]
 }
@@ -87,6 +90,20 @@ proc ::fossilhub::routeForPath {path} {
   }
   if {[regexp {(^|/)account/session/revoke/?$} $clean]} {
     return account-session-revoke
+  }
+  if {[regexp {(^|/)account/repositories/new/?$} $clean]} {
+    return repository-new
+  }
+  if {[regexp {(^|/)account/repositories/([^/]+)/(member-remove|member|transfer|archive|restore)/?$} \
+      $clean -> _ slug action]} {
+    return [list repository-management-action $slug $action]
+  }
+  if {[regexp {(^|/)account/repositories/([^/]+)/settings/?$} \
+      $clean -> _ slug]} {
+    return [list repository-settings $slug]
+  }
+  if {[regexp {(^|/)account/repositories/?$} $clean]} {
+    return repository-workspace
   }
   if {[regexp {(^|/)explore(?:\.html)?/?$} $clean]} {
     return explore
@@ -266,6 +283,41 @@ proc wapp-default {} {
     account-session-revoke {
       ::fossilhub::account::handleSessionRevoke $accountContext
     }
+    repository-workspace {
+      ::fossilhub::repositoryController::handleWorkspace $accountContext
+    }
+    repository-new {
+      ::fossilhub::repositoryController::handleNew $accountContext
+    }
+    repository-settings {
+      ::fossilhub::repositoryController::handleSettings \
+        $accountContext [lindex $route 1]
+    }
+    repository-management-action {
+      set slug [lindex $route 1]
+      switch -- [lindex $route 2] {
+        member {
+          ::fossilhub::repositoryController::handleMember \
+            $accountContext $slug 0
+        }
+        member-remove {
+          ::fossilhub::repositoryController::handleMember \
+            $accountContext $slug 1
+        }
+        transfer {
+          ::fossilhub::repositoryController::handleTransfer \
+            $accountContext $slug
+        }
+        archive {
+          ::fossilhub::repositoryController::handleArchive \
+            $accountContext $slug 0
+        }
+        restore {
+          ::fossilhub::repositoryController::handleArchive \
+            $accountContext $slug 1
+        }
+      }
+    }
     explore {
       set options [::fossilhub::catalogOptions]
       ::fossilhub::renderPage [::fossilhub::views::renderExplore \
@@ -282,8 +334,12 @@ proc wapp-default {} {
     repository {
       set name [lindex $route 1]
       set section [lindex $route 2]
-      if {![::fossilhub::publishedRepository $name] ||
-          ![::fossilhub::model::validRepositoryName $name] ||
+      set registry ""
+      if {[::fossilhub::model::validRepositoryName $name]} {
+        set registry [::fossilhub::repositories::byName $name]
+      }
+      if {$registry eq "" ||
+          ![::fossilhub::repositories::allows $registry $accountContext read] ||
           ![file isfile [::fossilhub::model::repositoryPath $name]]} {
         wapp-reply-code "404 Not Found"
         ::fossilhub::placeholder \
@@ -291,6 +347,9 @@ proc wapp-default {} {
           "That repository is not in this dig."
       } elseif {[catch {
         set repository [::fossilhub::model::repository $name 200]
+        dict set repository project_name [dict get $registry title]
+        dict set repository description [dict get $registry description]
+        dict set repository visibility [dict get $registry visibility]
         set sectionData [::fossilhub::repositorySectionData \
           $repository $section $route]
       } message]} {
