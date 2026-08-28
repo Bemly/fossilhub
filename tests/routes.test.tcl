@@ -15,6 +15,12 @@ proc assertContains {document needle label} {
   }
 }
 
+set mutationRequestId [::fossilhub::mutationController::requestId]
+assertEqual [string length $mutationRequestId] 32 \
+  "mutation request identifier length"
+assertEqual [regexp {^[[:xdigit:]]{32}$} $mutationRequestId] 1 \
+  "mutation request identifier format"
+
 assertEqual [::fossilhub::routeForPath /] home "root route"
 assertEqual [::fossilhub::routeForPath /explore] explore "explore route"
 assertEqual [::fossilhub::routeForPath /explore.html] explore "legacy explore route"

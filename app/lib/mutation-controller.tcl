@@ -1,5 +1,9 @@
 namespace eval ::fossilhub::mutationController {}
 
+proc ::fossilhub::mutationController::requestId {} {
+  return [::fossilhub::auth::randomToken 16]
+}
+
 proc ::fossilhub::mutationController::repositoryForName {name context capability} {
   if {![::fossilhub::model::validRepositoryName $name] ||
       [set repository [::fossilhub::repositories::byName $name]] eq "" ||
@@ -246,7 +250,7 @@ proc ::fossilhub::mutationController::handleFile {context repository operation \
     return
   }
   set content [expr {$action in {create edit} ? [dict get $values content] : ""}]
-  set requestId [::fossilhub::auth::randomToken 12]
+  set requestId [::fossilhub::mutationController::requestId]
   if {[catch {::fossilhub::mutations::fileChange $repository \
       [dict get $context user] $action $filename $nextFilename $content \
       [dict get $values message] [dict get $values branch] \
@@ -307,7 +311,7 @@ proc ::fossilhub::mutationController::handleWiki {context repository operation \
       $operation $page {This Wiki form expired. Reload and try again.} $values
     return
   }
-  set requestId [::fossilhub::auth::randomToken 12]
+  set requestId [::fossilhub::mutationController::requestId]
   if {[catch {set next [::fossilhub::mutations::wikiChange $repository \
       [dict get $context user] [dict get $values title] \
       [dict get $values content] [dict get $values mimetype] \
@@ -356,7 +360,7 @@ proc ::fossilhub::mutationController::handleTicketNew {context repository} {
       {This Ticket form expired. Reload and try again.} $values
     return
   }
-  set requestId [::fossilhub::auth::randomToken 12]
+  set requestId [::fossilhub::mutationController::requestId]
   if {[catch {set ticket [::fossilhub::mutations::ticketCreate $repository \
       [dict get $context user] [dict get $values title] \
       [dict get $values type] [dict get $values comment] $requestId]} message]} {
@@ -426,7 +430,7 @@ proc ::fossilhub::mutationController::handleTicket {context repository ticketId}
       title [string range [wapp-param title ""] 0 170] \
       type [string range [wapp-param type ""] 0 32]]
   }
-  set requestId [::fossilhub::auth::randomToken 12]
+  set requestId [::fossilhub::mutationController::requestId]
   if {[catch {::fossilhub::mutations::ticketChange $repository \
       [dict get $context user] $ticketId $action $comment \
       [wapp-param expected ""] $requestId $fields} message]} {
@@ -464,7 +468,7 @@ proc ::fossilhub::mutationController::handleForum {context repository operation 
       $operation $parent {This Forum form expired. Reload and try again.} $values
     return
   }
-  set requestId [::fossilhub::auth::randomToken 12]
+  set requestId [::fossilhub::mutationController::requestId]
   if {[catch {::fossilhub::mutations::forumChange $repository \
       [dict get $context user] $operation [dict get $values title] \
       [dict get $values content] [dict get $values mimetype] $parent \
