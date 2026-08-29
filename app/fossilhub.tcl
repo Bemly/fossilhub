@@ -293,6 +293,25 @@ proc ::fossilhub::trustedFile {path mime cache} {
   wapp-unsafe $content
 }
 
+proc ::fossilhub::trustedBinaryFile {path mime cache} {
+  if {![file isfile $path]} {
+    wapp-reply-code "404 Not Found"
+    wapp-mimetype text/plain
+    wapp-subst {Not found\n}
+    return
+  }
+
+  set channel [open $path rb]
+  try {
+    set content [read $channel]
+  } finally {
+    close $channel
+  }
+  wapp-mimetype $mime
+  wapp-cache-control $cache
+  wapp-unsafe $content
+}
+
 proc ::fossilhub::htmlPolicy {} {
   wapp-content-security-policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
   wapp-reply-extra X-Content-Type-Options nosniff
@@ -890,7 +909,7 @@ proc wapp-default {} {
     }
     brand-lockup {
       variable ::fossilhub::root
-      ::fossilhub::trustedFile \
+      ::fossilhub::trustedBinaryFile \
         [file join $::fossilhub::root public fossilhub-hub-lockup-v1.png] \
         image/png \
         max-age=3600
