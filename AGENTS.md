@@ -80,8 +80,6 @@ production change.
   `/vol1/1000/fossilhub/platform/fossilhub-bootstrap-admin.txt`
 - Production repositories:
   `/vol1/1000/fossilhub/repositories/{bedrock,ammonite,trilobite,basalt,cambrian,granite,shale,quartz,obsidian,tectonic}.fossil`
-- Previous production data, including legacy `dig.fossil`, is retained at
-  `/vol1/1000/fossilhub-rollback-0ac4dff-data` for immediate rollback.
 - Every production repository and the catalogue database must remain mode 0600
   and owned by UID/GID 10001:10001.
 - The platform database must remain mode 0600 and owned by UID/GID
@@ -109,13 +107,16 @@ production change.
 - Runtime user: `fossilhub:fossilhub` (UID/GID 10001:10001)
 - Security profile: read-only root, 16 MB `/tmp` tmpfs, all capabilities
   dropped, `no-new-privileges`, and PID limit 128.
-- Preferred rollback: stopped container
-  `fossilhub-rollback-0ac4dff-20260829`, with data at
-  `/vol1/1000/fossilhub-rollback-0ac4dff-data`.
-- Earlier rollback: stopped container `fossilhub-rollback-188b918`.
+- Historical rollback: stopped container `fossilhub-rollback-188b918`.
 - Stable rollback: stopped container `fossilhub-rollback-8c9726d` (0.1.2).
 - Older stopped rollback containers `fossilhub-rollback-94f8097` and
   `fossilhub-rollback-348f399` are also intentionally retained.
+- The immediate pre-Phase-5 rollback container
+  `fossilhub-rollback-0ac4dff-20260829` and its matching data were permanently
+  deleted on 2026-08-29 after explicit user authorization. The remaining
+  historical containers do not have a validated matching-data rollback path
+  for the current Phase 5 database and must not be started against production
+  data without a separately approved compatibility and recovery plan.
 
 Container names are operational facts, not a license to mutate them. Inspect
 before acting because another operator may have changed the NAS since this file
@@ -123,8 +124,8 @@ was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
 Release `2026.08.28-beta.1` was transactionally deployed on 2026-08-29 after
-isolated NAS acceptance. The prior production container and data are retained
-as the preferred rollback. The final smoke container
+isolated NAS acceptance. The prior production container and data were later
+permanently deleted with explicit user authorization. The final smoke container
 `fossilhub-beta-578fcff` is stopped and retained with data at
 `/vol1/1000/fossilhub-smoke-e0cb8dc`; see
 `docs/validation-2026.08.28-beta.1.md`.
@@ -279,6 +280,10 @@ redirect or 404. The server cannot infer the external prefix.
   browsers will fetch the new asset; a normal reload may reuse stale CSS.
 
 ## UI and code standards
+
+- 新增或修改的代码注释、Markdown 文档、运维记录和验收记录默认使用简体中文。
+  命令、路径、协议名、API、代码标识符、上游项目名和必须保持精确的英文界面文案
+  不做强制翻译。修改既有英文文档时，应在不损失技术事实的前提下同步改为中文。
 
 - Preserve the immutable source prototype in `reference/`; do not edit it.
 - Treat the visual direction as a 1:1 implementation, not an invitation to

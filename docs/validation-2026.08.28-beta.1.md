@@ -1,138 +1,70 @@
-# FossilHub 2026.08.28-beta.1 validation
+# FossilHub 2026.08.28-beta.1 验收记录
 
-Validation date: 2026-08-29
+验收日期：2026-08-29
 
-Outcome: the Phase 5 release passed isolated NAS acceptance and the separately
-authorized transactional production switch. Port 6080 now runs the validated
-artifact.
+结论：Phase 5 版本通过隔离 NAS 验收、明确授权的事务式生产切换和上线后复验。端口 6080 当前运行已验证产物。
 
-## Validated artifact
+## 已验证产物
 
-| Item | Value |
+| 项目 | 值 |
 | --- | --- |
-| Git revision in OCI label | `578fcff` |
-| Image | `fossilhub:2026.08.28-beta.1` |
-| Image ID | `sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54` |
-| Platform | `linux/amd64` |
-| Source archive SHA-256 | `9f02a7a4feb5fd254b01ea34014342a2606677f4d42c6dee1b9cf22411452945` |
-| Final smoke container | `fossilhub-beta-578fcff` |
-| Final smoke port | `6083:8080` |
-| Reused migration data | `/vol1/1000/fossilhub-smoke-e0cb8dc` |
-| Clean initializer data | `/vol1/1000/fossilhub-smoke-578fcff-init` |
-| Production container | `fossilhub` |
-| Production data | `/vol1/1000/fossilhub` |
-| Immediate rollback | `fossilhub-rollback-0ac4dff-20260829` |
-| Rollback data | `/vol1/1000/fossilhub-rollback-0ac4dff-data` |
+| OCI Git 修订 | `578fcff` |
+| 镜像 | `fossilhub:2026.08.28-beta.1` |
+| 镜像 ID | `sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54` |
+| 平台 | `linux/amd64` |
+| 源码归档 SHA-256 | `9f02a7a4feb5fd254b01ea34014342a2606677f4d42c6dee1b9cf22411452945` |
+| 最终烟测容器 | `fossilhub-beta-578fcff` |
+| 最终烟测端口 | `6083:8080` |
+| 迁移烟测数据 | `/vol1/1000/fossilhub-smoke-e0cb8dc` |
+| 干净初始化数据 | `/vol1/1000/fossilhub-smoke-578fcff-init` |
+| 生产容器 | `fossilhub` |
+| 生产数据 | `/vol1/1000/fossilhub` |
 
-The source input was created with `git archive` from the committed revision.
-The final smoke, test, and initializer containers are stopped and retained.
-Their data and the intermediate smoke artifacts were not deleted.
+源码输入由已提交修订通过 `git archive` 生成。最终烟测、测试和初始化容器均已停止并保留。原生产回滚容器 `fossilhub-rollback-0ac4dff-20260829` 及其数据目录已在用户于 2026-08-29 明确授权后永久删除。
 
-## Automated verification
+## 自动化验证
 
-- `git diff --check`, both JavaScript syntax checks, the live-script suite, and
-  all thirteen Tcl suites passed locally under Tcl 9.1b0.
-- The same thirteen Tcl suites passed inside the final image under its packaged
-  Tcl 9.1b0. The authentication suite used the packaged Argon2 binary rather
-  than the fixture implementation.
-- Wapp lint passed and the image reported Fossil 2.29 at the pinned upstream
-  check-in.
-- A clean final-image `fossilhub-init` run created exactly ten allow-listed
-  repositories and the catalogue without relying on extra `HOME` or `USER`
-  overrides.
-- The final image started successfully on the existing Phase 5 data after
-  several image replacements. Registry records, identities, catalogue state,
-  and the isolated collaboration repository survived those restarts and
-  migrations.
+- 本地 Tcl 9.1b0 下，`git diff --check`、两个 JavaScript 语法检查、live-script 套件和 13 个 Tcl 套件全部通过。
+- 同一批 13 个 Tcl 套件在最终镜像自带的 Tcl 9.1b0 下通过；认证套件使用镜像内真实 Argon2，而非测试替身。
+- Wapp lint 通过，镜像中的 Fossil 为固定上游 check-in 对应的 2.29。
+- 最终镜像的干净 `fossilhub-init` 恰好创建 10 个允许列表仓库和目录，无需额外覆盖 `HOME` 或 `USER`。
+- 最终镜像在既有 Phase 5 数据上经历多次替换和迁移后均能正常启动；平台注册、身份、目录状态和隔离协作仓库保持不变。
 
-## HTTP, transport, and data verification
+## HTTP、传输与数据验证
 
-- The landing page, Explore SSR and fragment search, both browser scripts, all
-  nine public information pages, and direct plus simulated mounted-prefix paths
-  returned HTTP 200.
-- Timeline, Files, Docs, Wiki, Tickets, Forum, Branches, Tags, and Statistics
-  returned HTTP 200 for every allow-listed repository. Browser output contained
-  no links into Fossil's native web interface.
-- A private repository returned the same generic 404 as an unknown repository
-  through both the browser and Fossil transport gates.
-- A real HTTP `fossil clone` and `fossil sync` completed against the final
-  image, and the client/server project codes matched.
-- Repository integrity passed. The platform registry contained eleven records
-  during end-to-end testing while the public catalogue retained only the ten
-  active public repositories.
-- Every repository, the catalogue database, the platform database, and the
-  bootstrap administrator record remained owned by UID/GID 10001:10001 with
-  mode 0600.
+- 首页、Explore SSR 与片段搜索、两个浏览器脚本、9 个公共信息页面、直接路径和模拟挂载前缀均返回 HTTP 200。
+- 10 个允许列表仓库的 Timeline、Files、Docs、Wiki、Tickets、Forum、Branches、Tags 和 Statistics 均返回 HTTP 200，页面不包含原生 Fossil Web 导航链接。
+- 私有仓库通过浏览器和 Fossil 传输入口时，与未知仓库一样返回通用 404。
+- 对最终镜像执行真实 HTTP `fossil clone` 和 `fossil sync` 成功，客户端与服务端 project code 一致。
+- 仓库完整性检查通过。端到端测试期间平台注册有 11 条记录，公开目录仍只包含 10 个公开仓库。
+- 所有仓库、目录数据库、平台数据库和管理员引导记录均为 UID/GID 10001:10001、权限 0600。
 
-## Collaboration and administration verification
+## 协作与管理功能验证
 
-The isolated HTTP workflow exercised registration, login, logout and session
-revocation; private repository creation; Writer collaboration; browser file,
-Wiki, Ticket, and Forum mutations; dashboard and settings access; administrator
-user/repository/audit/health/settings pages; recoverable archive and restore;
-password rotation with rejection of the old password; redacted audit export;
-and administrator catalogue rebuild. One-time CSRF challenges were consumed by
-the real forms. Unit and service suites additionally covered challenge replay,
-session expiry, login throttling, role boundaries, quota failures, rollback,
-and quarantine paths.
+隔离 HTTP 工作流覆盖：注册、登录、退出、会话撤销、私有仓库创建、Writer 协作、浏览器文件/Wiki/Ticket/Forum 写入、用户仪表盘和设置、管理员用户/仓库/审计/健康/设置页面、可恢复归档与还原、密码轮换、旧密码拒绝、脱敏审计导出和目录重建。真实表单消耗了一次性 CSRF 挑战。单元和服务测试还覆盖挑战重放、会话过期、登录限速、角色边界、配额失败、补偿回滚和完整性隔离。
 
-All isolated test-account sessions were revoked after acceptance. No submitted
-content, credential, cookie, challenge, or raw application log is included in
-this record.
+验收后已撤销所有隔离测试账号会话。本记录不包含提交内容、凭据、Cookie、挑战值或原始应用日志。
 
-## Browser verification
+## 浏览器验证
 
-- Light-mode layout passed at 1440 x 1000, 913 x 900, and 390 x 844 without
-  horizontal overflow.
-- Dark mode and reduced-motion preference passed at all three sizes for the
-  landing page, Explore, and public status surfaces. Account and public pages
-  were also checked after the system-theme consistency fix.
-- Repository Timeline, Files, Wiki, Tickets, and Forum surfaces were traversed
-  at the medium breakpoint; representative repository, status, Explore, and
-  mounted-prefix pages were traversed on mobile.
-- Mounted-prefix live catalogue search updated to one matching result and all
-  generated internal links and clone commands retained the simulated prefix.
-- The browser console reported no warnings or errors.
+- 浅色模式在 1440 x 1000、913 x 900、390 x 844 下均无水平溢出。
+- 深色模式和 reduced-motion 在三个尺寸下通过首页、Explore 和状态页验证；系统主题一致性修复后还检查了账号与公共页面。
+- 中等断点遍历了 Timeline、Files、Wiki、Tickets 和 Forum；手机尺寸遍历了代表性仓库、状态、Explore 和挂载前缀页面。
+- 挂载前缀下的实时目录搜索更新为 1 条匹配，所有内部链接和 clone 命令都保留模拟前缀。
+- 浏览器控制台没有警告或错误。
 
-## Runtime security and lifecycle
+## 运行时安全与生命周期
 
-The final smoke container used a read-only root filesystem, a 16 MiB
-`/tmp` tmpfs with `nosuid,nodev,noexec`, all capabilities dropped,
-`no-new-privileges`, PID limit 128, runtime UID/GID 10001:10001, the exact
-isolated data mount, and no Docker socket or host networking.
+最终容器使用只读根文件系统、带 `nosuid,nodev,noexec` 的 16 MiB `/tmp` tmpfs、全部 capability 丢弃、`no-new-privileges`、PID 上限 128、运行 UID/GID 10001:10001、精确隔离数据挂载，并且没有 Docker socket 或主机网络。
 
-The entrypoint forwards Docker stop signals to Althttpd and waits for it. The
-final smoke container stopped in less than one second with exit code 143,
-instead of reaching Docker's forced-stop timeout.
+入口脚本会把 Docker 停止信号转发给 Althttpd 并等待退出。最终烟测和生产重启验证均在一秒内以退出码 143 正常停止，没有触发强制停止超时。
 
-## Production deployment
+## 生产部署
 
-The authorized production switch completed on 2026-08-29. A fresh production
-data directory was initialized from the validated image rather than reusing
-end-to-end test identities or repositories. It contained ten repository files,
-ten catalogue records, and ten active platform registry records; all ten Fossil
-integrity checks passed before the switch.
+2026-08-29 在明确授权后完成生产切换。生产数据由已验证镜像全新初始化，没有复用端到端测试身份或仓库。切换前包含 10 个仓库文件、10 条目录记录和 10 条活跃平台注册记录，10 个 Fossil 完整性检查全部通过。
 
-The previous `fossilhub:0.2.0-beta.1` container was stopped and retained as
-`fossilhub-rollback-0ac4dff-20260829`. Its data was atomically moved to
-`/vol1/1000/fossilhub-rollback-0ac4dff-data`. The new container then started
-with the canonical `/vol1/1000/fossilhub:/data` mount and the same validated
-security restrictions. It became healthy without rollback.
+新容器使用标准 `/vol1/1000/fossilhub:/data` 挂载和已验证的安全限制启动，并在无需回滚的情况下进入健康状态。上线后完成 107 条直接 HTTP 路由与仓库页面检查、通用 404、响应安全头、真实 clone/sync、project code 对比、权限、目录/平台注册计数、管理员引导和浏览器导航验证。
 
-Post-deployment acceptance covered 107 direct HTTP route and repository-surface
-checks, generic browser and transport 404 responses, security headers, a real
-HTTP clone and sync with matching client/server project codes, file ownership
-and modes, registry/catalogue counts, the central administrator bootstrap, and
-browser navigation. The simulated mounted-prefix Explore search returned one
-matching repository, internal links retained the prefix, the administrator
-boundary redirected to sign-in, and the browser console remained empty.
+模拟挂载前缀的 Explore 搜索返回 1 个仓库，内部链接保留完整前缀；未登录访问管理员后台会跳转登录页；浏览器控制台为空。生产容器随后以 143 正常停止并重启为健康状态，目录和平台注册仍各为 10，唯一 `warden` 管理员保持首次登录强制改密，活动会话为 0。管理员引导凭据从未被自动化捕获。
 
-The production container then stopped gracefully with exit code 143 and became
-healthy after restart. Catalogue and registry counts remained ten, the sole
-bootstrap administrator remained present with mandatory first-login password
-change, and there were no active sessions. The bootstrap credential itself was
-never captured.
-
-No fnOS system file, application-center state, unrelated container, rollback
-container, image, or volume was removed. Local clone artifacts were moved to
-the desktop Trash and remain recoverable.
+用户随后明确要求删除旧 `0ac4dff` 回滚容器及其 1.6 MB 数据目录；两者已永久删除且无法恢复。当前生产、其他历史回滚容器、烟测容器、镜像和数据均未受影响。本地 clone 测试产物已移入桌面废纸篓，可恢复。

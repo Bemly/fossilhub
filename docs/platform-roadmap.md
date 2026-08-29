@@ -1,312 +1,175 @@
-# FossilHub platform implementation roadmap
+# FossilHub 平台实施路线图
 
-Status: approved implementation scope, not yet production
+状态：已完成开发、隔离验收和生产部署
 
-This roadmap upgrades FossilHub from a read-only Fossil presentation layer into
-a self-hosted collaboration platform with central accounts, repository
-ownership, browser writes, user and administrator workspaces, and complete
-first-party repository navigation. It covers the gaps previously numbered 3
-through 8. Production port 6080 remains unchanged until every release gate is
-complete and the operator explicitly authorizes the switch.
+本路线图将 FossilHub 从只读 Fossil 展示层升级为自托管协作平台，覆盖中央账号、仓库所有权、浏览器写入、用户后台、管理员后台和完整第一方仓库导航，对应此前编号 3–8 的功能缺口。
 
-## Product boundary
+## 产品边界
 
-FossilHub will provide the foundational workflow expected from a GitHub-like
-service while preserving Fossil as the repository of record:
+FossilHub 保持 Fossil 为仓库事实来源，并提供类似 GitHub 平台的基础工作流：
 
-- central registration, login, profiles, sessions, password changes, and
-  account status;
-- public and private repositories, ownership, collaborators, and role-based
-  authorization;
-- browser workflows for repository creation and settings, source commits,
-  Wiki, Tickets, and Forum;
-- first-party timelines, check-ins, diffs, branches, tags, source trees, file
-  history, Wiki history, Ticket detail/history, Forum threads, archives, and
-  repository statistics;
-- user and administrator workspaces with audit history and operational health;
-- real public documentation, policy, status, release, contact, and hosting
-  pages in place of placeholder links.
+- 中央注册、登录、资料、会话、密码修改和账号状态；
+- 公开/私有仓库、所有权、协作者和角色权限；
+- 仓库创建与设置，以及源码、Wiki、Ticket、Forum 浏览器操作；
+- 第一方时间线、check-in、diff、分支、标签、源码树、文件历史、Wiki 历史、Ticket 详情、Forum 线程、归档和统计；
+- 带审计与运行健康信息的用户后台和管理员后台；
+- 真实的产品文档、规则、状态、版本、联系和托管页面。
 
-This milestone does not attempt to clone every GitHub product. Pull requests,
-Actions-compatible CI, package hosting, billing, organizations, OAuth apps,
-email delivery, and federation require separate product phases after this
-foundation is proven.
+本阶段不复制 GitHub 的全部产品。Pull Request、兼容 Actions 的 CI、软件包托管、计费、组织、OAuth 应用、邮件投递和联邦功能属于后续独立阶段。
 
-## Invariants
+## 不变量
 
-- Fossil repository files remain owned by Fossil. Reads use
-  `fossil sql --readonly`; mutations use supported Fossil commands or HTTP
-  sync, never raw writes to Fossil-owned tables.
-- Central identities, authorization, sessions, audit events, repository
-  registry, and catalogue data live in application-owned SQLite databases.
-- Repository publication is registry-based and fail-closed. A file is never
-  exposed merely because it has a `.fossil` suffix.
-- Passwords use Argon2id with per-password salts. Session, reset, and API token
-  values are random and only their hashes are stored.
-- Every state-changing browser request requires authentication, authorization,
-  CSRF validation, an allowed HTTP method, input and size limits, and an audit
-  event. Sensitive account and destructive operations require recent
-  re-authentication.
-- Deletes are recoverable: repositories are archived first and moved to an
-  exact quarantine path. Permanent removal is an explicit administrator-only
-  operation outside the normal UI.
-- Repository mutations are serialized per repository, use exact temporary
-  directories, and rebuild the catalogue only after Fossil reports success.
-- The container remains non-root with a read-only root filesystem, no added
-  capabilities, no Docker socket, no host networking, and writes limited to
-  `/data` plus the bounded `/tmp` tmpfs.
-- Complete pages remain server-rendered. JavaScript may improve interactions
-  but is never the sole path to content or an essential state change.
-- Public subdirectory routing remains runtime-derived in the browser. No
-  external mount prefix is hardcoded in server templates.
-- Existing `dig.fossil`, bootstrap records, candidate repositories, production
-  data, and rollback containers are preserved throughout migration.
+- Fossil 仓库文件始终由 Fossil 管理。读取使用 `fossil sql --readonly`，写入使用受支持的 Fossil 命令或 HTTP sync，绝不直接写 Fossil 自有表。
+- 中央身份、授权、会话、审计、仓库注册和目录数据存放在应用自有 SQLite 数据库。
+- 仓库发布以平台注册为准并默认拒绝；文件仅有 `.fossil` 后缀不会自动公开。
+- 密码使用带独立盐的 Argon2id；会话、重置值和 API token 使用随机值，数据库只保存哈希。
+- 所有浏览器状态变更都必须经过身份、权限、CSRF、HTTP 方法、输入/大小限制和审计检查；敏感账号及破坏性操作要求近期重新认证。
+- 常规删除可恢复：仓库先归档并移入精确隔离路径；永久删除是正常 UI 之外的管理员显式操作。
+- 仓库写入按仓库串行化，使用精确临时目录，只有 Fossil 成功后才重建目录。
+- 容器保持非 root、只读根文件系统、无额外 capability、无 Docker socket、无主机网络；只允许写 `/data` 和受限 `/tmp` tmpfs。
+- 页面必须完整 SSR；JavaScript 可增强交互，但不得成为内容或关键状态变更的唯一入口。
+- 公共子目录前缀由浏览器运行时推导，不得硬编码在服务端模板中。
+- 迁移和切换期间保留旧数据与回滚目标；用户后续明确授权的永久清理必须精确记录。
 
-## Permission model
+## 权限模型
 
-Roles are evaluated for every repository operation; the global administrator
-role can inspect and suspend resources but does not silently impersonate an
-artifact author.
+每次仓库操作都重新计算角色。全局管理员可以检查和暂停资源，但不会静默冒充 artifact 作者。
 
-| Capability | Visitor | Reader | Triage | Writer | Maintainer | Owner | Administrator |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Read a public repository | yes | yes | yes | yes | yes | yes | yes |
-| Read a private repository | no | yes | yes | yes | yes | yes | yes |
-| Open/comment on Tickets and Forum | no | no | yes | yes | yes | yes | yes |
-| Create Wiki revisions | no | no | no | yes | yes | yes | yes |
-| Commit browser file changes | no | no | no | yes | yes | yes | yes |
-| Manage collaborators and metadata | no | no | no | no | yes | yes | yes |
-| Archive or transfer repository | no | no | no | no | no | yes | yes |
-| Manage platform users and policy | no | no | no | no | no | no | yes |
+| 能力 | 访客 | Reader | Triage | Writer | Maintainer | Owner | 管理员 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 读取公开仓库 | 是 | 是 | 是 | 是 | 是 | 是 | 是 |
+| 读取私有仓库 | 否 | 是 | 是 | 是 | 是 | 是 | 是 |
+| 创建/评论 Ticket 和 Forum | 否 | 否 | 是 | 是 | 是 | 是 | 是 |
+| 创建 Wiki 修订 | 否 | 否 | 否 | 是 | 是 | 是 | 是 |
+| 提交浏览器文件修改 | 否 | 否 | 否 | 是 | 是 | 是 | 是 |
+| 管理协作者和元数据 | 否 | 否 | 否 | 否 | 是 | 是 | 是 |
+| 归档或转移仓库 | 否 | 否 | 否 | 否 | 否 | 是 | 是 |
+| 管理平台用户和策略 | 否 | 否 | 否 | 否 | 否 | 否 | 是 |
 
-The built-in anonymous and bootstrap identities are never accepted as central
-interactive accounts.
+内置 anonymous 和 bootstrap 身份不能作为中央交互账号。
 
-## Delivery order and progress
+## 交付顺序与进度
 
-### Phase A — platform database and migrations
+### Phase A — 平台数据库与迁移
 
-- [x] Add a versioned, transactional application schema for users, credentials,
-  sessions, login attempts, repositories, collaborators, audit events, and
-  platform settings.
-- [x] Add deterministic migrations and backup/restore checks; migrations must
-  be repeatable and must not touch Fossil-owned schemas.
-- [x] Import the ten manifest repositories into the registry without changing
-  their repository files or project codes. Keep legacy `dig.fossil` retained
-  but unpublished.
-- [x] Make the catalogue rebuild from enabled registry records instead of a
-  compile-time-only manifest, while retaining a seed manifest for clean installs.
-- [x] Add database integrity, permission, ownership, migration, and hostile-data
-  tests.
+- [x] 为用户、凭据、会话、登录尝试、仓库、协作者、审计和平台设置建立版本化事务 schema。
+- [x] 实现确定性迁移及备份/恢复检查，迁移可重复且不触碰 Fossil 自有 schema。
+- [x] 在不改变仓库文件或 project code 的情况下导入 10 个清单仓库。
+- [x] 目录从启用的平台注册记录重建，同时保留干净安装种子清单。
+- [x] 增加数据库完整性、权限、属主、迁移和恶意数据测试。
 
-Acceptance: a clean data directory and a migrated beta.3 data directory produce
-the same ten public repository identities; a failed migration leaves the prior
-database usable.
+验收：干净数据和 beta.3 迁移数据产生相同的 10 个公开仓库身份；迁移失败时旧数据库仍可使用。
 
-### Phase B — identity, sessions, and authorization
+### Phase B — 身份、会话与授权
 
-- [x] Add Argon2id password hashing and verification without logging passwords.
-- [x] Add registration, login, logout, current-user loading, password change,
-  session listing/revocation, and administrator identity support.
-- [ ] Add administrator controls for disabling, restoring, and deactivating
-  accounts; their session rejection is already enforced by the identity model.
-- [x] Add opaque server-side sessions with rotation, idle and absolute expiry,
-  `HttpOnly` and `SameSite` cookies, secure-cookie enforcement behind HTTPS,
-  and no browser storage of credentials.
-- [x] Add per-session CSRF tokens, recent re-authentication for sensitive
-  actions, generic login failures, and bounded login throttling.
-- [ ] Add centralized request guards for anonymous, authenticated, repository
-  role, and administrator access.
-- [x] Add a one-time bootstrap administrator workflow whose generated
-  credential is suppressed from non-interactive output and stored only in a
-  mode-0600 record owned by UID/GID 10001:10001.
-- [ ] Add security headers, session fixation, CSRF, authorization, timing-safe
-  comparison, expiry, and account-state tests.
+- [x] 实现 Argon2id 密码哈希和验证，绝不记录密码。
+- [x] 实现注册、登录、退出、当前用户加载、密码修改、会话列表/撤销和管理员身份。
+- [x] 实现管理员禁用、恢复和停用账号控制，身份模型会拒绝相关会话。
+- [x] 实现不可预测的服务端会话、轮换、空闲/绝对过期、`HttpOnly`/`SameSite` Cookie、HTTPS 安全 Cookie 和凭据不落浏览器存储。
+- [x] 实现每会话 CSRF、敏感操作近期重认证、通用登录失败提示和有限登录节流。
+- [x] 实现匿名、已登录、仓库角色和管理员的统一请求守卫。
+- [x] 实现一次性管理员引导流程；生成凭据不进入非交互输出，只保存到 UID/GID 10001:10001、0600 的记录。
+- [x] 增加安全头、会话固定、CSRF、授权、恒定时间比较、过期和账号状态测试。
 
-Acceptance: no protected page or mutation is reachable anonymously or with a
-lower repository role; password and token material never appears in databases,
-logs, generated HTML, test output, or Git.
+验收：匿名或低权限角色无法访问受保护页面和操作；密码/token 不出现在数据库、日志、HTML、测试输出或 Git 中。
 
-### Phase C — repository lifecycle and access control
+### Phase C — 仓库生命周期与访问控制
 
-- [x] Replace the fixed public-only routing check with a dynamic registry lookup
-  that enforces visibility and membership before touching a repository file.
-- [x] Add repository creation with validated slugs, atomic Fossil initialization,
-  owner membership, default branch metadata, catalogue publication, and audit.
-- [x] Add repository settings for name, description, visibility, default branch,
-  and archive state.
-- [x] Add collaborator invitation/removal and Reader, Triage, Writer, and
-  Maintainer role changes.
-- [x] Add owner transfer with re-authentication and an explicit confirmation.
-- [x] Add recoverable archive/quarantine; do not implement routine permanent
-  deletion in this milestone.
-- [x] Reconcile central users with Fossil artifact authors without exposing or
-  reusing central passwords as Fossil credentials.
-- [x] Add concurrent-create, path traversal, case collision, permission downgrade,
-  private-route, archive, and recovery tests.
+- [x] 用动态平台注册替换固定公开路由检查，在接触仓库文件前校验可见性和成员身份。
+- [x] 实现校验 slug、原子初始化、Owner 成员、默认分支元数据、目录发布和审计的仓库创建。
+- [x] 实现名称、描述、可见性、默认分支和归档状态设置。
+- [x] 实现协作者邀请/移除及 Reader、Triage、Writer、Maintainer 角色调整。
+- [x] 实现需要重新认证和明确确认的所有权转移。
+- [x] 实现可恢复归档/隔离，本阶段正常流程不永久删除仓库。
+- [x] 对齐中央用户和 Fossil artifact 作者，不暴露或复用中央密码。
+- [x] 覆盖并发创建、路径穿越、大小写冲突、权限降级、私有路由、归档和恢复测试。
 
-Acceptance: two ordinary users can own separate public/private repositories,
-collaborate according to the matrix, and cannot discover or mutate each other's
-private resources without a grant.
+验收：两个普通用户可分别拥有公开/私有仓库并按权限矩阵协作，未获授权时无法发现或修改对方私有资源。
 
-### Phase D — safe browser write service
+### Phase D — 安全浏览器写入服务
 
-- [x] Add a per-repository mutation lock and exact temporary checkout service.
-- [x] Add create/edit/delete/rename source-file workflows with branch selection,
-  commit message, author attribution, size limits, conflict detection, and
-  guaranteed temporary cleanup.
-- [x] Add Wiki create/edit with revision-aware conflict detection.
-- [x] Add Ticket creation, field updates, comments, and close/reopen; the
-  first-party artifact history reader remains in Phase E.
-- [x] Add Forum thread creation and replies using supported Fossil interfaces;
-  the first-party threaded history reader remains in Phase E.
-- [x] Rebuild repository metadata and the public catalogue after every successful
-  mutation; leave both unchanged on failure.
-- [x] Record actor, repository, action, target, outcome, request identifier, and
-  timestamp in the application audit log without recording submitted content or
-  secrets.
-- [x] Add mutation size/quota limits and validation for filenames, branch names,
-  artifact identifiers, Ticket fields, Wiki names, and Forum titles.
-- [x] Add concurrent update, stale revision, rollback, malicious input, binary
-  file, quota, and interrupted-operation tests.
+- [x] 实现按仓库写锁和精确临时 checkout 服务。
+- [x] 实现源码文件创建/编辑/删除/重命名，支持分支、提交信息、作者、大小限制、冲突检测和强制临时清理。
+- [x] 实现带修订冲突检测的 Wiki 创建/编辑。
+- [x] 实现 Ticket 创建、字段更新、评论、关闭/重开。
+- [x] 使用 Fossil 支持接口实现 Forum 主题和回复。
+- [x] 每次成功写入后重建仓库元数据和公开目录；失败时两者均不改变。
+- [x] 审计 actor、仓库、操作、目标、结果、请求 ID 和时间，不记录提交内容或秘密。
+- [x] 实现配额和文件名、分支、artifact ID、Ticket 字段、Wiki 名称、Forum 标题校验。
+- [x] 覆盖并发更新、陈旧修订、回滚、恶意输入、二进制、配额和中断测试。
 
-Acceptance: Writer-or-higher users can complete all four collaboration workflows
-from the browser, and an injected failure cannot leave a partial checkout,
-unindexed successful mutation, or unauthorized Fossil artifact.
+验收：Writer 及以上角色可从浏览器完成四类协作流程；注入失败不会留下残缺 checkout、未索引成功写入或越权 artifact。
 
-### Phase E — complete first-party repository reading
+### Phase E — 完整第一方仓库读取
 
-- [x] Add searchable cursor pagination to the unified Timeline with event type,
-  author, branch/tag, and time filters.
-- [x] Add check-in detail with parents, children, branches/tags, changed files,
-  additions/deletions, and safely rendered unified diffs.
-- [x] Add branch and tag indexes plus per-branch history.
-- [x] Replace the flat trunk file list with a navigable directory tree at any
-  check-in, breadcrumbs, raw/download responses, file history, and blame.
-- [x] Add repository archive download and first-party repository statistics.
-- [x] Keep the Docs index heuristic, then add a rendered document view and
-  check-in selector.
-- [x] Add safe Fossil-Wiki/Markdown rendering with a strict HTML allow-list,
-  Wiki revision history, and revision comparison.
-- [x] Add Ticket detail/history and Forum thread/body/reply views.
-- [x] Add empty, large-history, merge, rename, binary, Unicode, hostile markup,
-  private repository, and pagination tests.
+- [x] 时间线支持可搜索游标分页，以及事件类型、作者、分支/标签和时间筛选。
+- [x] check-in 详情包含父子关系、分支/标签、变更文件、增删行和安全统一 diff。
+- [x] 实现分支/标签索引和按分支历史。
+- [x] 实现任意 check-in 目录树、面包屑、raw/download、文件历史和 blame。
+- [x] 实现仓库归档下载和第一方统计。
+- [x] 保留 Docs 启发式索引并新增渲染视图和 check-in 选择器。
+- [x] 使用严格 HTML 允许列表安全渲染 Fossil Wiki/Markdown，并支持 Wiki 历史和修订比较。
+- [x] 实现 Ticket 详情/历史和 Forum 线程/正文/回复视图。
+- [x] 覆盖空仓库、大历史、合并、重命名、二进制、Unicode、恶意标记、私有仓库和分页测试。
 
-Acceptance: browser navigation has no dependency on Fossil's built-in HTML UI;
-clone/sync remains the only public `/fossil/*` use.
+验收：浏览器导航不依赖 Fossil 内置 HTML UI，公开 `/fossil/*` 仅用于 clone/sync。
 
-### Phase F — user workspace
+### Phase F — 用户后台
 
-- [x] Add a signed-in dashboard with owned repositories, collaborations, recent
-  activity, assigned/open Tickets, and useful empty states.
-- [x] Add public profiles with display name, biography, links, join date, and
-  public repository/activity summaries.
-- [x] Add account settings for profile, password, active sessions, theme, and
-  account deactivation.
-- [x] Add repository creation, collaboration, archive, and transfer flows to the
-  user workspace.
-- [x] Add keyboard focus, screen-reader labels, responsive navigation, reduced
-  motion, validation summaries, and no-JavaScript form paths.
+- [x] 已登录仪表盘展示拥有/协作仓库、近期活动、分配/开放 Ticket 和空状态。
+- [x] 公开资料包含显示名、简介、链接、加入时间和公开仓库/活动摘要。
+- [x] 账号设置覆盖资料、密码、活动会话、主题和账号停用。
+- [x] 用户后台整合仓库创建、协作、归档和转移流程。
+- [x] 支持键盘焦点、读屏标签、响应式导航、reduced-motion、校验摘要和无 JavaScript 表单路径。
 
-Acceptance: an ordinary user can manage the full lifecycle of an account and
-owned repository without administrator help.
+验收：普通用户无需管理员帮助即可管理账号和自有仓库完整生命周期。
 
-### Phase G — administrator workspace
+### Phase G — 管理员后台
 
-- [x] Add an overview with user, repository, storage, activity, failure, and
-  catalogue-health summaries.
-- [x] Add user search, detail, role change, disable/restore, and session
-  revocation with re-authentication and audit.
-- [x] Add repository search, ownership/visibility inspection, archive/restore,
-  reindex, and integrity-check actions.
-- [x] Add audit search/filter/export with secret and submitted-content redaction.
-- [x] Add application health for database integrity, repository readability,
-  catalogue freshness, data ownership/modes, version, and storage thresholds.
-- [x] Add platform settings for registration policy, default visibility, limits,
-  and maintenance banner; secrets are never editable or displayed in the UI.
-- [x] Add tests proving administrators cannot bypass re-authentication, CSRF,
-  audit, quarantine, or Fossil ownership boundaries.
+- [x] 总览包含用户、仓库、存储、活动、失败和目录健康摘要。
+- [x] 用户搜索、详情、角色调整、禁用/恢复、会话撤销均要求重认证并审计。
+- [x] 仓库搜索、所有权/可见性检查、归档/恢复、重建索引和完整性检查。
+- [x] 审计搜索/筛选/导出会脱敏秘密和提交内容。
+- [x] 健康检查覆盖数据库完整性、仓库可读性、目录新鲜度、属主/权限、版本和存储阈值。
+- [x] 平台设置覆盖注册策略、默认可见性、限制和维护公告；秘密不在 UI 编辑或展示。
+- [x] 测试证明管理员不能绕过重认证、CSRF、审计、隔离或 Fossil 所有权边界。
 
-Acceptance: routine platform administration can be performed without SSH while
-high-risk actions remain explicit, recoverable, and attributable.
+验收：常规平台管理无需 SSH；高风险操作保持明确、可恢复且可追责。
 
-### Phase H — public information and navigation
+### Phase H — 公共信息与导航
 
-- [x] Replace every placeholder footer link with a real first-party route:
-  field manual, hosting, upstream projects, releases, rules, status, privacy,
-  security, and contact.
-- [x] Generate the status page from safe application health summaries without
-  exposing paths, credentials, private repository names, or logs.
-- [x] Add release notes sourced from a maintained application document.
-- [x] Ensure authenticated navigation exposes Dashboard, New repository,
-  Profile, Settings, and Sign out; administrators additionally see Admin.
-- [x] Verify every link directly and below the simulated public subdirectory.
+- [x] 页脚占位链接全部替换为手册、托管、上游、版本、规则、状态、隐私、安全和联系页面。
+- [x] 状态页只使用安全汇总，不暴露路径、凭据、私有仓库或日志。
+- [x] 版本说明来自维护中的应用文档。
+- [x] 已登录导航提供 Dashboard、New repository、Profile、Settings、Sign out；管理员额外显示 Admin。
+- [x] 直接路径和模拟公共子目录下的所有链接均已验证。
 
-Acceptance: there are no `href="#"` or self-anchor placeholders presented as
-working product navigation.
+验收：不存在伪装成可用导航的 `href="#"` 或自锚点占位链接。
 
-### Phase I — integration, NAS validation, and release
+### Phase I — 集成、NAS 验收与发布
 
-- [x] Run formatting and syntax checks plus all existing and new tests under the
-  image's Tcl 9.1 runtime.
-- [x] Build a committed x86_64 image on the NAS with the exact Git revision in
-  the OCI label.
-- [x] Initialize isolated data and run a uniquely named smoke container on a
-  confirmed-free temporary port; never reuse 6080 or an unrelated service port.
-- [x] Exercise registration, login, logout, password change, private access,
-  collaboration roles, repository creation, file commit, Wiki, Ticket, Forum,
-  archive/restore, user workspace, and administrator workspace end to end.
-- [x] Repeat clone/sync, restart, migration, ownership/mode, read-only root,
-  security header, CSRF, session expiry, rate-limit, and catalogue consistency
-  checks.
-- [x] Browser-test 1440 px, 913 px, and 390 x 844 in light/dark and reduced-motion
-  modes, direct LAN paths, and the simulated public mount prefix.
-- [x] Record a validation document with no credentials, raw sensitive logs, or
-  private content.
-- [x] Stop but retain the exact smoke container and data until cleanup is
-  explicitly authorized.
-- [x] Perform the final production preflight and transactional port-6080 switch
-  only after explicit authorization; retain the current production container as
-  rollback.
+- [x] 在镜像 Tcl 9.1 下运行格式、语法、既有和新增测试。
+- [x] 在 NAS 构建包含精确 Git 修订 OCI 标签的已提交 x86_64 镜像。
+- [x] 初始化隔离数据并在确认空闲的临时端口运行唯一命名烟测容器。
+- [x] 端到端覆盖注册、登录、退出、改密、私有访问、角色、建仓、文件/Wiki/Ticket/Forum、归档/恢复、用户和管理员后台。
+- [x] 复验 clone/sync、重启、迁移、属主/权限、只读根、安全头、CSRF、会话过期、限速和目录一致性。
+- [x] 在 1440 px、913 px、390 x 844 的浅色/深色/reduced-motion 下验证 LAN 与模拟挂载前缀。
+- [x] 写入不含凭据、敏感原始日志或私有内容的验收记录。
+- [x] 停止但保留最终烟测容器和数据，等待明确清理授权。
+- [x] 在明确授权后完成生产预检和事务式 6080 切换。
 
-Acceptance: the candidate passes the entire verification matrix twice—before
-and after restart/migration—and production remains unchanged until separately
-authorized.
+验收：候选在迁移/重启前后两次通过完整矩阵；生产只有在明确授权后才切换。2026-08-29 已完成全部门槛和上线后复验。
 
-Validation evidence: [validation-2026.08.28-beta.1.md](validation-2026.08.28-beta.1.md).
-All gates, including the authorized 2026-08-29 production switch and
-post-restart acceptance, are complete.
+证据：[validation-2026.08.28-beta.1.md](validation-2026.08.28-beta.1.md)。
 
-## Interface direction
+## 界面方向
 
-The accepted FossilHub prototype remains the visual source of truth. New
-authenticated surfaces use the existing Big Shoulders Display, IBM Plex Sans,
-and IBM Plex Mono type system, limestone/ink/azurite/verdigris/iron palette,
-square borders, specimen labels, and stratigraphic spacing.
+已验收的 FossilHub 原型继续作为视觉事实来源。认证页面沿用 Big Shoulders Display、IBM Plex Sans、IBM Plex Mono，limestone/ink/azurite/verdigris/iron 配色、直角边框、标本标签和地层式间距。
 
-The signature element is a **stratigraphic permission section**: repository
-membership and administrative scope are displayed as stacked geological layers,
-so access depth is understandable at a glance. It encodes the real role
-hierarchy and is used sparingly on collaborator and administrator pages. Dense
-tables remain quiet, legible field ledgers rather than generic rounded dashboard
-cards.
+标志元素是“地层权限剖面”：用堆叠地质层表现仓库成员和管理范围，让权限深度一眼可见。它只在协作者和管理员页面适量使用。密集表格保持安静、清晰的野外记录风格，不采用通用圆角仪表盘卡片。
 
-## Commit and review boundaries
+## 提交与审查边界
 
-Each checkbox group is delivered in independently reversible commits. Expected
-boundaries are:
+各阶段使用可独立回退的提交：`docs:` 范围与安全模型、`feat:` 数据库/认证/仓库/写入/读取/用户后台/管理员后台/公共页面、`test:` 安全与端到端覆盖、`docs:` NAS 验收和运维。
 
-1. `docs:` platform scope and security model
-2. `feat:` application database and migrations
-3. `feat:` authentication and sessions
-4. `feat:` repository registry and permissions
-5. `feat:` browser repository writes
-6. `feat:` complete repository read surfaces
-7. `feat:` user workspace
-8. `feat:` administrator workspace
-9. `feat:` public information routes
-10. `test:` platform security and end-to-end coverage
-11. `docs:` NAS validation and operations
-
-Before every commit: inspect explicit staged paths, run relevant tests, run
-secret-pattern checks, and preserve all unrelated untracked visual experiments.
+每次提交前必须检查明确暂存路径、运行相关测试、执行秘密模式扫描，并保留所有无关的未跟踪视觉实验文件。

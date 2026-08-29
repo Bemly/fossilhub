@@ -178,6 +178,7 @@ the committed NAS image, isolated initialization, restart/migration matrix,
 real collaboration workflow, browser matrix, clone/sync, and graceful stop all
 passed. The separately authorized production preflight and transactional
 port-6080 switch completed on 2026-08-29. Production now runs revision
-`578fcff`; the previous production container and data, plus the stopped smoke
-container and data, remain available for rollback and diagnosis. See
+`578fcff`. The previous production container and matching data were later
+permanently deleted with explicit user authorization; the stopped smoke
+container and data remain available for diagnosis. See
 `docs/validation-2026.08.28-beta.1.md`.

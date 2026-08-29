@@ -1,31 +1,21 @@
-# FossilHub release history
+# FossilHub 发布历史
 
-## 2026.08.28-beta.1 · collaboration candidate
+## 2026.08.28-beta.1 · 协作平台
 
-- Added the application-owned catalogue and central platform registry.
-- Added Argon2id accounts, opaque sessions, one-time form challenges, public
-  profiles, dashboards, account settings, and repository collaboration roles.
-- Added recoverable repository creation and archive flows plus browser-native
-  file, Wiki, Ticket, and Forum changes.
-- Added complete first-party history, source, document, Ticket, Forum, branch,
-  tag, statistics, and ZIP views while retaining Fossil CGI only for public
-  clone and sync.
-- Added the administrator workspace, redacted audit export, safe health board,
-  platform limits, recent-password checks, and integrity quarantine.
-- Replaced placeholder footer links with first-party product, policy, release,
-  privacy-preserving status, security, and contact pages, including safe
-  maintenance notices and versioned browser assets.
+- 新增应用自有的目录数据库和中央平台注册表。
+- 新增 Argon2id 账号、不可预测会话、一次性表单挑战、公开资料、用户仪表盘、账号设置和仓库协作角色。
+- 新增可恢复的仓库创建与归档流程，以及浏览器内文件、Wiki、Ticket 和 Forum 写入。
+- 新增第一方历史、源码、文档、Ticket、Forum、分支、标签、统计和 ZIP 页面；Fossil CGI 仅保留公开 clone/sync 传输能力。
+- 新增管理员后台、脱敏审计导出、安全健康面板、平台限制、近期密码校验和完整性隔离。
+- 用真实的产品、政策、版本、隐私状态、安全和联系页面替换页脚占位链接，并支持安全维护通知和版本化浏览器资源。
+- 2026-08-29 完成 NAS 隔离验收、事务式生产切换及上线后重启验证，当前运行于端口 6080。
 
-This candidate has not replaced production. NAS image, migration, restart,
-clone/sync, responsive browser, and transactional deployment gates remain.
+## 0.2.0-beta.1 · 原生 Fossil 传输
 
-## 0.2.0-beta.1 · native Fossil transport
+- 新增隔离的 Tcl/Wapp/Althttpd 运行环境和原生 Fossil 仓库。
+- 在 fnOS 上验证公开 clone/sync、持久化存储、重启行为和最初的三页地质风格界面。
 
-- Added the isolated Tcl/Wapp/Althttpd runtime and native Fossil repository.
-- Verified public clone and sync, persistent storage, restart behavior, and the
-  original geological three-page interface on fnOS.
+## 0.1.2 · 稳定视觉基线
 
-## 0.1.2 · stable visual baseline
-
-- Established the accepted FossilHub visual prototype and responsive layout.
-- Retained as the stable rollback image while collaboration work continues.
+- 建立通过验收的 FossilHub 视觉原型和响应式布局。
+- 作为早期稳定回滚镜像保留。
