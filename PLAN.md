@@ -154,7 +154,7 @@ later candidate passes every smoke and browser gate.
   ten isolated blank repositories, including search, each styled repository
   surface, clone/sync, persistence, permissions, responsive layouts, and the
   public subdirectory prefix.
-- [ ] Update NAS production on port 6080 only after explicit authorization and
+- [x] Update NAS production on port 6080 only after explicit authorization and
   retain the current container as a rollback target.
 
 ## Phase 5: collaboration platform foundation
@@ -165,19 +165,19 @@ ownership and permissions, browser writes, complete first-party repository
 navigation, user and administrator workspaces, and real public information
 pages.
 
-The source candidate for this phase is `2026.08.28-beta.1`.
+The deployed release for this phase is `2026.08.28-beta.1`.
 
 The dependency-ordered, auditable checklist and acceptance gates are maintained
-in [docs/platform-roadmap.md](docs/platform-roadmap.md). Production port 6080
-must remain on its current release until the new platform candidate passes that
-roadmap and receives separate switch authorization.
+in [docs/platform-roadmap.md](docs/platform-roadmap.md).
 
 Implementation phases A through H are complete: platform data, identity,
 repository lifecycle, browser writes, complete first-party reads, user and
 administrator workspaces, and public information/navigation are present in the
-source candidate. Phase I validation is complete for image revision `578fcff`;
+deployed release. Phase I validation is complete for image revision `578fcff`;
 the committed NAS image, isolated initialization, restart/migration matrix,
 real collaboration workflow, browser matrix, clone/sync, and graceful stop all
-passed. The stopped smoke container and data are retained. Only the separately
-authorized production preflight and transactional port-6080 switch remain; see
+passed. The separately authorized production preflight and transactional
+port-6080 switch completed on 2026-08-29. Production now runs revision
+`578fcff`; the previous production container and data, plus the stopped smoke
+container and data, remain available for rollback and diagnosis. See
 `docs/validation-2026.08.28-beta.1.md`.

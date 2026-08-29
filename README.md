@@ -3,8 +3,8 @@
 FossilHub is a Tcl/Wapp port of the three-page UI prototype in
 `/Users/bemly/cchaha/fossiltest`.
 
-The production target is an isolated Ubuntu 24.04 Docker container on fnOS.
-Althttpd terminates HTTP and launches the Wapp application as CGI. Candidate
+Production runs in an isolated Ubuntu 24.04 Docker container on fnOS. Althttpd
+terminates HTTP and launches the Wapp application as CGI. Release
 `2026.08.28-beta.1` uses an application-owned SQLite catalogue for search and
 filters, then queries each repository through `fossil sql --readonly` for Tcl
 server-rendered Timeline, Files, Docs, Wiki, Tickets, and Forum surfaces. The
@@ -20,12 +20,12 @@ The previous generated `dig.fossil` is no longer created or indexed.
 
 Production is available on the NAS at `http://192.168.1.162:6080/`; its health
 endpoint is `/healthz`, the reference repository page is
-`/repo/dig.fossil`, and the native Fossil service is `/fossil/dig/`.
-Production remains 0.2.0-beta.1. The Phase 5 candidate has completed its NAS,
-end-to-end, transport, security, lifecycle, and browser gates; only the
-separately authorized transactional production switch remains.
+`/repo/bedrock.fossil`, and its clone/sync endpoint is `/fossil/bedrock`.
+Production runs `fossilhub:2026.08.28-beta.1` at revision `578fcff`. It passed
+the NAS, end-to-end, transport, security, lifecycle, browser, transactional
+switch, and post-restart gates on 2026-08-29.
 
-Candidate routes begin at `/explore` and `/repo/bedrock.fossil`. The validated
+Repository routes begin at `/explore` and `/repo/bedrock.fossil`. The deployed
 image is `fossilhub:2026.08.28-beta.1` at runtime revision `578fcff`;
 [VERSION](VERSION) is the release source of truth. The complete isolated NAS
 record is [docs/validation-2026.08.28-beta.1.md](docs/validation-2026.08.28-beta.1.md).
@@ -100,6 +100,6 @@ pages from reusing stale assets after an update.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.
 - [docs/validation-2026.08.28-beta.1.md](docs/validation-2026.08.28-beta.1.md)
-  records the Phase 5 isolated NAS acceptance evidence.
+  records the Phase 5 isolated and production acceptance evidence.
 - [docs/third-party.md](docs/third-party.md) records the pinned Tcl, Wapp,
   Althttpd, and Fossil sources.

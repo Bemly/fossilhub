@@ -72,30 +72,23 @@ production change.
   - `/var/apps_ui/<pkg>/`
 - User-managed data: `/vol1/1000/`
 - FossilHub persistent data: `/vol1/1000/fossilhub/`
-- FossilHub live repository:
-  `/vol1/1000/fossilhub/repositories/dig.fossil`
-- Candidate catalogue database:
+- FossilHub catalogue database:
   `/vol1/1000/fossilhub/catalog/fossilhub.sqlite`
-- Phase 5 platform database:
+- FossilHub platform database:
   `/vol1/1000/fossilhub/platform/fossilhub.sqlite`
-- Phase 5 bootstrap administrator record:
+- FossilHub bootstrap administrator record:
   `/vol1/1000/fossilhub/platform/fossilhub-bootstrap-admin.txt`
-- Candidate blank repositories:
+- Production repositories:
   `/vol1/1000/fossilhub/repositories/{bedrock,ammonite,trilobite,basalt,cambrian,granite,shale,quartz,obsidian,tectonic}.fossil`
-- Fossil bootstrap administrator record:
-  `/vol1/1000/fossilhub/fossil-bootstrap-admin.txt`
-- The repository and bootstrap record must remain mode 0600 and owned by
-  UID/GID 10001:10001. Read the bootstrap record only in a trusted interactive
-  SSH terminal; never include its contents in logs, tests, commits, or replies.
-- Every candidate repository and the catalogue database must also remain mode
-  0600 and owned by UID/GID 10001:10001. `dig.fossil` and its bootstrap record
-  are retained as legacy production data even though the CalVer catalogue does
-  not expose them.
-- The Phase 5 platform database must remain mode 0600 and owned by UID/GID
+- Previous production data, including legacy `dig.fossil`, is retained at
+  `/vol1/1000/fossilhub-rollback-0ac4dff-data` for immediate rollback.
+- Every production repository and the catalogue database must remain mode 0600
+  and owned by UID/GID 10001:10001.
+- The platform database must remain mode 0600 and owned by UID/GID
   10001:10001. It stores application-owned repository registry, identity,
   authorization, session, settings, and audit data. Never query or mutate it
   through Fossil.
-- The Phase 5 bootstrap administrator record must remain mode 0600 and owned by
+- The bootstrap administrator record must remain mode 0600 and owned by
   UID/GID 10001:10001. Read it only in a trusted interactive SSH terminal;
   never capture or return its contents. The `warden` account must change its
   generated password on first sign-in.
@@ -104,18 +97,22 @@ production change.
 
 - Site: `http://192.168.1.162:6080/`
 - Health: `http://192.168.1.162:6080/healthz`
-- Reference repository UI: `http://192.168.1.162:6080/repo/dig.fossil`
-- Native Fossil service: `http://192.168.1.162:6080/fossil/dig/`
+- Reference repository UI: `http://192.168.1.162:6080/repo/bedrock.fossil`
+- Native Fossil transport: `http://192.168.1.162:6080/fossil/bedrock`
 - Container: `fossilhub`
-- Image tag: `fossilhub:0.2.0-beta.1`
-- Deployed code revision: `0ac4dff`
+- Image tag: `fossilhub:2026.08.28-beta.1`
+- Image ID: `sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`
+- Deployed code revision: `578fcff`
 - Mount: `/vol1/1000/fossilhub:/data`
 - Port: `6080:8080`
 - Restart policy: `unless-stopped`
 - Runtime user: `fossilhub:fossilhub` (UID/GID 10001:10001)
 - Security profile: read-only root, 16 MB `/tmp` tmpfs, all capabilities
   dropped, `no-new-privileges`, and PID limit 128.
-- Preferred rollback: stopped container `fossilhub-rollback-188b918`.
+- Preferred rollback: stopped container
+  `fossilhub-rollback-0ac4dff-20260829`, with data at
+  `/vol1/1000/fossilhub-rollback-0ac4dff-data`.
+- Earlier rollback: stopped container `fossilhub-rollback-188b918`.
 - Stable rollback: stopped container `fossilhub-rollback-8c9726d` (0.1.2).
 - Older stopped rollback containers `fossilhub-rollback-94f8097` and
   `fossilhub-rollback-348f399` are also intentionally retained.
@@ -125,13 +122,12 @@ before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
-The source candidate is `2026.08.28-beta.1`. Isolated NAS validation is complete
-for runtime revision `578fcff`, image ID
-`sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`.
-The final smoke container `fossilhub-beta-578fcff` is stopped and retained with
-data at `/vol1/1000/fossilhub-smoke-e0cb8dc`; see
-`docs/validation-2026.08.28-beta.1.md`. The candidate is not production until a
-separately authorized transactional port-6080 switch is complete.
+Release `2026.08.28-beta.1` was transactionally deployed on 2026-08-29 after
+isolated NAS acceptance. The prior production container and data are retained
+as the preferred rollback. The final smoke container
+`fossilhub-beta-578fcff` is stopped and retained with data at
+`/vol1/1000/fossilhub-smoke-e0cb8dc`; see
+`docs/validation-2026.08.28-beta.1.md`.
 
 ## Runtime and source pins
 

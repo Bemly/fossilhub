@@ -2,9 +2,9 @@
 
 Validation date: 2026-08-29
 
-Outcome: the Phase 5 candidate passed isolated NAS acceptance and is ready for
-a separately authorized production preflight. It has not replaced production
-on port 6080.
+Outcome: the Phase 5 release passed isolated NAS acceptance and the separately
+authorized transactional production switch. Port 6080 now runs the validated
+artifact.
 
 ## Validated artifact
 
@@ -19,6 +19,10 @@ on port 6080.
 | Final smoke port | `6083:8080` |
 | Reused migration data | `/vol1/1000/fossilhub-smoke-e0cb8dc` |
 | Clean initializer data | `/vol1/1000/fossilhub-smoke-578fcff-init` |
+| Production container | `fossilhub` |
+| Production data | `/vol1/1000/fossilhub` |
+| Immediate rollback | `fossilhub-rollback-0ac4dff-20260829` |
+| Rollback data | `/vol1/1000/fossilhub-rollback-0ac4dff-data` |
 
 The source input was created with `git archive` from the committed revision.
 The final smoke, test, and initializer containers are stopped and retained.
@@ -101,13 +105,34 @@ The entrypoint forwards Docker stop signals to Althttpd and waits for it. The
 final smoke container stopped in less than one second with exit code 143,
 instead of reaching Docker's forced-stop timeout.
 
-## Production boundary
+## Production deployment
 
-Production remained `fossilhub:0.2.0-beta.1` at revision `0ac4dff` on port
-6080 throughout validation and was healthy after the final smoke stop. No fnOS
-system file, application-center state, unrelated container, production data,
-rollback container, image, or volume was modified.
+The authorized production switch completed on 2026-08-29. A fresh production
+data directory was initialized from the validated image rather than reusing
+end-to-end test identities or repositories. It contained ten repository files,
+ten catalogue records, and ten active platform registry records; all ten Fossil
+integrity checks passed before the switch.
 
-The only remaining Phase I action is the final production preflight and
-transactional 6080 switch. It requires explicit authorization and must retain
-the current production container as the immediate rollback target.
+The previous `fossilhub:0.2.0-beta.1` container was stopped and retained as
+`fossilhub-rollback-0ac4dff-20260829`. Its data was atomically moved to
+`/vol1/1000/fossilhub-rollback-0ac4dff-data`. The new container then started
+with the canonical `/vol1/1000/fossilhub:/data` mount and the same validated
+security restrictions. It became healthy without rollback.
+
+Post-deployment acceptance covered 107 direct HTTP route and repository-surface
+checks, generic browser and transport 404 responses, security headers, a real
+HTTP clone and sync with matching client/server project codes, file ownership
+and modes, registry/catalogue counts, the central administrator bootstrap, and
+browser navigation. The simulated mounted-prefix Explore search returned one
+matching repository, internal links retained the prefix, the administrator
+boundary redirected to sign-in, and the browser console remained empty.
+
+The production container then stopped gracefully with exit code 143 and became
+healthy after restart. Catalogue and registry counts remained ten, the sole
+bootstrap administrator remained present with mandatory first-login password
+change, and there were no active sessions. The bootstrap credential itself was
+never captured.
+
+No fnOS system file, application-center state, unrelated container, rollback
+container, image, or volume was removed. Local clone artifacts were moved to
+the desktop Trash and remain recoverable.

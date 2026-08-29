@@ -265,7 +265,7 @@ working product navigation.
   private content.
 - [x] Stop but retain the exact smoke container and data until cleanup is
   explicitly authorized.
-- [ ] Perform the final production preflight and transactional port-6080 switch
+- [x] Perform the final production preflight and transactional port-6080 switch
   only after explicit authorization; retain the current production container as
   rollback.
 
@@ -274,8 +274,8 @@ and after restart/migration—and production remains unchanged until separately
 authorized.
 
 Validation evidence: [validation-2026.08.28-beta.1.md](validation-2026.08.28-beta.1.md).
-All gates above are complete except the separately authorized production
-preflight and switch.
+All gates, including the authorized 2026-08-29 production switch and
+post-restart acceptance, are complete.
 
 ## Interface direction
 

@@ -1,14 +1,15 @@
 # FossilHub production operations
 
-Deployment verified: 2026-08-27
+Deployment verified: 2026-08-29
 
 ## Current production
 
 - Site: `http://192.168.1.162:6080/`
 - Health: `http://192.168.1.162:6080/healthz`
 - Container: `fossilhub`
-- Image: `fossilhub:0.2.0-beta.1`
-- Source revision label: `0ac4dff`
+- Image: `fossilhub:2026.08.28-beta.1`
+- Image ID: `sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`
+- Source revision label: `578fcff`
 - Host/container port: `6080:8080`
 - Persistent data: `/vol1/1000/fossilhub:/data`
 - Restart policy: `unless-stopped`
@@ -24,23 +25,23 @@ fnOS system path.
 | --- | --- |
 | `/` | FossilHub landing page |
 | `/explore` | Repository catalogue |
-| `/repo/dig.fossil` | Repository specimen and timeline |
+| `/repo/bedrock.fossil` | Repository specimen and timeline |
+| `/repo/bedrock.fossil/files` | Versioned source tree |
+| `/repo/bedrock.fossil/wiki` | First-party Wiki |
+| `/repo/bedrock.fossil/tickets` | First-party Tickets |
+| `/repo/bedrock.fossil/forum` | First-party Forum |
 | `/fh.css` | Shared stylesheet |
 | `/healthz` | HTTP 200 with `ok` |
-| `/fossil/` | Native Fossil repository list |
-| `/fossil/dig/timeline` | Native Fossil Timeline |
-| `/fossil/dig/tree` | Versioned source tree |
-| `/fossil/dig/wiki` | Native Fossil Wiki |
-| `/fossil/dig/reportlist` | Native Fossil Tickets |
-| `/fossil/dig/forum` | Native Fossil Forum |
+| `/fossil/bedrock` | Fossil clone/sync transport only |
+| `/dashboard` | Signed-in user workspace |
+| `/admin` | Administrator workspace |
 
 Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
 
-## CalVer candidate
+## Deployed CalVer release
 
-The source candidate is `2026.08.28-beta.1`; it is not the production image
-until the separately authorized transactional switch below is complete.
-Isolated validation finished on 2026-08-29 for OCI revision `578fcff`, image ID
+Release `2026.08.28-beta.1` was transactionally deployed on 2026-08-29 after
+isolated validation finished for OCI revision `578fcff`, image ID
 `sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`.
 The stopped `fossilhub-beta-578fcff` container and its isolated data at
 `/vol1/1000/fossilhub-smoke-e0cb8dc` are retained; port 6083 is no longer bound
@@ -56,11 +57,12 @@ Quartz, Obsidian, and Tectonic. They begin with no check-ins, Wiki pages,
 Tickets, Forum posts, files, or imported upstream history beyond Fossil's
 required initial empty check-in.
 
-The candidate does not create `dig.fossil`. If that legacy repository and its
-bootstrap record already exist, they are preserved but omitted from the public
-catalogue.
+The release does not create `dig.fossil`. The previous production data,
+including its legacy repository and bootstrap record, is retained separately at
+`/vol1/1000/fossilhub-rollback-0ac4dff-data` for rollback and is not mounted by
+the current production container.
 
-Phase 5 introduces a second application-owned database at
+Phase 5 provides a second application-owned database at
 `/data/platform/fossilhub.sqlite`. It is the versioned source of truth for the
 repository registry and, as later Phase 5 milestones land, central accounts,
 sessions, memberships, settings, and audit events. Startup creates or migrates
@@ -117,7 +119,7 @@ through `HTTPS` or `X-Forwarded-Proto`. The public fnOS reverse proxy must retai
 that scheme header. `FOSSILHUB_COOKIE_SECURE=always` is available for an
 HTTPS-only deployment; `never` is restricted to isolated HTTP smoke testing.
 
-| Candidate route | Expected result |
+| Platform route | Expected result |
 | --- | --- |
 | `/explore?q=sqlite&kind=code&sort=recent` | Complete SSR search result |
 | `/catalog-fragment` | Progressive-search HTML fragment |
@@ -166,21 +168,22 @@ sudo docker logs --tail 100 fossilhub
 Althttpd request logs are persisted as
 `/vol1/1000/fossilhub/althttpd-YYYYMMDD.csv`.
 
-The live repository is `/vol1/1000/fossilhub/repositories/dig.fossil`.
-Clone it from a LAN client with:
+The reference live repository is
+`/vol1/1000/fossilhub/repositories/bedrock.fossil`. Clone it from a LAN client
+with:
 
 ```sh
-fossil clone http://192.168.1.162:6080/fossil/dig dig.fossil
+fossil clone http://192.168.1.162:6080/fossil/bedrock bedrock.fossil
 ```
 
-The one-time administrator name and password generated during repository
-bootstrap are stored in
-`/vol1/1000/fossilhub/fossil-bootstrap-admin.txt`. The file and repository are
-mode 0600 and owned by UID/GID 10001:10001. Read the record only in a trusted
-SSH terminal and never paste it into logs, tickets, or this repository:
+The central `warden` administrator's one-time credential is stored in
+`/vol1/1000/fossilhub/platform/fossilhub-bootstrap-admin.txt`. The file is mode
+0600 and owned by UID/GID 10001:10001. Read it only in a trusted interactive SSH
+terminal and change it immediately through `/account/security`. Never paste it
+into logs, tickets, automation output, or this repository:
 
 ```sh
-sudo cat /vol1/1000/fossilhub/fossil-bootstrap-admin.txt
+sudo cat /vol1/1000/fossilhub/platform/fossilhub-bootstrap-admin.txt
 ```
 
 ## Lifecycle
@@ -197,28 +200,33 @@ container.
 
 ## Rollback
 
-Four stopped rollback containers are intentionally retained:
+Five stopped rollback containers are intentionally retained:
 
+- `fossilhub-rollback-0ac4dff-20260829` — immediate pre-Phase-5 production;
+  data: `/vol1/1000/fossilhub-rollback-0ac4dff-data`
 - `fossilhub-rollback-188b918` — the first validated 0.2.0-beta.1 image
 - `fossilhub-rollback-8c9726d` — image `fossilhub:0.1.2`
 - `fossilhub-rollback-94f8097` — image `fossilhub:0.1.1`
 - `fossilhub-rollback-348f399` — image `fossilhub:0.1.0`
 
-The preferred rollback target is revision `188b918`; its existing container
-retains the original image ID even though the mutable beta tag now names the
-newer `0ac4dff` image. Preserve the failed container for diagnosis:
+The preferred rollback target is `fossilhub-rollback-0ac4dff-20260829`.
+Container and bind-mount rollback must happen together. Resolve the exact
+targets first, confirm that the failed-data and failed-container names are
+unused, and preserve both failed production artifacts for diagnosis:
 
 ```sh
 sudo docker stop fossilhub
-sudo docker rename fossilhub fossilhub-failed-0ac4dff
-sudo docker rename fossilhub-rollback-188b918 fossilhub
+sudo docker rename fossilhub fossilhub-failed-578fcff
+sudo mv /vol1/1000/fossilhub /vol1/1000/fossilhub-failed-578fcff-data
+sudo mv /vol1/1000/fossilhub-rollback-0ac4dff-data /vol1/1000/fossilhub
+sudo docker rename fossilhub-rollback-0ac4dff-20260829 fossilhub
 sudo docker start fossilhub
 curl --fail --silent --show-error http://127.0.0.1:6080/healthz
 ```
 
 Before running this sequence, confirm that the rollback container still exists
-and that no container already has the proposed `fossilhub-failed-0ac4dff` name.
-Reversing a rollback follows the same stop-and-rename pattern.
+and that neither proposed failed target already exists. Reversing a rollback
+follows the same stop, rename, and exact data-directory exchange.
 
 ## Post-deployment cleanup
 
@@ -227,6 +235,12 @@ responsive-hotfix containers were removed after production verification. The
 production container and all four `fossilhub-rollback-*` containers were
 preserved. No image, production data, rollback data, NAS build directory, or
 temporary smoke-test data directory was removed as part of that cleanup.
+
+On 2026-08-29, the Phase 5 deployment retained the prior production container
+and data, the final smoke container and data, and the production initializer,
+database-check, and integrity-check containers. No NAS container, image, data
+directory, or rollback artifact was deleted. Local HTTP clone artifacts were
+moved to the desktop Trash and remain recoverable.
 
 ## Upgrade procedure
 
