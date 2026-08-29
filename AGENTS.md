@@ -125,8 +125,10 @@ in sync with production.
 
 Release `2026.08.28-beta.1` was transactionally deployed on 2026-08-29 after
 isolated NAS acceptance. The prior production container and data were later
-permanently deleted with explicit user authorization. The final smoke container
-`fossilhub-beta-578fcff` is stopped and retained with data at
+permanently deleted with explicit user authorization. All non-production
+FossilHub init/test/beta containers, including `fossilhub-beta-578fcff`, were
+deleted with explicit user authorization; their data, volumes, and images were
+not removed. The final smoke data remains at
 `/vol1/1000/fossilhub-smoke-e0cb8dc`; see
 `docs/validation-2026.08.28-beta.1.md`.
 

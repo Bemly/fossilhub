@@ -129,7 +129,7 @@ sudo docker restart fossilhub
 
 ## 部署后保留项
 
-仍保留最终烟测容器 `fossilhub-beta-578fcff` 及其数据 `/vol1/1000/fossilhub-smoke-e0cb8dc`，以及生产 initializer、数据库检查和完整性检查容器。未经明确列名授权，不得删除它们或任何镜像、卷、烟测数据和历史回滚容器。
+用户于 2026-08-29 明确授权后，已删除所有非生产 FossilHub init/test/beta 容器，包括最终烟测容器 `fossilhub-beta-578fcff`、生产 initializer、数据库检查、完整性检查和旧 6082 beta 容器。容器绑定的数据、Docker 卷和镜像均未删除；最终烟测数据 `/vol1/1000/fossilhub-smoke-e0cb8dc` 仍保留。未经明确列名授权，不得删除烟测数据、卷、镜像或历史回滚容器。
 
 本地 HTTP clone 测试产物已移入桌面废纸篓，可恢复。用户自有 Logo、trilobite、ammonite、bone-triad 等视觉实验文件不得修改、删除或提交。
 
