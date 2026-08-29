@@ -175,6 +175,9 @@ roadmap and receives separate switch authorization.
 Implementation phases A through H are complete: platform data, identity,
 repository lifecycle, browser writes, complete first-party reads, user and
 administrator workspaces, and public information/navigation are present in the
-source candidate. Phase I validation, the committed NAS image, isolated smoke
-container, restart/migration matrix, and separately authorized production
-switch remain.
+source candidate. Phase I validation is complete for image revision `578fcff`;
+the committed NAS image, isolated initialization, restart/migration matrix,
+real collaboration workflow, browser matrix, clone/sync, and graceful stop all
+passed. The stopped smoke container and data are retained. Only the separately
+authorized production preflight and transactional port-6080 switch remain; see
+`docs/validation-2026.08.28-beta.1.md`.

@@ -125,8 +125,13 @@ before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
-The source candidate is `2026.08.28-beta.1`. It is not production until its NAS
-validation record and transactional port-6080 switch are complete.
+The source candidate is `2026.08.28-beta.1`. Isolated NAS validation is complete
+for runtime revision `578fcff`, image ID
+`sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`.
+The final smoke container `fossilhub-beta-578fcff` is stopped and retained with
+data at `/vol1/1000/fossilhub-smoke-e0cb8dc`; see
+`docs/validation-2026.08.28-beta.1.md`. The candidate is not production until a
+separately authorized transactional port-6080 switch is complete.
 
 ## Runtime and source pins
 

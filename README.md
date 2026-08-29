@@ -21,12 +21,14 @@ The previous generated `dig.fossil` is no longer created or indexed.
 Production is available on the NAS at `http://192.168.1.162:6080/`; its health
 endpoint is `/healthz`, the reference repository page is
 `/repo/dig.fossil`, and the native Fossil service is `/fossil/dig/`.
-Production remains 0.2.0-beta.1 until the Tcl SSR candidate completes the NAS
-smoke and transactional deployment gates.
+Production remains 0.2.0-beta.1. The Phase 5 candidate has completed its NAS,
+end-to-end, transport, security, lifecycle, and browser gates; only the
+separately authorized transactional production switch remains.
 
-Candidate routes begin at `/explore` and `/repo/bedrock.fossil`. The image tag
-is `fossilhub:2026.08.28-beta.1`; [VERSION](VERSION) is the release source of
-truth.
+Candidate routes begin at `/explore` and `/repo/bedrock.fossil`. The validated
+image is `fossilhub:2026.08.28-beta.1` at runtime revision `578fcff`;
+[VERSION](VERSION) is the release source of truth. The complete isolated NAS
+record is [docs/validation-2026.08.28-beta.1.md](docs/validation-2026.08.28-beta.1.md).
 
 Phase 5 development adds a separate versioned platform database at
 `/data/platform/fossilhub.sqlite` for central identities, authorization,
@@ -97,5 +99,7 @@ pages from reusing stale assets after an update.
 - [PLAN.md](PLAN.md) records implementation and acceptance status.
 - [docs/operations.md](docs/operations.md) contains deployment, diagnostics,
   and rollback procedures.
+- [docs/validation-2026.08.28-beta.1.md](docs/validation-2026.08.28-beta.1.md)
+  records the Phase 5 isolated NAS acceptance evidence.
 - [docs/third-party.md](docs/third-party.md) records the pinned Tcl, Wapp,
   Althttpd, and Fossil sources.

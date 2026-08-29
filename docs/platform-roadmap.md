@@ -247,23 +247,23 @@ working product navigation.
 
 ### Phase I — integration, NAS validation, and release
 
-- [ ] Run formatting and syntax checks plus all existing and new tests under the
+- [x] Run formatting and syntax checks plus all existing and new tests under the
   image's Tcl 9.1 runtime.
-- [ ] Build a committed x86_64 image on the NAS with the exact Git revision in
+- [x] Build a committed x86_64 image on the NAS with the exact Git revision in
   the OCI label.
-- [ ] Initialize isolated data and run a uniquely named smoke container on a
+- [x] Initialize isolated data and run a uniquely named smoke container on a
   confirmed-free temporary port; never reuse 6080 or an unrelated service port.
-- [ ] Exercise registration, login, logout, password change, private access,
+- [x] Exercise registration, login, logout, password change, private access,
   collaboration roles, repository creation, file commit, Wiki, Ticket, Forum,
   archive/restore, user workspace, and administrator workspace end to end.
-- [ ] Repeat clone/sync, restart, migration, ownership/mode, read-only root,
+- [x] Repeat clone/sync, restart, migration, ownership/mode, read-only root,
   security header, CSRF, session expiry, rate-limit, and catalogue consistency
   checks.
-- [ ] Browser-test 1440 px, 913 px, and 390 x 844 in light/dark and reduced-motion
+- [x] Browser-test 1440 px, 913 px, and 390 x 844 in light/dark and reduced-motion
   modes, direct LAN paths, and the simulated public mount prefix.
-- [ ] Record a validation document with no credentials, raw sensitive logs, or
+- [x] Record a validation document with no credentials, raw sensitive logs, or
   private content.
-- [ ] Stop but retain the exact smoke container and data until cleanup is
+- [x] Stop but retain the exact smoke container and data until cleanup is
   explicitly authorized.
 - [ ] Perform the final production preflight and transactional port-6080 switch
   only after explicit authorization; retain the current production container as
@@ -272,6 +272,10 @@ working product navigation.
 Acceptance: the candidate passes the entire verification matrix twice—before
 and after restart/migration—and production remains unchanged until separately
 authorized.
+
+Validation evidence: [validation-2026.08.28-beta.1.md](validation-2026.08.28-beta.1.md).
+All gates above are complete except the separately authorized production
+preflight and switch.
 
 ## Interface direction
 

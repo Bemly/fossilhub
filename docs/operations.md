@@ -39,9 +39,16 @@ Legacy prototype paths `/explore.html` and `/repo.html` remain valid.
 ## CalVer candidate
 
 The source candidate is `2026.08.28-beta.1`; it is not the production image
-until the validation and transactional switch below are complete. Wapp request
-processes carry CGI environment variables, so application-side Fossil CLI
-queries must include Fossil's `--nocgi` global option. Its public
+until the separately authorized transactional switch below is complete.
+Isolated validation finished on 2026-08-29 for OCI revision `578fcff`, image ID
+`sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`.
+The stopped `fossilhub-beta-578fcff` container and its isolated data at
+`/vol1/1000/fossilhub-smoke-e0cb8dc` are retained; port 6083 is no longer bound
+by that container. See
+[validation-2026.08.28-beta.1.md](validation-2026.08.28-beta.1.md).
+
+Wapp request processes carry CGI environment variables, so application-side
+Fossil CLI queries must include Fossil's `--nocgi` global option. Its public
 catalogue is an application-owned SQLite database at
 `/data/catalog/fossilhub.sqlite`, rebuilt atomically from ten clean local
 repositories: Bedrock, Ammonite, Trilobite, Basalt, Cambrian, Granite, Shale,
@@ -234,6 +241,10 @@ temporary smoke-test data directory was removed as part of that cleanup.
    replacement with the same restrictions and persistent volume.
 7. Verify health, UTF-8 content, routes, logs, desktop/mobile layout, and restart
    behaviour before considering the deployment complete.
+
+The runtime entrypoint forwards `SIGTERM` to Althttpd and waits for it. A normal
+`docker stop` should complete before its timeout and report exit code 143; exit
+137 indicates a forced stop and must be investigated before production use.
 
 ## fnOS boundaries
 
