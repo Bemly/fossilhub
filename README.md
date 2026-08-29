@@ -5,7 +5,7 @@ FossilHub is a Tcl/Wapp port of the three-page UI prototype in
 
 Production runs in an isolated Ubuntu 24.04 Docker container on fnOS. Althttpd
 terminates HTTP and launches the Wapp application as CGI. Release
-`2026.08.28-beta.1` uses an application-owned SQLite catalogue for search and
+`2026.08.29-beta.1` uses an application-owned SQLite catalogue for search and
 filters, then queries each repository through `fossil sql --readonly` for Tcl
 server-rendered Timeline, Files, Docs, Wiki, Tickets, and Forum surfaces. The
 browser receives complete HTML; JavaScript progressively enhances catalogue
@@ -21,14 +21,14 @@ The previous generated `dig.fossil` is no longer created or indexed.
 Production is available on the NAS at `http://192.168.1.162:6080/`; its health
 endpoint is `/healthz`, the reference repository page is
 `/repo/bedrock.fossil`, and its clone/sync endpoint is `/fossil/bedrock`.
-Production runs `fossilhub:2026.08.28-beta.1` at revision `578fcff`. It passed
-the NAS, end-to-end, transport, security, lifecycle, browser, transactional
-switch, and post-restart gates on 2026-08-29.
+生产环境运行 `fossilhub:2026.08.29-beta.1`，运行时代码修订为 `3b88c20`。
+该版本在 2026-08-29 完成 NAS 构建、完整测试、事务式切换、真实生产数据、
+clone/sync、权限、70 条 HTTP 路由和响应式浏览器验收。
 
 Repository routes begin at `/explore` and `/repo/bedrock.fossil`. The deployed
-image is `fossilhub:2026.08.28-beta.1` at runtime revision `578fcff`;
-[VERSION](VERSION) is the release source of truth. The complete isolated NAS
-record is [docs/validation-2026.08.28-beta.1.md](docs/validation-2026.08.28-beta.1.md).
+image is `fossilhub:2026.08.29-beta.1` at runtime revision `3b88c20`;
+[VERSION](VERSION) is the release source of truth. The production acceptance
+record is [docs/validation-2026.08.29-beta.1.md](docs/validation-2026.08.29-beta.1.md).
 
 Phase 5 development adds a separate versioned platform database at
 `/data/platform/fossilhub.sqlite` for central identities, authorization,
@@ -101,5 +101,7 @@ pages from reusing stale assets after an update.
   and rollback procedures.
 - [docs/validation-2026.08.28-beta.1.md](docs/validation-2026.08.28-beta.1.md)
   records the Phase 5 isolated and production acceptance evidence.
+- [docs/validation-2026.08.29-beta.1.md](docs/validation-2026.08.29-beta.1.md)
+  记录正式 Logo 维护版本的生产部署与验收证据。
 - [docs/third-party.md](docs/third-party.md) records the pinned Tcl, Wapp,
   Althttpd, and Fossil sources.

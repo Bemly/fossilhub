@@ -98,9 +98,9 @@ production change.
 - Reference repository UI: `http://192.168.1.162:6080/repo/bedrock.fossil`
 - Native Fossil transport: `http://192.168.1.162:6080/fossil/bedrock`
 - Container: `fossilhub`
-- Image tag: `fossilhub:2026.08.28-beta.1`
-- Image ID: `sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`
-- Deployed code revision: `578fcff`
+- Image tag: `fossilhub:2026.08.29-beta.1`
+- Image ID: `sha256:24cbe0cf7c50dd6fda05d30d6134c98b53bdf66b8af1ae394ec0eff1528934e8`
+- Deployed code revision: `3b88c20`
 - Mount: `/vol1/1000/fossilhub:/data`
 - Port: `6080:8080`
 - Restart policy: `unless-stopped`
@@ -111,6 +111,11 @@ production change.
 - Stable rollback: stopped container `fossilhub-rollback-8c9726d` (0.1.2).
 - Older stopped rollback containers `fossilhub-rollback-94f8097` and
   `fossilhub-rollback-348f399` are also intentionally retained.
+- Immediate compatible rollback containers from the 2026-08-29 logo rollout
+  are stopped `fossilhub-rollback-02682c9-20260829-logo` and
+  `fossilhub-rollback-578fcff-20260829-logo`. The first contains the initial
+  logo candidate before binary-response correction; the second contains the
+  preceding `2026.08.28-beta.1` production image. Preserve both.
 - The immediate pre-Phase-5 rollback container
   `fossilhub-rollback-0ac4dff-20260829` and its matching data were permanently
   deleted on 2026-08-29 after explicit user authorization. The remaining
@@ -123,14 +128,19 @@ before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
 
-Release `2026.08.28-beta.1` was transactionally deployed on 2026-08-29 after
-isolated NAS acceptance. The prior production container and data were later
-permanently deleted with explicit user authorization. All non-production
+Release `2026.08.29-beta.1` was transactionally deployed on 2026-08-29 from
+revision `3b88c20` after the user explicitly requested direct production
+validation instead of an isolated smoke container. The logo response hotfix,
+full image test suite, 70-route production matrix, clone/sync, permissions and
+responsive browser checks passed. The two immediate predecessor containers are
+retained under the logo rollback names above. The older pre-Phase-5
+`0ac4dff` production container and matching data were permanently deleted with
+explicit user authorization. All non-production
 FossilHub init/test/beta containers, including `fossilhub-beta-578fcff`, were
 deleted with explicit user authorization; their data, volumes, and images were
 not removed. The final smoke data remains at
 `/vol1/1000/fossilhub-smoke-e0cb8dc`; see
-`docs/validation-2026.08.28-beta.1.md`.
+`docs/validation-2026.08.29-beta.1.md`.
 
 ## Runtime and source pins
 

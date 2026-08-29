@@ -165,7 +165,9 @@ ownership and permissions, browser writes, complete first-party repository
 navigation, user and administrator workspaces, and real public information
 pages.
 
-The deployed release for this phase is `2026.08.28-beta.1`.
+The deployed collaboration foundation release is `2026.08.28-beta.1`; the
+current production maintenance release is `2026.08.29-beta.1` at revision
+`3b88c20`.
 
 The dependency-ordered, auditable checklist and acceptance gates are maintained
 in [docs/platform-roadmap.md](docs/platform-roadmap.md).
@@ -181,4 +183,6 @@ port-6080 switch completed on 2026-08-29. Production now runs revision
 `578fcff`. The previous production container and matching data were later
 permanently deleted with explicit user authorization; the stopped smoke
 container and data remain available for diagnosis. See
-`docs/validation-2026.08.28-beta.1.md`.
+`docs/validation-2026.08.28-beta.1.md`. The later FossilHub logo maintenance
+release and its direct-production acceptance are recorded in
+`docs/validation-2026.08.29-beta.1.md`.

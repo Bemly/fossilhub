@@ -7,9 +7,9 @@
 - 站点：`http://192.168.1.162:6080/`
 - 健康检查：`http://192.168.1.162:6080/healthz`
 - 容器：`fossilhub`
-- 镜像：`fossilhub:2026.08.28-beta.1`
-- 镜像 ID：`sha256:c126646005c236fb10dcb1a4c1e2aa8ea5b22e23418aafa9619525e84242ba54`
-- 源码修订标签：`578fcff`
+- 镜像：`fossilhub:2026.08.29-beta.1`
+- 镜像 ID：`sha256:24cbe0cf7c50dd6fda05d30d6134c98b53bdf66b8af1ae394ec0eff1528934e8`
+- 源码修订标签：`3b88c20`
 - 端口：`6080:8080`
 - 持久化数据：`/vol1/1000/fossilhub:/data`
 - 重启策略：`unless-stopped`
@@ -116,7 +116,10 @@ sudo docker restart fossilhub
 
 用户已于 2026-08-29 明确授权永久删除刚切换前的容器 `fossilhub-rollback-0ac4dff-20260829` 和数据 `/vol1/1000/fossilhub-rollback-0ac4dff-data`。这两个目标不可恢复，因此目前不存在带匹配旧数据的即时 Phase 5 前回滚点。
 
-以下更早的停止容器仍保留：
+以下停止容器仍保留：
+
+- `fossilhub-rollback-02682c9-20260829-logo` — 首次 Logo 上线候选，PNG 二进制响应修复前
+- `fossilhub-rollback-578fcff-20260829-logo` — Logo 上线前的 `2026.08.28-beta.1` 生产容器
 
 - `fossilhub-rollback-188b918` — 早期 0.2.0-beta.1
 - `fossilhub-rollback-8c9726d` — 0.1.2

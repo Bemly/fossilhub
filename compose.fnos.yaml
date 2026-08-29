@@ -7,7 +7,8 @@ services:
       dockerfile: Dockerfile
       args:
         FOSSILHUB_REVISION: ${FOSSILHUB_REVISION:-unknown}
-    image: fossilhub:0.2.0-beta.1
+        FOSSILHUB_VERSION: ${FOSSILHUB_VERSION:-2026.08.29-beta.1}
+    image: fossilhub:2026.08.29-beta.1
     container_name: fossilhub
     restart: unless-stopped
     ports:
@@ -16,7 +17,7 @@ services:
       - /vol1/1000/fossilhub:/data
     read_only: true
     tmpfs:
-      - /tmp:size=16m,mode=1777
+      - /tmp:size=16m,mode=1777,nosuid,nodev,noexec
     security_opt:
       - no-new-privileges:true
     cap_drop:
