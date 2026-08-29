@@ -288,10 +288,7 @@ variable exploreTemplate {
 <header class="topbar">
   <div class="wrap">
     <a class="wordmark" href="index.html" aria-label="FossilHub home">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-        <path d="M12 12a1.1 1.1 0 0 1 1.1 1.1A2.2 2.2 0 0 1 10.9 15.3 3.6 3.6 0 0 1 7.3 11.7 5.2 5.2 0 0 1 12.5 6.5 7 7 0 0 1 19.5 13.5"/>
-      </svg>
-      <b>Fossilhub</b>
+      <img src="fossilhub-hub-lockup-v1.png?v=20260829-1" width="137" height="50" alt="FossilHub">
     </a>
     <nav class="topnav" aria-label="Primary">
       <a href="#featured">Featured</a>

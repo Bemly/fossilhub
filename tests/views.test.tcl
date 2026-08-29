@@ -270,6 +270,9 @@ assertContains $loginPage {autocomplete="current-password"} \
 set registerPage [::fossilhub::views::renderRegister \
   $anonymousContext [string repeat b 64] "" \
   [dict create username alice email alice@example.test display_name Alice]]
+assertContains $registerPage \
+  {src="fossilhub-hub-lockup-v1.png?v=20260829-1"} \
+  "account pages use the selected brand lockup"
 assertContains $registerPage {minlength="12"} "registration password policy"
 assertContains $registerPage {Passwords are stored with Argon2id.} \
   "registration password storage notice"

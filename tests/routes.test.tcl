@@ -200,6 +200,11 @@ assertEqual [::fossilhub::routeForPath /repo/fossilhub-live.js] \
   live-script "nested live integration script route"
 assertEqual [::fossilhub::routeForPath /repo/catalog-search.js] \
   catalog-script "nested catalog script route"
+assertEqual [::fossilhub::routeForPath /fossilhub-hub-lockup-v1.png] \
+  brand-lockup "brand lockup route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/repo/fossilhub-hub-lockup-v1.png] \
+  brand-lockup "mounted nested brand lockup route"
 
 rename ::fossilhub::maintenanceBanner ::fossilhub::realMaintenanceBanner
 proc ::fossilhub::maintenanceBanner {} { return {Window <unsafe>} }

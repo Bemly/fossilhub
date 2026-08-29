@@ -83,6 +83,9 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)catalog-search\.js$} $clean]} {
     return catalog-script
   }
+  if {[regexp {(^|/)fossilhub-hub-lockup-v1\.png$} $clean]} {
+    return brand-lockup
+  }
   if {[regexp {(^|/)catalog-fragment$} $clean]} {
     return catalog-fragment
   }
@@ -883,6 +886,13 @@ proc wapp-default {} {
       ::fossilhub::trustedFile \
         [file join $::fossilhub::root public catalog-search.js] \
         "text/javascript; charset=utf-8" \
+        max-age=3600
+    }
+    brand-lockup {
+      variable ::fossilhub::root
+      ::fossilhub::trustedFile \
+        [file join $::fossilhub::root public fossilhub-hub-lockup-v1.png] \
+        image/png \
         max-age=3600
     }
     default {
