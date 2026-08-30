@@ -76,7 +76,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="fh.css?v=20260830-1">
+<link rel="stylesheet" href="fh.css?v=20260830-2">
 </head>
 <body class="account-body">
 <div class="rail account-rail" aria-hidden="true"><div class="rail-track"></div><span class="rail-label" style="top:16%%">ID</span><span class="rail-label" style="top:49%%">ACL</span><span class="rail-label" style="top:82%%">LOG</span></div>

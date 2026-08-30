@@ -85,7 +85,7 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 [data-theme="dark"] .wordmark img{filter:brightness(0) invert(1)}
 .topnav{display:flex;gap:24px;margin-left:auto}
 .topnav a{
-  font-size:13.5px;color:var(--ink-2);
+  font-size:13.5px;color:var(--ink-2);white-space:nowrap;
 }
 .topnav a:hover{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink)}
 .site-tools{display:flex;align-items:center;gap:12px;flex:none;white-space:nowrap}

@@ -11,7 +11,7 @@ variable homeTemplate {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>document.documentElement.dataset.theme=localStorage.getItem("fh-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script>
-<link rel="stylesheet" href="fh.css?v=20260830-1">
+<link rel="stylesheet" href="fh.css?v=20260830-2">
 </head>
 <body data-repository-slug="@@REPOSITORY_SLUG@@">
 
