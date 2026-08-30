@@ -280,7 +280,13 @@ proc ::fossilhub::i18n::use {locale} {
 
 proc ::fossilhub::i18n::useRequest {} {
   set cookies [wapp-param HTTP_COOKIE ""]
+  if {$cookies eq ""} {
+    set cookies [wapp-param {.hdr:Cookie} ""]
+  }
   set languages [wapp-param HTTP_ACCEPT_LANGUAGE ""]
+  if {$languages eq ""} {
+    set languages [wapp-param {.hdr:Accept-Language} ""]
+  }
   return [::fossilhub::i18n::use \
     [::fossilhub::i18n::fromSources $cookies $languages]]
 }
