@@ -1,7 +1,7 @@
 namespace eval ::fossilhub::views {
 variable repositoryTemplate {
 <!doctype html>
-<html lang="en">
+<html lang="@@HTML_LANG@@">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +11,7 @@ variable repositoryTemplate {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>document.documentElement.dataset.theme=localStorage.getItem("fh-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script>
-<link rel="stylesheet" href="fh.css?v=20260828-3">
+<link rel="stylesheet" href="fh.css?v=20260830-1">
 <style>
 .chip-plain{color:var(--ink-2);border-color:var(--line);background:transparent}
 .crumb-row{
@@ -300,14 +300,15 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
     <a class="wordmark" href="index.html" aria-label="FossilHub home">
       <img src="fossilhub-hub-lockup-v1.png?v=20260829-1" width="137" height="50" alt="FossilHub">
     </a>
-    <nav class="topnav" aria-label="Repository">
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/timeline">Timeline</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">Files</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/wiki">Wiki</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/tickets">Tickets</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/forum">Forum</a>
+    <nav class="topnav" aria-label="@@REPOSITORY_NAV_LABEL@@">
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/timeline">@@NAV_TIMELINE@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">@@NAV_FILES@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/wiki">@@NAV_WIKI@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/tickets">@@NAV_TICKETS@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/forum">@@NAV_FORUM@@</a>
     </nav>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
+    @@SITE_TOOLS@@
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="@@THEME_LABEL@@">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
     </button>
@@ -507,7 +508,8 @@ proc ::fossilhub::views::repositoryFacts {repository} {
     [::fossilhub::view::escape $transportNote]]
 }
 
-proc ::fossilhub::views::renderRepository {repository {section timeline} {sectionData ""}} {
+proc ::fossilhub::views::renderRepository {repository {section timeline} \
+    {sectionData ""} {context ""}} {
   variable repositoryTemplate
   if {$sectionData eq ""} {
     set sectionData [dict create repository $repository event_filter all]
@@ -539,6 +541,15 @@ proc ::fossilhub::views::renderRepository {repository {section timeline} {sectio
     [dict get $repository visibility] : "public"}]
   set transport [::fossilhub::views::repositoryTransport $visibility]
   set page [string map [list \
+    @@HTML_LANG@@ [::fossilhub::i18n::locale] \
+    @@REPOSITORY_NAV_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t repository_navigation]] \
+    @@NAV_TIMELINE@@ [::fossilhub::view::escape [::fossilhub::i18n::t timeline]] \
+    @@NAV_FILES@@ [::fossilhub::view::escape [::fossilhub::i18n::t files]] \
+    @@NAV_WIKI@@ [::fossilhub::view::escape [::fossilhub::i18n::t wiki]] \
+    @@NAV_TICKETS@@ [::fossilhub::view::escape [::fossilhub::i18n::t tickets]] \
+    @@NAV_FORUM@@ [::fossilhub::view::escape [::fossilhub::i18n::t forum]] \
+    @@THEME_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t theme_toggle]] \
+    @@SITE_TOOLS@@ [::fossilhub::views::siteTools $context] \
     @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $repository slug]] \
     @@REPOSITORY_NAME@@ [::fossilhub::view::escape [dict get $repository name]] \
     @@REPOSITORY_UPPER@@ [::fossilhub::view::escape \

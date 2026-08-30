@@ -1,32 +1,73 @@
 namespace eval ::fossilhub::views {}
 
-proc ::fossilhub::views::accountFrame {title eyebrow heading lede content context} {
-  set authenticated [dict get $context authenticated]
-  if {$authenticated} {
+proc ::fossilhub::views::anonymousContext {} {
+  return [dict create authenticated 0 user "" session_hash "" token "" \
+    logout_token "" locale [::fossilhub::i18n::locale] return_to /]
+}
+
+proc ::fossilhub::views::siteTools {{context ""}} {
+  if {$context eq ""} {
+    set context [::fossilhub::views::anonymousContext]
+  }
+  set returnTo [expr {[dict exists $context return_to] ? \
+    [dict get $context return_to] : "/"}]
+  set locale [::fossilhub::i18n::locale]
+  set nextLocale [expr {$locale eq "zh-CN" ? "en" : "zh-CN"}]
+  set html [format {
+    <div class="site-tools" aria-label="%s">
+      <form class="locale-form" action="locale" method="post" data-hub-action="/locale">
+        <input type="hidden" name="locale" value="%s">
+        <input type="hidden" name="return_to" value="%s">
+        <button type="submit" aria-label="%s">%s</button>
+      </form>} \
+    [::fossilhub::view::escape [::fossilhub::i18n::t account_navigation]] \
+    $nextLocale [::fossilhub::view::escape $returnTo] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t locale_label]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t switch_language]]]
+  if {[dict get $context authenticated]} {
     set user [dict get $context user]
-    set adminLink ""
+    append html [format {
+      <a href="#" data-hub-path="/dashboard">%s</a>
+      <a href="#" data-hub-path="/account/repositories">%s</a>
+      <a href="#" data-hub-path="/users/%s">%s</a>
+      <a href="#" data-hub-path="/settings">%s</a>} \
+      [::fossilhub::view::escape [::fossilhub::i18n::t dashboard]] \
+      [::fossilhub::view::escape [::fossilhub::i18n::t repositories]] \
+      [::fossilhub::view::escape [dict get $user username]] \
+      [::fossilhub::view::escape [::fossilhub::i18n::t profile]] \
+      [::fossilhub::view::escape [::fossilhub::i18n::t settings]]]
     if {[dict get $user role] eq "administrator"} {
-      set adminLink {<a href="#" data-hub-path="/admin">Admin</a>}
+      append html [format {<a href="#" data-hub-path="/admin">%s</a>} \
+        [::fossilhub::view::escape [::fossilhub::i18n::t admin]]]
     }
-    set identity [format {
-      <a href="#" data-hub-path="/dashboard">Dashboard</a>
-      <a href="#" data-hub-path="/repositories/new">New repo</a>
-      <a href="#" data-hub-path="/users/%s">Profile</a>
-      <a href="#" data-hub-path="/settings">Settings</a>%s
+    set logoutToken [expr {[dict exists $context logout_token] ? \
+      [dict get $context logout_token] : ""}]
+    append html [format {
       <form class="nav-form" action="logout" method="post" data-hub-action="/logout">
         <input type="hidden" name="csrf" value="%s">
-        <button type="submit">Sign out</button>
+        <button type="submit">%s</button>
       </form>} \
-      [::fossilhub::view::escape [dict get $user username]] \
-      $adminLink \
-      [::fossilhub::view::escape [dict get $context logout_token]]]
+      [::fossilhub::view::escape $logoutToken] \
+      [::fossilhub::view::escape [::fossilhub::i18n::t sign_out]]]
   } else {
-    set identity {
-      <a href="#" data-hub-path="/login">Sign in</a>
-      <a href="#" data-hub-path="/register">Create account</a>}
+    append html [format {
+      <a href="#" data-hub-path="/login">%s</a>
+      <a class="site-register" href="#" data-hub-path="/register">%s</a>} \
+      [::fossilhub::view::escape [::fossilhub::i18n::t sign_in]] \
+      [::fossilhub::view::escape [::fossilhub::i18n::t register]]]
   }
+  append html {</div>}
+  return $html
+}
+
+proc ::fossilhub::views::accountFrame {title eyebrow heading lede content context} {
+  set identity [::fossilhub::views::siteTools $context]
+  set title [::fossilhub::i18n::phrase $title]
+  set eyebrow [::fossilhub::i18n::phrase $eyebrow]
+  set heading [::fossilhub::i18n::phrase $heading]
+  set lede [::fossilhub::i18n::phrase $lede]
   return [format {<!doctype html>
-<html lang="en">
+<html lang="%s">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -35,7 +76,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="fh.css?v=20260828-3">
+<link rel="stylesheet" href="fh.css?v=20260830-1">
 </head>
 <body class="account-body">
 <div class="rail account-rail" aria-hidden="true"><div class="rail-track"></div><span class="rail-label" style="top:16%%">ID</span><span class="rail-label" style="top:49%%">ACL</span><span class="rail-label" style="top:82%%">LOG</span></div>
@@ -45,7 +86,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
       <img src="fossilhub-hub-lockup-v1.png?v=20260829-1" width="137" height="50" alt="FossilHub">
     </a>
     <nav class="topnav account-nav" aria-label="Account navigation">
-      <a href="#" data-hub-path="/explore">Explore</a>%s
+      <a href="#" data-hub-path="/explore">%s</a>%s
     </nav>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2"/></svg></button>
   </div>
@@ -56,7 +97,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
       <p class="eyebrow">%s</p>
       <h1>%s</h1>
       <p>%s</p>
-      <div class="identity-strata" aria-hidden="true"><span>Identity</span><span>Access</span><span>Audit</span></div>
+      <div class="identity-strata" aria-hidden="true"><span>%s</span><span>%s</span><span>%s</span></div>
     </section>
     <section class="account-panel">%s</section>
   </div>
@@ -65,10 +106,15 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
 <script>const b=document.getElementById('themeBtn');if(b)b.addEventListener('click',()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('fh-theme',n)});</script>
 </body>
 </html>} \
-    [::fossilhub::view::escape $title] $identity \
+    [::fossilhub::i18n::locale] \
+    [::fossilhub::view::escape $title] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t explore]] $identity \
     [::fossilhub::view::escape $eyebrow] \
     [::fossilhub::view::escape $heading] \
-    [::fossilhub::view::escape $lede] $content]
+    [::fossilhub::view::escape $lede] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t identity]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t access]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t audit]] $content]
 }
 
 proc ::fossilhub::views::accountNotice {message} {
@@ -276,17 +322,23 @@ proc ::fossilhub::views::renderLogin {context csrf {message ""} {login ""}} {
   set content [format {%s
     <form class="field-form" action="login" method="post" data-hub-action="/login">
       <input type="hidden" name="csrf" value="%s">
-      <label>Username or email<input name="login" type="text" autocomplete="username" maxlength="254" value="%s" required autofocus></label>
-      <label>Password<input name="password" type="password" autocomplete="current-password" maxlength="1024" required></label>
-      <button class="btn btn-primary" type="submit">Sign in</button>
+      <label>%s<input name="login" type="text" autocomplete="username" maxlength="254" value="%s" required autofocus></label>
+      <label>%s<input name="password" type="password" autocomplete="current-password" maxlength="1024" required></label>
+      <button class="btn btn-primary" type="submit">%s</button>
     </form>
-    <p class="form-foot">New to this dig? <a href="#" data-hub-path="/register">Create an account</a>.</p>} \
+    <p class="form-foot">%s <a href="#" data-hub-path="/register">%s</a></p>} \
     [::fossilhub::views::accountNotice $message] \
     [::fossilhub::view::escape $csrf] \
-    [::fossilhub::view::escape $login]]
-  return [::fossilhub::views::accountFrame {Sign in} {Identity checkpoint} \
-    {Return to the field} \
-    {Your account opens the repositories and tools assigned to you.} \
+    [::fossilhub::view::escape [::fossilhub::i18n::t username_or_email]] \
+    [::fossilhub::view::escape $login] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t password]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t sign_in]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t new_to_dig]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t create_account]]]
+  return [::fossilhub::views::accountFrame \
+    [::fossilhub::i18n::t sign_in] {Identity checkpoint} \
+    [::fossilhub::i18n::t return_to_field] \
+    [::fossilhub::i18n::t account_opens_tools] \
     $content $context]
 }
 
@@ -296,22 +348,32 @@ proc ::fossilhub::views::renderRegister {context csrf {message ""} {values {}}} 
   set content [format {%s
     <form class="field-form" action="register" method="post" data-hub-action="/register">
       <input type="hidden" name="csrf" value="%s">
-      <label>Username<input name="username" type="text" autocomplete="username" maxlength="39" pattern="[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?" value="%s" required></label>
-      <label>Display name<input name="display_name" type="text" autocomplete="name" maxlength="80" value="%s"></label>
-      <label>Email<input name="email" type="email" autocomplete="email" maxlength="254" value="%s" required></label>
-      <label>Password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="1024" required><small>At least 12 characters. Passwords are stored with Argon2id.</small></label>
-      <label>Confirm password<input name="password_confirm" type="password" autocomplete="new-password" maxlength="1024" required></label>
-      <button class="btn btn-primary" type="submit">Create account</button>
+      <label>%s<input name="username" type="text" autocomplete="username" maxlength="39" pattern="[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?" value="%s" required></label>
+      <label>%s<input name="display_name" type="text" autocomplete="name" maxlength="80" value="%s"></label>
+      <label>%s<input name="email" type="email" autocomplete="email" maxlength="254" value="%s" required></label>
+      <label>%s<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="1024" required><small>%s</small></label>
+      <label>%s<input name="password_confirm" type="password" autocomplete="new-password" maxlength="1024" required></label>
+      <button class="btn btn-primary" type="submit">%s</button>
     </form>
-    <p class="form-foot">Already registered? <a href="#" data-hub-path="/login">Sign in</a>.</p>} \
+    <p class="form-foot">%s <a href="#" data-hub-path="/login">%s</a></p>} \
     [::fossilhub::views::accountNotice $message] \
     [::fossilhub::view::escape $csrf] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t username]] \
     [::fossilhub::view::escape [dict get $values username]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t display_name]] \
     [::fossilhub::view::escape [dict get $values display_name]] \
-    [::fossilhub::view::escape [dict get $values email]]]
-  return [::fossilhub::views::accountFrame {Create account} {Open a field record} \
-    {Claim your survey mark} \
-    {One identity follows every commit, field note, ticket, and discussion.} \
+    [::fossilhub::view::escape [::fossilhub::i18n::t email]] \
+    [::fossilhub::view::escape [dict get $values email]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t password]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t password_help]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t confirm_password]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t create_account]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t already_registered]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t sign_in]]]
+  return [::fossilhub::views::accountFrame \
+    [::fossilhub::i18n::t create_account] {Open a field record} \
+    [::fossilhub::i18n::t claim_survey_mark] \
+    [::fossilhub::i18n::t identity_follows_work] \
     $content $context]
 }
 

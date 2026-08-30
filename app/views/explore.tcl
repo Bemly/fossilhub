@@ -1,17 +1,17 @@
 namespace eval ::fossilhub::views {
 variable exploreTemplate {
 <!doctype html>
-<html lang="en">
+<html lang="@@HTML_LANG@@">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Explore digs — FossilHub</title>
+<title>@@PAGE_TITLE@@</title>
 <meta name="description" content="Browse Fossil repositories on FossilHub — every dig holds code, wiki, tickets and forum in one artifact.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>document.documentElement.dataset.theme=localStorage.getItem("fh-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script>
-<link rel="stylesheet" href="fh.css?v=20260828-3">
+<link rel="stylesheet" href="fh.css?v=20260830-1">
 <style>
 .x-hero{padding-block:52px 44px;border-bottom:1px solid var(--line)}
 .x-hero h1{
@@ -290,12 +290,13 @@ variable exploreTemplate {
     <a class="wordmark" href="index.html" aria-label="FossilHub home">
       <img src="fossilhub-hub-lockup-v1.png?v=20260829-1" width="137" height="50" alt="FossilHub">
     </a>
-    <nav class="topnav" aria-label="Primary">
-      <a href="#featured">Featured</a>
-      <a href="#feed">Surface feed</a>
-      <a href="#digs">All digs</a>
+    <nav class="topnav" aria-label="@@PRIMARY_NAV_LABEL@@">
+      <a href="#featured">@@FEATURED_LABEL@@</a>
+      <a href="#feed">@@SURFACE_FEED_LABEL@@</a>
+      <a href="#digs">@@ALL_DIGS_LABEL@@</a>
     </nav>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
+    @@SITE_TOOLS@@
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="@@THEME_LABEL@@">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
     </button>
@@ -307,22 +308,22 @@ variable exploreTemplate {
 
   <section class="x-hero">
     <div class="wrap">
-      <p class="eyebrow">Fossilhub · Site survey</p>
-      <h1>The field guide to open digs.</h1>
-      <p class="lede">Every listing below is a complete Fossil repository — code, wiki, tickets, and forum packed into one artifact you can clone, mirror, or mail. Sorted by most recent surface activity.</p>
+      <p class="eyebrow">@@EXPLORE_EYEBROW@@</p>
+      <h1>@@EXPLORE_HEADING@@</h1>
+      <p class="lede">@@EXPLORE_LEDE@@</p>
       <form class="catalog-form" action="explore" method="get" data-catalog-form>
         <div class="searchbar">
-          <label class="sr-only" for="catalogQuery">Search repositories</label>
-          <input class="q" id="catalogQuery" name="q" type="search" value="@@QUERY@@" placeholder="Search names, descriptions, categories, or languages" autocomplete="off">
+          <label class="sr-only" for="catalogQuery">@@SEARCH_REPOSITORIES@@</label>
+          <input class="q" id="catalogQuery" name="q" type="search" value="@@QUERY@@" placeholder="@@SEARCH_PLACEHOLDER@@" autocomplete="off">
           <span class="search-state" data-search-state>@@RESULT_SUMMARY@@</span>
           <span class="kbd">/</span>
         </div>
         <div class="filterbar">
           <div class="fgroup" role="group" aria-label="Repository content filter">
-            <span class="gl">STRATA</span>
+            <span class="gl">@@STRATA_LABEL@@</span>
             <input type="hidden" name="kind" value="@@KIND@@" data-kind-input>
-            <button class="fchip @@KIND_ALL@@" type="button" data-kind="all">All</button>
-            <button class="fchip @@KIND_CODE@@" type="button" data-kind="code">Code</button>
+            <button class="fchip @@KIND_ALL@@" type="button" data-kind="all">@@ALL_LABEL@@</button>
+            <button class="fchip @@KIND_CODE@@" type="button" data-kind="code">@@CODE_LABEL@@</button>
             <button class="fchip @@KIND_WIKI@@" type="button" data-kind="wiki">Wiki</button>
             <button class="fchip @@KIND_TICKETS@@" type="button" data-kind="tickets">Tickets</button>
             <button class="fchip @@KIND_FORUM@@" type="button" data-kind="forum">Forum</button>
@@ -336,7 +337,7 @@ variable exploreTemplate {
               <option value="size" @@SORT_SIZE@@>Mass · largest</option>
             </select></span>
           </div>
-          <noscript><button class="btn btn-ghost search-submit" type="submit">Apply survey</button></noscript>
+          <noscript><button class="btn btn-ghost search-submit" type="submit">@@APPLY_FILTERS@@</button></noscript>
         </div>
       </form>
     </div>
@@ -444,7 +445,8 @@ proc ::fossilhub::views::renderExploreResults {repositories} {
   set count [llength $repositories]
   set featuredHtml ""
   if {$count == 0} {
-    set featuredHtml {<div class="panel"><div class="panel-body">No repositories match this survey.</div></div>}
+    set featuredHtml [format {<div class="panel"><div class="panel-body">%s</div></div>} \
+      [::fossilhub::view::escape [::fossilhub::i18n::t no_matches]]]
   } else {
     set featuredHtml [::fossilhub::view::featuredRepository \
       [lindex $repositories 0]]
@@ -457,18 +459,19 @@ proc ::fossilhub::views::renderExploreResults {repositories} {
     append cards [::fossilhub::view::repositoryCard $repository $index]
   }
   if {$cards eq ""} {
-    set cards {<div class="panel"><div class="panel-body">Try a broader term or select a different stratum.</div></div>}
+    set cards [format {<div class="panel"><div class="panel-body">%s</div></div>} \
+      [::fossilhub::view::escape [::fossilhub::i18n::t broader_search]]]
   }
 
   return [format {
   <div data-catalog-results data-result-count="%d">
     <section class="featured wrap" id="featured">
-      <p class="sec-tag">Surface specimen</p>
+      <p class="sec-tag">%s</p>
       %s
       <div class="feed" id="feed">
         <div class="feed-head">
-          <p>Across matching digs — the surface feed</p>
-          <span class="feed-hint">scroll →</span>
+          <p>%s</p>
+          <span class="feed-hint">%s</span>
         </div>
         <div class="feed-row">%s</div>
       </div>
@@ -476,18 +479,26 @@ proc ::fossilhub::views::renderExploreResults {repositories} {
     <section class="grid-sec" id="digs">
       <div class="wrap">
         <div class="toolrow reveal">
-          <p class="eyebrow">Survey results</p>
-          <span class="count">SHOWING %s — INDEXED IN SQLITE</span>
+          <p class="eyebrow">%s</p>
+          <span class="count">%s %s — %s</span>
         </div>
         <div class="cards">%s</div>
       </div>
     </section>
   </div>} \
-    $count $featuredHtml [::fossilhub::view::surfaceFeed $repositories] \
-    [::fossilhub::view::formatCount $count] $cards]
+    $count \
+    [::fossilhub::view::escape [::fossilhub::i18n::t surface_specimen]] \
+    $featuredHtml \
+    [::fossilhub::view::escape [::fossilhub::i18n::t matching_digs]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t scroll_hint]] \
+    [::fossilhub::view::surfaceFeed $repositories] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t survey_results]] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t showing]] \
+    [::fossilhub::view::formatCount $count] \
+    [::fossilhub::view::escape [::fossilhub::i18n::t indexed_sqlite]] $cards]
 }
 
-proc ::fossilhub::views::renderExplore {repositories {options {}}} {
+proc ::fossilhub::views::renderExplore {repositories {options {}} {context ""}} {
   variable exploreTemplate
   set options [::fossilhub::catalog::searchOptions $options]
   set count [llength $repositories]
@@ -502,9 +513,27 @@ proc ::fossilhub::views::renderExplore {repositories {options {}}} {
   set kinds [dict create all "" code "" wiki "" tickets "" forum ""]
   dict set kinds [dict get $options kind] sel
   set page [string map [list \
+    @@HTML_LANG@@ [::fossilhub::i18n::locale] \
+    @@PAGE_TITLE@@ [::fossilhub::view::escape [::fossilhub::i18n::t explore_title]] \
+    @@PRIMARY_NAV_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t primary_navigation]] \
+    @@FEATURED_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t featured]] \
+    @@SURFACE_FEED_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t surface_feed]] \
+    @@ALL_DIGS_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t all_digs]] \
+    @@THEME_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t theme_toggle]] \
+    @@EXPLORE_EYEBROW@@ [::fossilhub::view::escape [::fossilhub::i18n::t explore_eyebrow]] \
+    @@EXPLORE_HEADING@@ [::fossilhub::view::escape [::fossilhub::i18n::t explore_heading]] \
+    @@EXPLORE_LEDE@@ [::fossilhub::view::escape [::fossilhub::i18n::t explore_lede]] \
+    @@SEARCH_REPOSITORIES@@ [::fossilhub::view::escape [::fossilhub::i18n::t search_repositories]] \
+    @@SEARCH_PLACEHOLDER@@ [::fossilhub::view::escape [::fossilhub::i18n::t search_placeholder]] \
+    @@STRATA_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t strata]] \
+    @@ALL_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t all]] \
+    @@CODE_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t code]] \
+    @@APPLY_FILTERS@@ [::fossilhub::view::escape [::fossilhub::i18n::t apply_filters]] \
+    @@SITE_TOOLS@@ [::fossilhub::views::siteTools $context] \
     @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $featured slug]] \
     @@QUERY@@ [::fossilhub::view::escape [dict get $options q]] \
-    @@RESULT_SUMMARY@@ "$count matches" \
+    @@RESULT_SUMMARY@@ [expr {[::fossilhub::i18n::locale] eq "zh-CN" ? \
+      "$count 个结果" : "$count matches"}] \
     @@KIND@@ [dict get $options kind] \
     @@KIND_ALL@@ [dict get $kinds all] \
     @@KIND_CODE@@ [dict get $kinds code] \

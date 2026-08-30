@@ -1,17 +1,17 @@
 namespace eval ::fossilhub::views {
 variable homeTemplate {
 <!doctype html>
-<html lang="en">
+<html lang="@@HTML_LANG@@">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FossilHub — The whole project, preserved in one stone</title>
+<title>@@PAGE_TITLE@@</title>
 <meta name="description" content="FossilHub is a hosting hub for Fossil repositories: code, wiki, tickets, forum and docs in a single versioned artifact.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>document.documentElement.dataset.theme=localStorage.getItem("fh-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script>
-<link rel="stylesheet" href="fh.css?v=20260828-3">
+<link rel="stylesheet" href="fh.css?v=20260830-1">
 </head>
 <body data-repository-slug="@@REPOSITORY_SLUG@@">
 
@@ -31,14 +31,15 @@ variable homeTemplate {
     <a class="wordmark" href="#top" aria-label="FossilHub home">
       <img src="fossilhub-hub-lockup-v1.png?v=20260829-1" width="137" height="50" alt="FossilHub">
     </a>
-    <nav class="topnav" aria-label="Primary">
-      <a href="#timeline">Timeline</a>
-      <a href="#wiki">Wiki</a>
-      <a href="#tickets">Tickets</a>
-      <a href="#engine">Engine</a>
-      <a href="explore.html">Explore</a>
+    <nav class="topnav" aria-label="@@PRIMARY_NAV_LABEL@@">
+      <a href="#timeline">@@NAV_TIMELINE@@</a>
+      <a href="#wiki">@@NAV_WIKI@@</a>
+      <a href="#tickets">@@NAV_TICKETS@@</a>
+      <a href="#engine">@@NAV_ENGINE@@</a>
+      <a href="explore.html">@@NAV_EXPLORE@@</a>
     </nav>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
+    @@SITE_TOOLS@@
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="@@THEME_LABEL@@">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
     </button>
@@ -52,12 +53,12 @@ variable homeTemplate {
     <div class="wrap">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">Fossilhub · A home for Fossil repositories</p>
-          <h1>The whole project, preserved in one <em>stone.</em></h1>
-          <p class="lede">Fossil keeps code, wiki, tickets, forum, and docs inside a single versioned artifact. Open it in a browser tab or clone it to work offline — either way, you hold the entire history of the dig.</p>
+          <p class="eyebrow">@@HOME_EYEBROW@@</p>
+          <h1>@@HOME_HEADING@@</h1>
+          <p class="lede">@@HOME_LEDE@@</p>
           <div class="cta-row">
-            <a class="btn btn-primary" href="explore.html">Explore repositories</a>
-            <a class="btn btn-ghost" href="#engine">Read the field manual</a>
+            <a class="btn btn-primary" href="explore.html">@@EXPLORE_REPOSITORIES@@</a>
+            <a class="btn btn-ghost" href="#engine">@@FIELD_MANUAL@@</a>
           </div>
         </div>
         <div class="core-wrap">
@@ -334,7 +335,7 @@ themeBtn.addEventListener('click', () => {
 }
 }
 
-proc ::fossilhub::views::renderHome {repository} {
+proc ::fossilhub::views::renderHome {repository {context ""}} {
   variable homeTemplate
   set eventCount [expr {
     [dict get $repository checkins] +
@@ -343,6 +344,21 @@ proc ::fossilhub::views::renderHome {repository} {
     [dict get $repository forum_events]
   }]
   return [string map [list \
+    @@HTML_LANG@@ [::fossilhub::i18n::locale] \
+    @@PAGE_TITLE@@ [::fossilhub::view::escape [::fossilhub::i18n::t home_title]] \
+    @@PRIMARY_NAV_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t primary_navigation]] \
+    @@NAV_TIMELINE@@ [::fossilhub::view::escape [::fossilhub::i18n::t timeline]] \
+    @@NAV_WIKI@@ [::fossilhub::view::escape [::fossilhub::i18n::t wiki]] \
+    @@NAV_TICKETS@@ [::fossilhub::view::escape [::fossilhub::i18n::t tickets]] \
+    @@NAV_ENGINE@@ [::fossilhub::view::escape [::fossilhub::i18n::t engine]] \
+    @@NAV_EXPLORE@@ [::fossilhub::view::escape [::fossilhub::i18n::t explore]] \
+    @@THEME_LABEL@@ [::fossilhub::view::escape [::fossilhub::i18n::t theme_toggle]] \
+    @@HOME_EYEBROW@@ [::fossilhub::view::escape [::fossilhub::i18n::t home_eyebrow]] \
+    @@HOME_HEADING@@ [::fossilhub::i18n::t home_heading] \
+    @@HOME_LEDE@@ [::fossilhub::view::escape [::fossilhub::i18n::t home_lede]] \
+    @@EXPLORE_REPOSITORIES@@ [::fossilhub::view::escape [::fossilhub::i18n::t explore_repositories]] \
+    @@FIELD_MANUAL@@ [::fossilhub::view::escape [::fossilhub::i18n::t field_manual]] \
+    @@SITE_TOOLS@@ [::fossilhub::views::siteTools $context] \
     @@REPOSITORY_SLUG@@ [::fossilhub::view::escape [dict get $repository slug]] \
     @@REPOSITORY_NAME@@ [::fossilhub::view::escape [dict get $repository name]] \
     @@PROJECT_ID@@ [::fossilhub::view::escape \

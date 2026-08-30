@@ -102,6 +102,9 @@ assertEqual [::fossilhub::routeForPath /repo.html] \
   {repository bedrock.fossil timeline} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /catalog-fragment] \
   catalog-fragment "catalog fragment route"
+assertEqual [::fossilhub::routeForPath /locale] locale "locale route"
+assertEqual [::fossilhub::routeForPath \
+  /bemly-moe/app/fossilhub/locale] locale "mounted locale route"
 assertEqual [::fossilhub::routeForPath /login] login "login route"
 assertEqual [::fossilhub::routeForPath /register] register "register route"
 assertEqual [::fossilhub::routeForPath /logout] logout "logout route"

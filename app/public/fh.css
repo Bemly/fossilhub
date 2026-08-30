@@ -10,7 +10,7 @@
   --verdi:#2F6E5A;
   --iron:#A64B22;
   --font-display:"Big Shoulders Display","Arial Narrow",sans-serif;
-  --font-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --font-body:"IBM Plex Sans","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --tick:rgba(28,35,44,.38);
   --edge:rgba(28,35,44,.26);
@@ -88,6 +88,19 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
   font-size:13.5px;color:var(--ink-2);
 }
 .topnav a:hover{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink)}
+.site-tools{display:flex;align-items:center;gap:12px;flex:none;white-space:nowrap}
+.site-tools a,.site-tools button{
+  border:0;background:transparent;color:var(--ink-2);font:500 12px/1.2 var(--font-body);
+  cursor:pointer;padding:0
+}
+.site-tools a:hover,.site-tools button:hover{color:var(--ink);text-decoration:none}
+.site-tools form{display:inline-flex;margin:0}
+.site-tools input[type=hidden]{display:none}
+.site-tools .locale-form button{
+  min-width:42px;padding:6px 9px;border:1px solid var(--line);border-radius:999px;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;background:var(--card)
+}
+.site-tools .site-register{color:var(--azurite-deep)}
 .cmd-chip{
   font-family:var(--font-mono);font-size:11.5px;
   display:inline-flex;gap:8px;align-items:center;
@@ -318,6 +331,7 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
   body{padding-left:0}
   .rail{display:none}
   .topnav{display:none}
+  .site-tools{margin-left:auto}
   .demo-grid{grid-template-columns:1fr;gap:32px}
   .flip>.copy{order:0}
   .stats{grid-template-columns:repeat(2,1fr);row-gap:32px}
@@ -325,6 +339,10 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 }
 @media (max-width:560px){
   .cmd-chip{display:none}
+  .topbar .wrap{gap:11px;padding-inline:14px}
+  .site-tools{gap:9px;max-width:calc(100vw - 176px);overflow-x:auto;scrollbar-width:none}
+  .site-tools::-webkit-scrollbar{display:none}
+  .topbar>.wrap>.theme-btn{display:none}
   .tl-row{grid-template-columns:40px 42px minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:reduce){

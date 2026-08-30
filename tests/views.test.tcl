@@ -1,6 +1,7 @@
 set projectRoot [file dirname [file dirname [file normalize [info script]]]]
 source [file join $projectRoot app lib view.tcl]
 source [file join $projectRoot app lib markup.tcl]
+source [file join $projectRoot app lib i18n.tcl]
 source [file join $projectRoot app lib catalog-model.tcl]
 source [file join $projectRoot app lib repository-service.tcl]
 source [file join $projectRoot app views home.tcl]
@@ -68,6 +69,7 @@ assertContains $home {Ship &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;} \
 assertContains $home {1,284 artifacts · 3.1 MB received} "home live metrics"
 assertNotContains $home {Add delta compression to bundle writer} \
   "home prototype event removed"
+assertNotContains $home {@@} "home placeholders resolved"
 
 set explore [::fossilhub::views::renderExplore [list $repository]]
 assertContains $explore {1 match} "Explore live count"
@@ -78,6 +80,7 @@ assertContains $explore {A live &amp; durable repository} \
 assertContains $explore {repo/dig.fossil} "Explore repository route"
 assertNotContains $explore {12,408} "Explore prototype count removed"
 assertNotContains $explore {amber.fossil} "Explore prototype repository removed"
+assertNotContains $explore {@@} "Explore placeholders resolved"
 
 set emptyExplore [::fossilhub::views::renderExplore {}]
 assertContains $emptyExplore {No repositories match this survey.} \
@@ -115,6 +118,7 @@ assertNotContains $page {c-a17f3b} "repository prototype hash removed"
 assertNotContains $page {SSR_TIMELINE} "SSR implementation markers removed"
 assertNotContains $page {@@REPOSITORY_NAME@@} "SSR placeholders resolved"
 assertNotContains $page {@@VISIBILITY@@} "repository visibility placeholder resolved"
+assertNotContains $page {@@} "repository placeholders resolved"
 
 set safeMarkup [::fossilhub::markup::render \
   {# Heading
@@ -452,5 +456,33 @@ assertNotContains $publicStatusPage {/data/} \
   "public status omits filesystem paths"
 assertNotContains $publicStatusPage {repository_slug} \
   "public status omits repository identities"
+
+::fossilhub::i18n::use zh-CN
+set chineseHome [::fossilhub::views::renderHome $repository $anonymousContext]
+assertContains $chineseHome {<html lang="zh-CN">} \
+  "Chinese home language marker"
+assertContains $chineseHome {整个项目，凝结在一块<em>岩石</em>中。} \
+  "Chinese home hero"
+assertContains $chineseHome {data-hub-path="/login">登录</a>} \
+  "Chinese anonymous sign-in entry"
+assertContains $chineseHome {data-hub-action="/locale"} \
+  "home language switch form"
+
+set chineseLogin [::fossilhub::views::renderLogin \
+  $anonymousContext [string repeat a 64]]
+assertContains $chineseLogin {<html lang="zh-CN">} \
+  "Chinese account language marker"
+assertContains $chineseLogin {用户名或邮箱<input} \
+  "Chinese login field"
+assertContains $chineseLogin {type="submit">登录</button>} \
+  "Chinese login action"
+
+set chineseAdmin [::fossilhub::views::siteTools $adminContext]
+assertContains $chineseAdmin {data-hub-path="/admin">管理</a>} \
+  "Chinese administrator entry"
+assertContains $chineseAdmin \
+  {data-hub-path="/account/repositories">我的仓库</a>} \
+  "Chinese repository management entry"
+::fossilhub::i18n::use en
 
 puts "view tests passed"

@@ -13,7 +13,8 @@ proc ::fossilhub::views::adminFrame {title heading lede content context \
   } {
     set current [expr {$key eq $active ? { aria-current="page"} : ""}]
     append links [format {<a%s href="#" data-hub-path="%s">%s</a>} \
-      $current $path $label]
+      $current $path [::fossilhub::view::escape \
+        [::fossilhub::i18n::phrase $label]]]
   }
   set body [format {<nav class="admin-tabs" aria-label="Administration">%s</nav>%s} \
     $links $content]

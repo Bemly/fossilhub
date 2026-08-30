@@ -84,6 +84,18 @@ proc ::fossilhub::account::clearSessionCookie {} {
   wapp-reply-extra Set-Cookie $value
 }
 
+proc ::fossilhub::account::setLocaleCookie {locale} {
+  set locale [::fossilhub::i18n::normalize $locale]
+  if {$locale eq ""} {
+    error "unsupported interface language"
+  }
+  set value "fh_locale=$locale; Path=/; Max-Age=31536000; SameSite=Lax"
+  if {[::fossilhub::account::secureCookie]} {
+    append value {; Secure}
+  }
+  wapp-reply-extra Set-Cookie $value
+}
+
 proc ::fossilhub::account::withLogoutChallenge {context} {
   if {[dict get $context authenticated]} {
     dict set context logout_token [::fossilhub::auth::issueChallenge \

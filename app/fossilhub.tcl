@@ -11,6 +11,7 @@ foreach sourceFile {
   lib/history-model.tcl
   lib/platform-model.tcl
   lib/auth-model.tcl
+  lib/i18n.tcl
   lib/catalog-model.tcl
   lib/repository-service.tcl
   lib/workspace-model.tcl
@@ -88,6 +89,9 @@ proc ::fossilhub::routeForPath {path} {
   }
   if {[regexp {(^|/)catalog-fragment$} $clean]} {
     return catalog-fragment
+  }
+  if {[regexp {(^|/)locale/?$} $clean]} {
+    return locale
   }
   if {[regexp {(^|/)login/?$} $clean]} {
     return login
@@ -336,6 +340,29 @@ proc ::fossilhub::renderPage {content} {
   wapp-unsafe [::fossilhub::decoratePage $content]
 }
 
+proc ::fossilhub::requestUri {} {
+  set uri [wapp-param REQUEST_URI /]
+  return [::fossilhub::i18n::returnTo $uri]
+}
+
+proc ::fossilhub::handleLocale {} {
+  if {[string toupper [wapp-param REQUEST_METHOD GET]] ne "POST"} {
+    wapp-reply-code "405 Method Not Allowed"
+    ::fossilhub::placeholder {Method not allowed — FossilHub} \
+      {Language changes accept POST requests only.}
+    return
+  }
+  set locale [::fossilhub::i18n::normalize [wapp-param locale ""]]
+  if {$locale eq ""} {
+    wapp-reply-code "400 Bad Request"
+    ::fossilhub::placeholder {Invalid language — FossilHub} \
+      {Choose English or Simplified Chinese.}
+    return
+  }
+  ::fossilhub::account::setLocaleCookie $locale
+  wapp-redirect [::fossilhub::i18n::returnTo [wapp-param return_to /]]
+}
+
 proc ::fossilhub::maintenanceBanner {} {
   if {![file isfile [::fossilhub::platform::databasePath]]} {
     return ""
@@ -356,7 +383,8 @@ proc ::fossilhub::decoratePage {content} {
   if {$finish < 0} {
     return $content
   }
-  set notice [format {<div class="maintenance-banner" role="status"><b>Maintenance notice</b><span>%s</span></div>} \
+  set notice [format {<div class="maintenance-banner" role="status"><b>%s</b><span>%s</span></div>} \
+    [::fossilhub::view::escape [::fossilhub::i18n::t maintenance_notice]] \
     [::fossilhub::view::escape $banner]]
   return [string replace $content $finish $finish ">$notice"]
 }
@@ -724,8 +752,9 @@ proc ::fossilhub::handleRepositoryRead {accountContext route} {
     }
     return
   }
+  set accountContext [::fossilhub::account::withLogoutChallenge $accountContext]
   if {[catch {set page [::fossilhub::views::renderRepository \
-      $repository $section $sectionData]}]} {
+      $repository $section $sectionData $accountContext]}]} {
     puts stderr "FossilHub: first-party repository render failed for [file tail $name]"
     wapp-reply-code "503 Service Unavailable"
     ::fossilhub::placeholder \
@@ -737,8 +766,11 @@ proc ::fossilhub::handleRepositoryRead {accountContext route} {
 }
 
 proc wapp-default {} {
+  set locale [::fossilhub::i18n::useRequest]
   set route [::fossilhub::routeForPath [::fossilhub::requestPath]]
   set accountContext [::fossilhub::account::requestContext]
+  dict set accountContext locale $locale
+  dict set accountContext return_to [::fossilhub::requestUri]
   switch -- [lindex $route 0] {
     health {
       wapp-mimetype text/plain
@@ -746,8 +778,13 @@ proc wapp-default {} {
       wapp-subst {ok\n}
     }
     home {
+      set accountContext [::fossilhub::account::withLogoutChallenge \
+        $accountContext]
       ::fossilhub::renderPage [::fossilhub::views::renderHome \
-        [::fossilhub::primaryRepository]]
+        [::fossilhub::primaryRepository] $accountContext]
+    }
+    locale {
+      ::fossilhub::handleLocale
     }
     login {
       ::fossilhub::account::handleLogin $accountContext
@@ -872,8 +909,10 @@ proc wapp-default {} {
     }
     explore {
       set options [::fossilhub::catalogOptions]
+      set accountContext [::fossilhub::account::withLogoutChallenge \
+        $accountContext]
       ::fossilhub::renderPage [::fossilhub::views::renderExplore \
-        [::fossilhub::catalog::repositories $options] $options]
+        [::fossilhub::catalog::repositories $options] $options $accountContext]
     }
     catalog-fragment {
       set options [::fossilhub::catalogOptions]
