@@ -483,6 +483,7 @@ static char *zRemoteAddr = 0;    /* IP address of the request */
 static char *zReferer = 0;       /* Name of the page that refered to us */
 static char *zAccept = 0;        /* What formats will be accepted */
 static char *zAcceptEncoding =0; /* gzip or default */
+static char *zAcceptLanguage =0; /* Preferred response languages */
 static char *zContentLength = 0; /* Content length reported in the header */
 static char *zContentType = 0;   /* Content type reported in the header */
 static char *zQuerySuffix = 0;   /* The part of the URL after the first ? */
@@ -720,6 +721,7 @@ static struct {
   { "DOCUMENT_ROOT",            &zHome },
   { "HTTP_ACCEPT",              &zAccept },
   { "HTTP_ACCEPT_ENCODING",     &zAcceptEncoding },
+  { "HTTP_ACCEPT_LANGUAGE",     &zAcceptLanguage },
   { "HTTP_COOKIE",              &zCookie },
   { "HTTP_HOST",                &zHttpHost },
   { "HTTP_IF_MODIFIED_SINCE",   &zIfModifiedSince },
@@ -3305,6 +3307,7 @@ void ProcessOneRequest(int forceClose, int socketId){
   zAuthType = 0;
   zRemoteUser = 0;
   zReferer = 0;
+  zAcceptLanguage = 0;
   zIfNoneMatch = 0;
   zIfModifiedSince = 0;
   zContentLength = 0;
@@ -3326,6 +3329,8 @@ void ProcessOneRequest(int forceClose, int socketId){
       zAccept = StrDup(zVal);
     }else if( strcasecmp(zFieldName,"Accept-Encoding:")==0 ){
       zAcceptEncoding = StrDup(zVal);
+    }else if( strcasecmp(zFieldName,"Accept-Language:")==0 ){
+      zAcceptLanguage = StrDup(zVal);
     }else if( strcasecmp(zFieldName,"Content-length:")==0 ){
       zContentLength = StrDup(zVal);
     }else if( strcasecmp(zFieldName,"Content-type:")==0 ){

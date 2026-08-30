@@ -24,6 +24,10 @@
 - 许可证：`althttpd.c` 中的公有领域声明
 - 本地构建输入：`vendor/althttpd/`
 
+下游兼容补丁：将标准请求头 `Accept-Language` 作为 CGI 环境变量
+`HTTP_ACCEPT_LANGUAGE` 转发给 Wapp，使服务端渲染可以在尚未写入语言 Cookie
+时遵循浏览器语言偏好。补丁不改变请求路由、静态文件或 CGI 执行边界。
+
 快照哈希用于标识下载的官方归档。仓库只保留 FossilHub 构建和运行所需的源码与许可证文件。
 
 ## Tcl
