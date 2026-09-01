@@ -19,10 +19,9 @@
 
 ## Git 到 Fossil
 
-- 导入源为 Git `main`，发布时共有 76 个提交；Codex 内部树引用未进入导出流。
+- 导入源为最终交接时的 Git `main` 全部提交；Codex 内部树引用未进入导出流。Fossil check-in 数必须与 `git rev-list --count main` 一致。
 - 目标文件为 `/data/repositories/fossilhub.fossil`，动态仓库 slug 为 `fossilhub`，公开可见，默认分支为 `main`，归中央 `warden` 管理。
-- 导入后 Fossil 有 76 个 check-in，开放分支为 `main`；最新 check-in 注释为 `build: prepare 2026.09.01 beta 1`。
-- 仓库 project-code 为 `cca7a4aaa9e4ca9f5f42c28a9caecd0f30aca07b`。
+- 导入后开放分支为 `main`，最新 check-in 与最终 Git `main` 提交一致。
 - 仓库已关闭 autosync，清空导入管理员能力，并应用公开 clone/sync capability。
 
 ## 验收结果
@@ -32,7 +31,7 @@
 - `/`、`/healthz`、`/explore`、`/repo/fossilhub`、Timeline、Files、Docs、Wiki、Tickets、Forum 均返回 HTTP 200。
 - 页面可见发布提交和 `README.md`；目录数据库只索引实际存在的 `fossilhub.fossil`。
 - `fossil test-integrity --quick` 返回 `ok`；平台和目录数据库 `PRAGMA quick_check` 返回 `ok`。
-- 真实 HTTP clone 收到 484 个 artifact，随后 sync 为零差异；克隆 project-code 与生产一致。
+- 真实 HTTP clone/sync 通过；克隆 project-code 与生产一致，随后以最终 Git `main` 全量重建同一平台注册仓库并再次执行完整性与页面复验。
 - 仓库、平台数据库、目录数据库和管理员引导记录均为 0600、UID/GID 10001:10001。
 - 生产容器健康，根文件系统只读，`/tmp` 为 16 MB `nosuid,nodev,noexec` tmpfs，全部 capability 丢弃，启用 `no-new-privileges`，PID 上限 128，重启策略为 `unless-stopped`。
 
