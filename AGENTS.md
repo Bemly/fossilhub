@@ -78,8 +78,8 @@ production change.
   `/vol1/1000/fossilhub/platform/fossilhub.sqlite`
 - FossilHub bootstrap administrator record:
   `/vol1/1000/fossilhub/platform/fossilhub-bootstrap-admin.txt`
-- Production repositories:
-  `/vol1/1000/fossilhub/repositories/{bedrock,ammonite,trilobite,basalt,cambrian,granite,shale,quartz,obsidian,tectonic}.fossil`
+- Current production repository:
+  `/vol1/1000/fossilhub/repositories/fossilhub.fossil`
 - Every production repository and the catalogue database must remain mode 0600
   and owned by UID/GID 10001:10001.
 - The platform database must remain mode 0600 and owned by UID/GID
@@ -95,18 +95,23 @@ production change.
 
 - Site: `http://192.168.1.162:6080/`
 - Health: `http://192.168.1.162:6080/healthz`
-- Reference repository UI: `http://192.168.1.162:6080/repo/bedrock.fossil`
-- Native Fossil transport: `http://192.168.1.162:6080/fossil/bedrock`
+- Reference repository UI: `http://192.168.1.162:6080/repo/fossilhub`
+- Native Fossil transport: `http://192.168.1.162:6080/fossil/fossilhub`
 - Container: `fossilhub`
-- Image tag: `fossilhub:2026.08.30-beta.1`
-- Image ID: `sha256:b8500950d43d8d094d7321d4fa7f9cd47a0efa296a2e18439f4e16411be0e06d`
-- Deployed code revision: `fe7824f`
+- Image tag: `fossilhub:2026.09.01-beta.1`
+- Image ID: `sha256:8ddb4fa4356cf814538ceaf7c0aa50de4138c636728af6b912756b674c481f14`
+- Deployed code revision: `2998dde7c04423c2e1c54892c1f914a2b90b5e34`
 - Mount: `/vol1/1000/fossilhub:/data`
 - Port: `6080:8080`
 - Restart policy: `unless-stopped`
 - Runtime user: `fossilhub:fossilhub` (UID/GID 10001:10001)
 - Security profile: read-only root, 16 MB `/tmp` tmpfs, all capabilities
   dropped, `no-new-privileges`, and PID limit 128.
+- Immediate reset predecessor: stopped container
+  `fossilhub-rollback-df85466-20260901-reset`, containing the preceding
+  `2026.08.30-beta.2` image. Its former production data was permanently
+  deleted without a backup at the user's explicit request, so it is not a
+  compatible data rollback target.
 - Immediate bilingual-release rollback: stopped container
   `fossilhub-rollback-3b88c20-20260830-i18n`, containing the preceding
   `2026.08.29-beta.1` image. Preserve it.
@@ -130,6 +135,16 @@ Container names are operational facts, not a license to mutate them. Inspect
 before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
+
+Release `2026.09.01-beta.1` was built from committed revision
+`2998dde7c04423c2e1c54892c1f914a2b90b5e34` and deployed directly on
+2026-09-01. At the user's explicit direction, the preceding production data
+directory and the abandoned smoke copy were permanently deleted without a
+backup or 6082 candidate. The fresh platform owns one imported repository,
+`fossilhub.fossil`, containing the `main` history of this Git project. Image
+tests, HTTP repository surfaces, Fossil integrity, database quick-checks,
+permissions, and real clone/sync passed; see
+`docs/validation-2026.09.01-beta.1.md`.
 
 Release `2026.08.30-beta.1` was transactionally deployed on 2026-08-30 from
 revision `fe7824f`. It adds server-rendered Simplified Chinese/English
@@ -183,7 +198,7 @@ browser
      -> registry-gated Fossil CGI only for public clone/sync transport
   -> `/data/catalog/fossilhub.sqlite`
   -> `/data/platform/fossilhub.sqlite`
-  -> ten manifest-listed blank `.fossil` repositories under `/data/repositories`
+  -> imported `/data/repositories/fossilhub.fossil`
 ```
 
 - `app/fossilhub.tcl` owns Wapp routing and Tcl SSR response delivery.
@@ -191,7 +206,8 @@ browser
   otherwise Fossil inherits `GATEWAY_INTERFACE` and treats the next argument as
   a CGI configuration filename instead of a CLI subcommand.
 - `app/lib/repository-manifest.tcl` is the allow-list for the ten blank
-  repository names and catalogue facets. Files outside that list
+  seed names and catalogue facets. The platform also publishes validated
+  dynamic registry entries such as the current `fossilhub` repository; files
   are never published merely because they end in `.fossil`.
 - `app/lib/fossil-model.tcl` queries repository metadata, history, trunk files,
   Wiki artifacts, Tickets, and Forum activity through Fossil's

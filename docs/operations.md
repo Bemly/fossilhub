@@ -1,19 +1,19 @@
 # FossilHub 生产运维手册
 
-部署复验日期：2026-08-30
+部署复验日期：2026-09-01
 
 ## 当前生产
 
 - 站点：`http://192.168.1.162:6080/`
 - 健康检查：`http://192.168.1.162:6080/healthz`
 - 容器：`fossilhub`
-- 镜像：`fossilhub:2026.08.30-beta.1`
-- 镜像 ID：`sha256:b8500950d43d8d094d7321d4fa7f9cd47a0efa296a2e18439f4e16411be0e06d`
-- 源码修订标签：`fe7824f`
+- 镜像：`fossilhub:2026.09.01-beta.1`
+- 镜像 ID：`sha256:8ddb4fa4356cf814538ceaf7c0aa50de4138c636728af6b912756b674c481f14`
+- 源码修订标签：`2998dde7c04423c2e1c54892c1f914a2b90b5e34`
 - 端口：`6080:8080`
 - 持久化数据：`/vol1/1000/fossilhub:/data`
 - 重启策略：`unless-stopped`
-- 直接回滚容器：`fossilhub-rollback-3b88c20-20260830-i18n`（停止）
+- 直接前序容器：`fossilhub-rollback-df85466-20260901-reset`（停止，仅保留容器；旧数据已永久删除，不能直接回滚）
 
 容器以 UID/GID `10001:10001` 运行，根文件系统只读；`/tmp` 为 16 MB 且带 `nosuid,nodev,noexec` 的 tmpfs；全部 Linux capability 已丢弃；启用 `no-new-privileges`；PID 上限 128。容器不使用主机网络、Docker socket 或 fnOS 系统路径。
 
@@ -23,13 +23,13 @@
 | --- | --- |
 | `/` | FossilHub 首页 |
 | `/explore` | 仓库目录与搜索 |
-| `/repo/bedrock.fossil` | 仓库概览和时间线 |
-| `/repo/bedrock.fossil/files` | 版本化源码树 |
-| `/repo/bedrock.fossil/docs` | 文档索引 |
-| `/repo/bedrock.fossil/wiki` | 第一方 Wiki |
-| `/repo/bedrock.fossil/tickets` | 第一方 Tickets |
-| `/repo/bedrock.fossil/forum` | 第一方 Forum |
-| `/fossil/bedrock` | 仅供 Fossil clone/sync |
+| `/repo/fossilhub` | 本项目仓库概览和时间线 |
+| `/repo/fossilhub/files` | 版本化源码树 |
+| `/repo/fossilhub/docs` | 文档索引 |
+| `/repo/fossilhub/wiki` | 第一方 Wiki |
+| `/repo/fossilhub/tickets` | 第一方 Tickets |
+| `/repo/fossilhub/forum` | 第一方 Forum |
+| `/fossil/fossilhub` | 仅供 Fossil clone/sync |
 | `/dashboard` | 已登录用户后台 |
 | `/admin` | 管理员后台 |
 | `/fh.css` | 公共样式 |
@@ -41,7 +41,7 @@
 
 公开目录数据库为 `/data/catalog/fossilhub.sqlite`。平台注册、身份、授权、会话、设置和审计数据库为 `/data/platform/fossilhub.sqlite`。两者都属于应用，可以使用 `sqlite3`；Fossil 仓库文件不得用原始 SQLite 读写。
 
-生产包含 10 个干净仓库：Bedrock、Ammonite、Trilobite、Basalt、Cambrian、Granite、Shale、Quartz、Obsidian 和 Tectonic。每个仓库只有 Fossil 必需的初始空 check-in，未导入演示历史。
+生产仓库文件只有 `/data/repositories/fossilhub.fossil`，包含本项目 Git `main` 导入的完整历史。平台初始化仍会幂等登记十个内置 seed 元数据行，但对应 `.fossil` 文件并不存在，公开目录只索引实际存在且已登记的 `fossilhub.fossil`。
 
 Wapp 请求带 CGI 环境变量，因此应用启动的每个 Fossil CLI 查询都必须带 `--nocgi`。浏览器页面不得链接 Fossil 内置 Web UI。`/fossil/<slug>` 只允许活跃公开平台注册仓库进行 clone/sync；`/fossil/` 不列出仓库，私有和未知 slug 在接触文件前统一返回 404。
 
@@ -95,10 +95,10 @@ sudo docker logs --tail 100 fossilhub
 
 日志路径为 `/vol1/1000/fossilhub/althttpd-YYYYMMDD.csv`。日志可能包含敏感查询字符串，只能做定向检查，不得写入 Git 或完整返回。
 
-参考仓库为 `/vol1/1000/fossilhub/repositories/bedrock.fossil`：
+当前仓库为 `/vol1/1000/fossilhub/repositories/fossilhub.fossil`：
 
 ```sh
-fossil clone http://192.168.1.162:6080/fossil/bedrock bedrock.fossil
+fossil clone http://192.168.1.162:6080/fossil/fossilhub fossilhub.fossil
 ```
 
 ## 生命周期

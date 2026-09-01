@@ -5,14 +5,14 @@ FossilHub is a Tcl/Wapp port of the three-page UI prototype in
 
 Production runs in an isolated Ubuntu 24.04 Docker container on fnOS. Althttpd
 terminates HTTP and launches the Wapp application as CGI. Release
-`2026.08.30-beta.1` uses an application-owned SQLite catalogue for search and
+`2026.09.01-beta.1` uses an application-owned SQLite catalogue for search and
 filters, then queries each repository through `fossil sql --readonly` for Tcl
 server-rendered Timeline, Files, Docs, Wiki, Tickets, and Forum surfaces. The
 browser receives complete HTML; JavaScript progressively enhances catalogue
 search, theme, motion, and public mount-prefix adaptation.
 
-The catalogue contains ten clean local Fossil repositories with no imported or
-demonstration history. Fossil's CGI endpoint remains available for clone and
+The production catalogue contains this project's imported `fossilhub.fossil`
+repository and its Git `main` history. Fossil's CGI endpoint remains available for clone and
 sync transport on active public registry entries, but browser navigation stays
 inside FossilHub's visual system. The transport gate has no repository-list
 response and returns the same generic 404 for private and unknown names.
@@ -20,16 +20,16 @@ The previous generated `dig.fossil` is no longer created or indexed.
 
 Production is available on the NAS at `http://192.168.1.162:6080/`; its health
 endpoint is `/healthz`, the reference repository page is
-`/repo/bedrock.fossil`, and its clone/sync endpoint is `/fossil/bedrock`.
-生产环境运行 `fossilhub:2026.08.30-beta.1`，运行时代码修订为 `fe7824f`。
-该版本在 2026-08-30 完成 NAS 构建、完整测试、事务式切换、真实生产数据、
-clone/sync、权限、70 条 HTTP 路由和响应式浏览器验收，并新增服务端中英文
-切换及可发现的登录、注册、个人仓库和管理员入口。
+`/repo/fossilhub`, and its clone/sync endpoint is `/fossil/fossilhub`.
+生产环境运行 `fossilhub:2026.09.01-beta.1`，运行时代码修订为完整提交
+`2998dde7c04423c2e1c54892c1f914a2b90b5e34`。该版本直接重置生产数据，
+将本项目 Git `main` 的完整历史导入为 `fossilhub.fossil`，并完成镜像测试、
+HTTP、完整性、权限及真实 clone/sync 验收。
 
-Repository routes begin at `/explore` and `/repo/bedrock.fossil`. The deployed
-image is `fossilhub:2026.08.30-beta.1` at runtime revision `fe7824f`;
+Repository routes begin at `/explore` and `/repo/fossilhub`. The deployed
+image is `fossilhub:2026.09.01-beta.1` at runtime revision `2998dde7c04423c2e1c54892c1f914a2b90b5e34`;
 [VERSION](VERSION) is the release source of truth. The production acceptance
-record is [docs/validation-2026.08.30-beta.1.md](docs/validation-2026.08.30-beta.1.md).
+record is [docs/validation-2026.09.01-beta.1.md](docs/validation-2026.09.01-beta.1.md).
 
 Phase 5 development adds a separate versioned platform database at
 `/data/platform/fossilhub.sqlite` for central identities, authorization,
@@ -103,6 +103,8 @@ pages from reusing stale assets after an update.
 - [docs/validation-2026.08.28-beta.1.md](docs/validation-2026.08.28-beta.1.md)
   records the Phase 5 isolated and production acceptance evidence.
 - [docs/validation-2026.08.30-beta.1.md](docs/validation-2026.08.30-beta.1.md)
+- [docs/validation-2026.09.01-beta.1.md](docs/validation-2026.09.01-beta.1.md)
+  记录生产数据直接重置、本项目 Git 历史导入和最终 clone/sync 验收。
 - [docs/validation-2026.08.29-beta.1.md](docs/validation-2026.08.29-beta.1.md)
   记录正式 Logo 维护版本的生产部署与验收证据。
 - [docs/third-party.md](docs/third-party.md) records the pinned Tcl, Wapp,

@@ -166,8 +166,8 @@ navigation, user and administrator workspaces, and real public information
 pages.
 
 The deployed collaboration foundation release is `2026.08.28-beta.1`; the
-current production maintenance release is `2026.08.30-beta.1` at revision
-`fe7824f`.
+current production maintenance release is `2026.09.01-beta.1` at revision
+`2998dde7c04423c2e1c54892c1f914a2b90b5e34`.
 
 The dependency-ordered, auditable checklist and acceptance gates are maintained
 in [docs/platform-roadmap.md](docs/platform-roadmap.md).
@@ -187,3 +187,5 @@ container and data remain available for diagnosis. See
 release and its direct-production acceptance are recorded in
 `docs/validation-2026.08.29-beta.1.md`. The server-rendered bilingual account
 navigation release is recorded in `docs/validation-2026.08.30-beta.1.md`.
+The direct production reset and Git-to-Fossil import are recorded in
+`docs/validation-2026.09.01-beta.1.md`.
