@@ -1,5 +1,9 @@
 namespace eval ::fossilhub::views {}
 
+proc ::fossilhub::views::localizedFormat {template args} {
+  return [format [::fossilhub::i18n::template $template] {*}$args]
+}
+
 proc ::fossilhub::views::anonymousContext {} {
   return [dict create authenticated 0 user "" session_hash "" token "" \
     logout_token "" locale [::fossilhub::i18n::locale] return_to /]
@@ -13,7 +17,7 @@ proc ::fossilhub::views::siteTools {{context ""}} {
     [dict get $context return_to] : "/"}]
   set locale [::fossilhub::i18n::locale]
   set nextLocale [expr {$locale eq "zh-CN" ? "en" : "zh-CN"}]
-  set html [format {
+  set html [::fossilhub::views::localizedFormat {
     <div class="site-tools" aria-label="%s">
       <form class="locale-form" action="locale" method="post" data-hub-action="/locale">
         <input type="hidden" name="locale" value="%s">
@@ -26,7 +30,7 @@ proc ::fossilhub::views::siteTools {{context ""}} {
     [::fossilhub::view::escape [::fossilhub::i18n::t switch_language]]]
   if {[dict get $context authenticated]} {
     set user [dict get $context user]
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <a href="#" data-hub-path="/dashboard">%s</a>
       <a href="#" data-hub-path="/account/repositories">%s</a>
       <a href="#" data-hub-path="/users/%s">%s</a>
@@ -37,12 +41,12 @@ proc ::fossilhub::views::siteTools {{context ""}} {
       [::fossilhub::view::escape [::fossilhub::i18n::t profile]] \
       [::fossilhub::view::escape [::fossilhub::i18n::t settings]]]
     if {[dict get $user role] eq "administrator"} {
-      append html [format {<a href="#" data-hub-path="/admin">%s</a>} \
+      append html [::fossilhub::views::localizedFormat {<a href="#" data-hub-path="/admin">%s</a>} \
         [::fossilhub::view::escape [::fossilhub::i18n::t admin]]]
     }
     set logoutToken [expr {[dict exists $context logout_token] ? \
       [dict get $context logout_token] : ""}]
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <form class="nav-form" action="logout" method="post" data-hub-action="/logout">
         <input type="hidden" name="csrf" value="%s">
         <button type="submit">%s</button>
@@ -50,7 +54,7 @@ proc ::fossilhub::views::siteTools {{context ""}} {
       [::fossilhub::view::escape $logoutToken] \
       [::fossilhub::view::escape [::fossilhub::i18n::t sign_out]]]
   } else {
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <a href="#" data-hub-path="/login">%s</a>
       <a class="site-register" href="#" data-hub-path="/register">%s</a>} \
       [::fossilhub::view::escape [::fossilhub::i18n::t sign_in]] \
@@ -66,7 +70,7 @@ proc ::fossilhub::views::accountFrame {title eyebrow heading lede content contex
   set eyebrow [::fossilhub::i18n::phrase $eyebrow]
   set heading [::fossilhub::i18n::phrase $heading]
   set lede [::fossilhub::i18n::phrase $lede]
-  return [format {<!doctype html>
+  return [::fossilhub::views::localizedFormat {<!doctype html>
 <html lang="%s">
 <head>
 <meta charset="utf-8">
@@ -121,7 +125,7 @@ proc ::fossilhub::views::accountNotice {message} {
   if {$message eq ""} {
     return ""
   }
-  return [format {<div class="form-notice" role="alert">%s</div>} \
+  return [::fossilhub::views::localizedFormat {<div class="form-notice" role="alert">%s</div>} \
     [::fossilhub::view::escape $message]]
 }
 
@@ -146,15 +150,15 @@ proc ::fossilhub::views::activityLabel {action} {
     repository.forum-thread {opened a discussion} \
     repository.forum-reply {replied to a discussion}]
   if {[dict exists $labels $action]} {
-    return [dict get $labels $action]
+    return [::fossilhub::i18n::phrase [dict get $labels $action]]
   }
   return [string map {. { · } - { }} $action]
 }
 
 proc ::fossilhub::views::renderWorkspaceRepositories {repositories emptyText} {
   if {[llength $repositories] == 0} {
-    return [format {<div class="workspace-empty"><p>%s</p></div>} \
-      [::fossilhub::view::escape $emptyText]]
+    return [::fossilhub::views::localizedFormat {<div class="workspace-empty"><p>%s</p></div>} \
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase $emptyText]]]
   }
   set html {<div class="workspace-list">}
   foreach repository $repositories {
@@ -162,7 +166,7 @@ proc ::fossilhub::views::renderWorkspaceRepositories {repositories emptyText} {
     if {[dict exists $repository membership_role]} {
       set role [string totitle [dict get $repository membership_role]]
     }
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <article class="workspace-repository">
         <div><div class="workspace-repo-title"><a href="#" data-hub-path="/repo/%s">%s</a><span class="repo-state repo-state-%s">%s</span></div>
         <p>%s</p><small>%s · %s · updated %s</small></div>
@@ -173,8 +177,9 @@ proc ::fossilhub::views::renderWorkspaceRepositories {repositories emptyText} {
       [::fossilhub::view::escape [dict get $repository visibility]] \
       [::fossilhub::view::escape [dict get $repository visibility]] \
       [::fossilhub::view::escape [dict get $repository description]] \
-      [::fossilhub::view::escape $role] \
-      [::fossilhub::view::escape [dict get $repository state]] \
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase $role]] \
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase \
+        [dict get $repository state]]] \
       [::fossilhub::view::escape [::fossilhub::view::formatDate \
         [dict get $repository updated_epoch]]] \
       [::fossilhub::view::escape [dict get $repository name]]]
@@ -185,23 +190,24 @@ proc ::fossilhub::views::renderWorkspaceRepositories {repositories emptyText} {
 
 proc ::fossilhub::views::renderActivity {activity emptyText} {
   if {[llength $activity] == 0} {
-    return [format {<div class="workspace-empty"><p>%s</p></div>} \
-      [::fossilhub::view::escape $emptyText]]
+    return [::fossilhub::views::localizedFormat {<div class="workspace-empty"><p>%s</p></div>} \
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase $emptyText]]]
   }
   set html {<ol class="activity-list">}
   foreach event $activity {
     set repository [dict get $event repository_slug]
     set context ""
     if {$repository ne ""} {
-      set context [format { in <a href="#" data-hub-path="/repo/%s">%s</a>} \
+      set context [::fossilhub::views::localizedFormat { in <a href="#" data-hub-path="/repo/%s">%s</a>} \
         [::fossilhub::view::escape "${repository}.fossil"] \
         [::fossilhub::view::escape [dict get $event repository_title]]]
     }
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <li><span class="activity-mark" aria-hidden="true"></span><div><b>%s</b>%s<small>%s · %s</small></div></li>} \
       [::fossilhub::view::escape [::fossilhub::views::activityLabel \
         [dict get $event action]]] $context \
-      [::fossilhub::view::escape [dict get $event outcome]] \
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase \
+        [dict get $event outcome]]] \
       [::fossilhub::view::escape [::fossilhub::view::formatDate \
         [dict get $event epoch]]]]
   }
@@ -216,7 +222,7 @@ proc ::fossilhub::views::renderDashboard {context data} {
   } else {
     set ticketHtml {<div class="dashboard-tickets">}
     foreach ticket $tickets {
-      append ticketHtml [format {
+      append ticketHtml [::fossilhub::views::localizedFormat {
         <a href="#" data-hub-path="/repo/%s.fossil/ticket/%s"><span>%s</span><b>%s</b><small>%s · %s</small></a>} \
         [::fossilhub::view::escape [dict get $ticket repository_slug]] \
         [::fossilhub::view::escape [dict get $ticket uuid]] \
@@ -228,7 +234,7 @@ proc ::fossilhub::views::renderDashboard {context data} {
     }
     append ticketHtml {</div>}
   }
-  set content [format {
+  set content [::fossilhub::views::localizedFormat {
     <div class="workspace-actions"><div><h2>Your repositories</h2><p>Owned strata and repositories where you collaborate.</p></div><a class="btn btn-primary" href="#" data-hub-path="/repositories/new">New repository</a></div>
     <h3 class="workspace-section-title">Owned</h3>%s
     <h3 class="workspace-section-title">Collaborations</h3>%s
@@ -250,17 +256,17 @@ proc ::fossilhub::views::renderPublicProfile {context profile} {
   set user [dict get $profile user]
   set facts ""
   if {[dict get $user location] ne ""} {
-    append facts [format {<span>%s</span>} \
+    append facts [::fossilhub::views::localizedFormat {<span>%s</span>} \
       [::fossilhub::view::escape [dict get $user location]]]
   }
   if {[dict get $user website] ne ""} {
-    append facts [format {<a href="%s" rel="nofollow me">Website</a>} \
+    append facts [::fossilhub::views::localizedFormat {<a href="%s" rel="nofollow me">Website</a>} \
       [::fossilhub::view::escape [dict get $user website]]]
   }
-  append facts [format {<span>Joined %s</span>} \
+  append facts [::fossilhub::views::localizedFormat {<span>Joined %s</span>} \
     [::fossilhub::view::escape [::fossilhub::view::formatDate \
       [dict get $user created_epoch]]]]
-  set content [format {
+  set content [::fossilhub::views::localizedFormat {
     <div class="profile-record"><div class="profile-monogram" aria-hidden="true">%s</div><div><h2>%s</h2><code>@%s</code></div></div>
     <p class="profile-biography">%s</p><div class="profile-facts">%s</div>
     <div class="section-rule"></div><h2>Public repositories</h2>%s
@@ -270,7 +276,8 @@ proc ::fossilhub::views::renderPublicProfile {context profile} {
     [::fossilhub::view::escape [dict get $user display_name]] \
     [::fossilhub::view::escape [dict get $user username]] \
     [::fossilhub::view::escape [expr {[dict get $user biography] eq "" ?
-      "No biography recorded." : [dict get $user biography]}]] $facts \
+      [::fossilhub::i18n::phrase {No biography recorded.}] : \
+      [dict get $user biography]}]] $facts \
     [::fossilhub::views::renderWorkspaceRepositories \
       [dict get $profile repositories] {No public repositories yet.}] \
     [::fossilhub::views::renderActivity [dict get $profile activity] \
@@ -285,7 +292,7 @@ proc ::fossilhub::views::renderPublicProfile {context profile} {
 proc ::fossilhub::views::renderSettings {context profileCsrf deactivateCsrf \
     message values} {
   set user [dict get $context user]
-  set content [format {%s
+  set content [::fossilhub::views::localizedFormat {%s
     <div class="settings-tabs" aria-label="Settings sections"><a aria-current="page" href="#" data-hub-path="/settings">Profile</a><a href="#" data-hub-path="/settings/security">Password &amp; sessions</a></div>
     <h2>Public profile</h2>
     <form class="field-form" action="settings" method="post" data-hub-action="/settings">
@@ -319,7 +326,7 @@ proc ::fossilhub::views::renderSettings {context profileCsrf deactivateCsrf \
 }
 
 proc ::fossilhub::views::renderLogin {context csrf {message ""} {login ""}} {
-  set content [format {%s
+  set content [::fossilhub::views::localizedFormat {%s
     <form class="field-form" action="login" method="post" data-hub-action="/login">
       <input type="hidden" name="csrf" value="%s">
       <label>%s<input name="login" type="text" autocomplete="username" maxlength="254" value="%s" required autofocus></label>
@@ -345,7 +352,7 @@ proc ::fossilhub::views::renderLogin {context csrf {message ""} {login ""}} {
 proc ::fossilhub::views::renderRegister {context csrf {message ""} {values {}}} {
   set defaults [dict create username "" email "" display_name ""]
   set values [dict merge $defaults $values]
-  set content [format {%s
+  set content [::fossilhub::views::localizedFormat {%s
     <form class="field-form" action="register" method="post" data-hub-action="/register">
       <input type="hidden" name="csrf" value="%s">
       <label>%s<input name="username" type="text" autocomplete="username" maxlength="39" pattern="[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?" value="%s" required></label>
@@ -383,11 +390,12 @@ proc ::fossilhub::views::renderSecurity {context passwordCsrf sessions message} 
   foreach session $sessions {
     set current [expr {[dict get $session id_hash] eq \
       [dict get $context session_hash]}]
-    set label [expr {$current ? "Current session" : "Signed-in session"}]
+    set label [::fossilhub::i18n::phrase \
+      [expr {$current ? "Current session" : "Signed-in session"}]]
     set purpose "revoke-session:[dict get $session id_hash]"
     set challenge [::fossilhub::auth::issueChallenge \
       $purpose [dict get $context session_hash]]
-    append rows [format {
+    append rows [::fossilhub::views::localizedFormat {
       <div class="session-row">
         <div><b>%s</b><small>Last seen %s · expires %s · mark %s</small></div>
         <form action="revoke" method="post" data-hub-action="/settings/session/revoke">
@@ -403,9 +411,10 @@ proc ::fossilhub::views::renderSecurity {context passwordCsrf sessions message} 
       [::fossilhub::view::escape [string range [dict get $session id_hash] 0 9]] \
       [::fossilhub::view::escape $challenge] \
       [::fossilhub::view::escape [dict get $session id_hash]] \
-      [expr {$current ? "Sign out" : "Revoke"}]]
+      [expr {$current ? [::fossilhub::i18n::t sign_out] : \
+        [::fossilhub::i18n::phrase Revoke]}]]
   }
-  set content [format {%s
+  set content [::fossilhub::views::localizedFormat {%s
     <div class="settings-tabs" aria-label="Settings sections"><a href="#" data-hub-path="/settings">Profile</a><a aria-current="page" href="#" data-hub-path="/settings/security">Password &amp; sessions</a></div>
     <div class="account-label"><span>Signed in as</span><b>%s</b><small>%s · %s</small></div>
     <h2>Change password</h2>

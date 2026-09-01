@@ -3,20 +3,20 @@ namespace eval ::fossilhub::views {}
 proc ::fossilhub::views::repositoryStateChip {repository} {
   set visibility [dict get $repository visibility]
   set state [dict get $repository state]
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <span class="repo-state repo-state-%s">%s</span>
     <span class="repo-state repo-state-%s">%s</span>} \
     [::fossilhub::view::escape $visibility] \
-    [::fossilhub::view::escape $visibility] \
+    [::fossilhub::view::escape [::fossilhub::i18n::phrase $visibility]] \
     [::fossilhub::view::escape $state] \
-    [::fossilhub::view::escape $state]]
+    [::fossilhub::view::escape [::fossilhub::i18n::phrase $state]]]
 }
 
 proc ::fossilhub::views::renderRepositoryWorkspace {context repositories} {
   set rows ""
   foreach repository $repositories {
     set role [::fossilhub::repositories::effectiveRole $repository $context]
-    append rows [format {
+    append rows [::fossilhub::views::localizedFormat {
       <article class="workspace-repository">
         <div>
           <div class="workspace-repo-title"><a href="../../repo/%s" data-hub-path="/repo/%s">%s</a>%s</div>
@@ -30,7 +30,7 @@ proc ::fossilhub::views::renderRepositoryWorkspace {context repositories} {
       [::fossilhub::view::escape [dict get $repository title]] \
       [::fossilhub::views::repositoryStateChip $repository] \
       [::fossilhub::view::escape [dict get $repository description]] \
-      [::fossilhub::view::escape $role] \
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase $role]] \
       [::fossilhub::view::escape [dict get $repository default_branch]] \
       [::fossilhub::view::escape [dict get $repository slug]] \
       [::fossilhub::view::escape [dict get $repository slug]]]
@@ -38,7 +38,7 @@ proc ::fossilhub::views::renderRepositoryWorkspace {context repositories} {
   if {$rows eq ""} {
     set rows {<div class="workspace-empty"><b>No repositories yet</b><p>Create a repository or ask an owner to add you as a collaborator.</p></div>}
   }
-  set content [format {
+  set content [::fossilhub::views::localizedFormat {
     <div class="workspace-actions"><div><h2>Your repositories</h2><p>Owned strata and collaborations in one field ledger.</p></div><a class="btn btn-primary" href="repositories/new" data-hub-path="/account/repositories/new">New repository</a></div>
     <div class="workspace-list">%s</div>} $rows]
   return [::fossilhub::views::accountFrame {Repository workspace} \
@@ -50,7 +50,7 @@ proc ::fossilhub::views::renderRepositoryWorkspace {context repositories} {
 proc ::fossilhub::views::renderRepositoryNew {context csrf message values} {
   set values [dict merge [dict create slug "" title "" description "" \
     visibility public] $values]
-  set content [format {%s
+  set content [::fossilhub::views::localizedFormat {%s
     <h2>Create repository</h2>
     <form class="field-form" action="new" method="post" data-hub-action="/account/repositories/new">
       <input type="hidden" name="csrf" value="%s">
@@ -78,14 +78,14 @@ proc ::fossilhub::views::permissionStrata {members} {
   set widths [dict create owner 100 maintainer 86 writer 70 triage 54 reader 40]
   foreach member $members {
     set role [dict get $member role]
-    append layers [format {
+    append layers [::fossilhub::views::localizedFormat {
       <div class="permission-layer permission-%s" style="--layer-width:%s%%"><b>%s</b><span>@%s</span><small>%s</small></div>} \
       [::fossilhub::view::escape $role] [dict get $widths $role] \
       [::fossilhub::view::escape [dict get $member display_name]] \
       [::fossilhub::view::escape [dict get $member username]] \
-      [::fossilhub::view::escape $role]]
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase $role]]]
   }
-  return [format {<div class="permission-strata" aria-label="Repository permission layers">%s</div>} $layers]
+  return [::fossilhub::views::localizedFormat {<div class="permission-strata" aria-label="Repository permission layers">%s</div>} $layers]
 }
 
 proc ::fossilhub::views::renderRepositorySettings {context repository members \
@@ -105,7 +105,7 @@ proc ::fossilhub::views::renderRepositorySettings {context repository members \
     set remove ""
     if {$canManage && [dict get $member role] ne "owner"} {
       set removeToken [dict get $challenges "remove:[dict get $member id]"]
-      set remove [format {
+      set remove [::fossilhub::views::localizedFormat {
         <form method="post" action="member-remove" data-hub-action="/account/repositories/%s/member-remove">
           <input type="hidden" name="csrf" value="%s"><input type="hidden" name="user" value="%s">
           <button class="btn btn-ghost btn-compact" type="submit">Remove</button>
@@ -114,15 +114,16 @@ proc ::fossilhub::views::renderRepositorySettings {context repository members \
         [::fossilhub::view::escape $removeToken] \
         [::fossilhub::view::escape [dict get $member id]]]
     }
-    append memberRows [format {
+    append memberRows [::fossilhub::views::localizedFormat {
       <div class="member-ledger-row"><div><b>%s</b><span>@%s</span></div><code>%s</code>%s</div>} \
       [::fossilhub::view::escape [dict get $member display_name]] \
       [::fossilhub::view::escape [dict get $member username]] \
-      [::fossilhub::view::escape [dict get $member role]] $remove]
+      [::fossilhub::view::escape [::fossilhub::i18n::phrase \
+        [dict get $member role]]] $remove]
   }
   set manageForms ""
   if {$canManage && [dict get $repository state] eq "active"} {
-    set manageForms [format {
+    set manageForms [::fossilhub::views::localizedFormat {
       <section class="settings-section"><h2>Repository record</h2>
         <form class="field-form compact-form" method="post" action="settings" data-hub-action="/account/repositories/%s/settings">
           <input type="hidden" name="csrf" value="%s">
@@ -151,7 +152,7 @@ proc ::fossilhub::views::renderRepositorySettings {context repository members \
       [::fossilhub::view::escape [dict get $repository slug]] \
       [::fossilhub::view::escape [dict get $challenges member]]]
   } else {
-    set manageForms [format {
+    set manageForms [::fossilhub::views::localizedFormat {
       <section class="settings-section"><h2>Collaborators</h2>%s<div class="member-ledger">%s</div></section>} \
       [::fossilhub::views::permissionStrata $members] $memberRows]
   }
@@ -159,7 +160,7 @@ proc ::fossilhub::views::renderRepositorySettings {context repository members \
   set ownerForms ""
   if {$canOwn} {
     if {[dict get $repository state] eq "active"} {
-      set ownerForms [format {
+      set ownerForms [::fossilhub::views::localizedFormat {
         <section class="settings-section danger-section"><h2>Owner controls</h2><p>These operations require a recently authenticated session and the exact repository name.</p>
           <form class="field-form compact-form" method="post" action="transfer" data-hub-action="/account/repositories/%s/transfer">
             <input type="hidden" name="csrf" value="%s"><label>Transfer to username<input name="username" maxlength="39" required></label><label>Type <code>%s</code> to confirm<input name="confirm" autocomplete="off" required></label><button class="btn btn-ghost" type="submit">Transfer ownership</button>
@@ -175,7 +176,7 @@ proc ::fossilhub::views::renderRepositorySettings {context repository members \
         [::fossilhub::view::escape [dict get $challenges archive]] \
         [::fossilhub::view::escape [dict get $repository slug]]]
     } else {
-      set ownerForms [format {
+      set ownerForms [::fossilhub::views::localizedFormat {
         <section class="settings-section danger-section"><h2>Archived repository</h2><p>The repository file is in quarantine and is not readable or cloneable.</p>
           <form class="field-form compact-form" method="post" action="restore" data-hub-action="/account/repositories/%s/restore"><input type="hidden" name="csrf" value="%s"><label>Type <code>%s</code> to restore<input name="confirm" autocomplete="off" required></label><button class="btn btn-primary" type="submit">Restore repository</button></form>
         </section>} \
@@ -184,7 +185,7 @@ proc ::fossilhub::views::renderRepositorySettings {context repository members \
         [::fossilhub::view::escape [dict get $repository slug]]]
     }
   }
-  set content [format {%s
+  set content [::fossilhub::views::localizedFormat {%s
     <div class="repository-heading"><div><span class="mono-label">%s.fossil</span><h2>%s</h2></div>%s</div>
     %s%s} \
     [::fossilhub::views::accountNotice $message] \

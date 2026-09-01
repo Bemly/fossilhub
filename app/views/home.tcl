@@ -371,5 +371,5 @@ proc ::fossilhub::views::renderHome {repository {context ""}} {
       [dict get $repository checkins]] \
     @@EVENTS@@ [::fossilhub::view::formatCount $eventCount] \
     @@HOME_TIMELINE@@ [::fossilhub::view::homeTimeline $repository]] \
-    $homeTemplate]
+    [::fossilhub::i18n::template $homeTemplate]]
 }

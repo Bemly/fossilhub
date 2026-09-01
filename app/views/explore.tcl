@@ -544,7 +544,7 @@ proc ::fossilhub::views::renderExplore {repositories {options {}} {context ""}} 
     @@SORT_OLDEST@@ [dict get $selected oldest] \
     @@SORT_NAME@@ [dict get $selected name] \
     @@SORT_SIZE@@ [dict get $selected size]] \
-    $exploreTemplate]
+    [::fossilhub::i18n::template $exploreTemplate]]
   return [::fossilhub::view::replaceRegion $page \
     <!--SSR_RESULTS_START--> <!--SSR_RESULTS_END--> \
     [::fossilhub::views::renderExploreResults $repositories]]

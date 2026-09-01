@@ -591,7 +591,7 @@ proc ::fossilhub::views::renderRepository {repository {section timeline} \
       [dict get $repository contributors]] \
     @@FORUM_EVENTS@@ [::fossilhub::view::formatCount \
       [dict get $repository forum_events]]] \
-    $repositoryTemplate]
+    [::fossilhub::i18n::template $repositoryTemplate]]
   set page [::fossilhub::view::replaceRegion $page \
     <!--SSR_SECTION_START--> <!--SSR_SECTION_END--> \
     [::fossilhub::views::renderRepositorySection \

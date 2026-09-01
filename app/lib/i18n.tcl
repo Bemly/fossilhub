@@ -148,6 +148,213 @@ namespace eval ::fossilhub::i18n {
       survey_results {勘测结果} \
       indexed_sqlite {已索引至 SQLite} \
       showing 显示]]
+  variable templateTranslations [list \
+    {Owned strata and repositories where you collaborate.} {你拥有的地层，以及你参与协作的仓库。} \
+    {Owned strata and collaborations in one field ledger.} {在同一份现场账册中查看自有仓库与协作仓库。} \
+    {Open work across repositories you can access. FossilHub does not invent assignment fields that are absent from the repository.} {汇总你可访问仓库中的待办工作。FossilHub 不会凭空添加仓库中不存在的指派字段。} \
+    {Create a repository or ask an owner to add you as a collaborator.} {创建一个仓库，或请所有者将你添加为协作者。} \
+    {Lowercase letters, numbers, and single hyphens. The URL cannot be renamed in this milestone.} {仅使用小写字母、数字和单个连字符；当前阶段不支持修改 URL。} \
+    {Public — visible and cloneable by everyone} {公开 — 所有人均可查看和克隆} \
+    {Private — members only} {私有 — 仅成员可访问} \
+    {These operations require a recently authenticated session and the exact repository name.} {这些操作需要近期完成身份验证，并输入准确的仓库名称。} \
+    {The repository file is in quarantine and is not readable or cloneable.} {仓库文件已被隔离，当前不可读取或克隆。} \
+    {Theme is stored only in this browser. System mode follows your device preference.} {主题只保存在当前浏览器中；系统模式跟随设备偏好。} \
+    {Signing in will be blocked and every active session will close. Repository custody remains intact for administrator review.} {账户将无法登录，所有活动会话都会关闭；仓库保管关系仍会保留，供管理员检查。} \
+    {Email is private and is never shown on your public profile.} {邮箱属于私密信息，不会显示在公开主页中。} \
+    {High-risk administrator actions require a fresh identity check.} {高风险管理员操作需要重新验证身份。} \
+    {These actions require a password check from the last ten minutes and produce an audit event.} {这些操作要求最近十分钟内完成密码验证，并会生成审计事件。} \
+    {Safe checks only; paths, private names, logs, and credentials are omitted.} {仅显示安全检查结果；路径、私有名称、日志和凭据均会省略。} \
+    {Safe platform totals without credentials, paths, or private content.} {仅显示不含凭据、路径或私有内容的平台汇总。} \
+    {Submitted content, session material, request identifiers, and internal detail are excluded.} {已排除提交内容、会话材料、请求标识和内部细节。} \
+    {Public text only. Never enter credentials or operational logs.} {只能填写公开文本，切勿输入凭据或运维日志。} \
+    {Only non-secret application policy is editable here.} {这里只允许编辑不含秘密的应用策略。} \
+    {Integrity failure moves the file out of publication and marks the registry record quarantined.} {完整性检查失败会将文件移出发布范围，并把注册记录标记为隔离。} \
+    {This repository is quarantined. Browser restore is deliberately blocked pending trusted recovery.} {此仓库已隔离；在可信恢复完成前，浏览器恢复操作会被主动阻止。} \
+    {Repositories per user} {每位用户的仓库数} \
+    {Default repository visibility} {默认仓库可见性} \
+    {Repository quota · MiB} {仓库配额 · MiB} \
+    {Password &amp; sessions} {密码与会话} \
+    {Account navigation} {账户导航} \
+    {Settings sections} {设置分区} \
+    {Toggle color theme} {切换配色主题} \
+    {Color theme} {配色主题} \
+    {Repository permission layers} {仓库权限层级} \
+    {Confirm new password} {确认新密码} \
+    {Current password} {当前密码} \
+    {New password} {新密码} \
+    {Change password} {修改密码} \
+    {Active sessions} {活动会话} \
+    {Signed in as} {当前登录身份} \
+    {Last seen %s · expires %s · mark %s} {最后活动 %s · 到期 %s · 标记 %s} \
+    {Public repositories} {公开仓库} \
+    {Public activity} {公开活动} \
+    {Public profile} {公开主页} \
+    {No open Tickets in your repositories.} {你的仓库中没有未关闭的 Ticket。} \
+    {No repositories yet} {尚无仓库} \
+    {No repositories match these filters.} {没有仓库符合这些筛选条件。} \
+    {No users match these filters.} {没有用户符合这些筛选条件。} \
+    {No audit events match.} {没有符合条件的审计事件。} \
+    {No repository relationships.} {没有仓库关联关系。} \
+    {Your repositories} {你的仓库} \
+    {New repository} {新建仓库} \
+    {Create repository} {创建仓库} \
+    {Repository name} {仓库名称} \
+    {Display title} {显示标题} \
+    {Default branch} {默认分支} \
+    {Repository record} {仓库记录} \
+    {Save repository} {保存仓库} \
+    {Collaborators} {协作者} \
+    {Add or update} {添加或更新} \
+    {Owner controls} {所有者控制} \
+    {Transfer to username} {转移给用户名} \
+    {Transfer ownership} {转移所有权} \
+    {Archive repository} {归档仓库} \
+    {Archived repository} {已归档仓库} \
+    {Restore repository} {恢复仓库} \
+    {Type <code>%s</code> to confirm} {输入 <code>%s</code> 以确认} \
+    {Type <code>%s</code> to archive} {输入 <code>%s</code> 以归档} \
+    {Type <code>%s</code> to restore} {输入 <code>%s</code> 以恢复} \
+    {Save profile} {保存资料} \
+    {Deactivate account} {停用账户} \
+    {Appearance} {外观} \
+    {Biography} {个人简介} \
+    {Website} {网站} \
+    {Location} {所在地} \
+    {Light} {浅色} \
+    {Dark} {深色} \
+    {System} {跟随系统} \
+    {Open Tickets} {未关闭的 Ticket} \
+    {Recent activity} {最近活动} \
+    {Collaborations} {协作仓库} \
+    {Owned} {自有仓库} \
+    {Application health} {应用健康状态} \
+    {Application revision} {应用修订} \
+    {Catalogue database} {目录数据库} \
+    {Catalogue indexed} {目录索引状态} \
+    {Platform database} {平台数据库} \
+    {Protected file modes} {受保护文件权限} \
+    {Repository readability} {仓库可读性} \
+    {Runtime ownership} {运行时所有权} \
+    {Operational overview} {运行概览} \
+    {Recent audit activity} {近期审计活动} \
+    {Search identities, review status, and open a controlled record.} {搜索身份、检查状态并打开受控记录。} \
+    {Repository relationships} {仓库关联关系} \
+    {Platform policy} {平台策略} \
+    {Maintenance banner} {维护横幅} \
+    {Storage budget} {存储预算} \
+    {Controlled actions} {受控操作} \
+    {Rebuild catalogue} {重建目录} \
+    {Run integrity check} {运行完整性检查} \
+    {Inspect health} {检查健康状态} \
+    {Confirm your password} {确认你的密码} \
+    {Confirm identity} {确认身份} \
+    {Exact action} {准确操作} \
+    {Export CSV} {导出 CSV} \
+    {Action / mark} {操作 / 标记} \
+    {Last sign-in} {最近登录} \
+    {Platform role} {平台角色} \
+    {Change role} {修改角色} \
+    {Revoke all sessions} {撤销全部会话} \
+    {Registration} {注册} \
+    {Save platform policy} {保存平台策略} \
+    {SORT BY} {排序} \
+    {Surface · recent} {地表 · 最近活动} \
+    {Deep time · oldest} {深层 · 最早优先} \
+    {Specimen · name} {标本 · 名称} \
+    {Mass · largest} {体量 · 最大优先} \
+    {One thread for everything that happened.} {所有变化，汇成一条时间线。} \
+    {Check-ins, ticket changes, wiki edits, and forum posts land on a single chronological timeline — with forks and merges drawn as they happen.} {check-in、Ticket 变更、Wiki 编辑和论坛发言按时间汇入同一条记录，分叉与合并也会随事件呈现。} \
+    {No tab-switching between tools. The timeline is the project's complete field journal: who changed what, when a bug was closed, which page was rewritten — all in one scroll, all searchable from one box.} {不必在多个工具之间来回切换。时间线就是项目完整的现场日志：谁改了什么、问题何时关闭、哪个页面被重写，都能在同一处滚动查看和搜索。} \
+    {Documentation that checks out with the code.} {与代码一同检出的文档。} \
+    {The wiki and the docs tree version alongside source. Check out any commit and the manuals match it exactly — no drift between release notes and reality.} {Wiki 与文档树和源码一起版本化。检出任意提交，手册都会与当时的代码准确对应，不会让发布说明偏离现实。} \
+    {Edit pages from the browser or from your checkout — either path saves a real commit with a real hash. A wiki page is never “just content”: it is an artifact in the repository like everything else.} {无论在浏览器还是本地检出中编辑页面，都会保存为带真实哈希的提交。Wiki 页面不是孤立内容，而是和其他资料一样属于仓库 artifact。} \
+    {The bug tracker never leaves the repository.} {问题跟踪始终留在仓库中。} \
+    {Tickets and forum threads travel inside the same artifact as the code. Clone the repo, get its whole history of arguments.} {Ticket 与论坛讨论和代码保存在同一个 artifact 中；克隆仓库，也会取得完整的讨论历史。} \
+    {Every ticket change and every forum reply becomes part of the timeline you already read. Mirror a project to a laptop before a flight and its open questions fly with you.} {每次 Ticket 变更和论坛回复都会进入同一条时间线。出发前把项目镜像到电脑，尚未解决的问题也会随你离线同行。} \
+    {One binary does the work of a rack.} {一个二进制，完成整套服务。} \
+    {A single static executable initializes, serves, syncs, and renders. Point it at a file and it becomes the forge.} {一个静态可执行文件即可初始化、服务、同步与渲染；将它指向仓库文件，就得到完整的协作站点。} \
+    {No daemons, no config files, no database server. The web UI ships inside the same binary that stores the data.} {无需额外守护进程、配置文件或数据库服务器；Web 界面与数据能力封装在同一个二进制中。} \
+    {Distributed when you want it, centralized when you need it: peers sync directly over HTTP(S) in autosync mode, while a single server can host hundreds of projects. Backup is one file copy.} {需要时分布式，需要时集中式：节点可通过 HTTP(S) 自动同步，一台服务器也能托管大量项目；备份只需复制一个文件。} \
+    {Stratum 01 · Timeline} {地层 01 · 时间线} \
+    {Stratum 02 · Wiki + embedded docs} {地层 02 · Wiki 与内嵌文档} \
+    {Stratum 03 · Tickets + forum} {地层 03 · Tickets 与论坛} \
+    {Stratum 04 · The engine} {地层 04 · 引擎} \
+    {self-contained executable} {自包含可执行文件} \
+    {external dependencies} {外部依赖} \
+    {first check-in by D.&nbsp;R.&nbsp;Hipp} {D.&nbsp;R.&nbsp;Hipp 的首次 check-in} \
+    {of history in every clone} {历史包含在每次克隆中} \
+    {Start a dig} {开始勘探} \
+    {Browse repositories} {浏览仓库} \
+    {Field manual} {现场手册} \
+    {Release history} {发布历史} \
+    {SQLite, the sibling project} {SQLite，姊妹项目} \
+    {Site rules} {站点规则} \
+    {Status board} {状态面板} \
+    {Contact the wardens} {联系管理员} \
+    {The hub} {本站} \
+    {Bedrock · Nothing below this line} {基岩 · 此线以下再无地层} \
+    {Upstream} {上游项目} \
+    {Privacy} {隐私} \
+    {Security} {安全} \
+    {SPECIMEN LABEL} {标本标签} \
+    {FOSSILHUB ▸ DIGS ▸ } {FOSSILHUB ▸ 仓库 ▸ } \
+    {Private repository · browser members only} {私有仓库 · 仅成员可在浏览器访问} \
+    {Survey trunk files} {勘测 trunk 文件} \
+    {live Fossil artifact} {实时 Fossil artifact} \
+    {Tcl server-rendered} {Tcl 服务端渲染} \
+    {updated @@RELATIVE_TIME@@} {更新于 @@RELATIVE_TIME@@} \
+    {artifacts in one file} {个 artifact 收纳在单文件中} \
+    {wiki versions} {个 Wiki 版本} \
+    {open tickets} {个未关闭 Ticket} \
+    {contributors} {位贡献者} \
+    {Repository facts} {仓库事实} \
+    {FossilHub surfaces} {FossilHub 界面} \
+    {Composition} {构成} \
+    {SITE ID} {站点 ID} \
+    {PROJECT} {项目} \
+    {OPENED} {创建时间} \
+    {LAST FIND} {最近发现} \
+    {ARTIFACTS} {ARTIFACT 数} \
+    {DEPTH} {深度} \
+    {SOURCE} {数据源} \
+    {RENDERER} {渲染器} \
+    {Files} {文件} \
+    {Docs} {文档} \
+    {Timeline} {时间线} \
+    {Forum } {论坛 } \
+    {Tickets } {Tickets } \
+    {Wiki } {Wiki } \
+    {Repository custody} {仓库保管} \
+    {User custody} {用户保管} \
+    {Audit ledger} {审计账本} \
+    {Display name} {显示名称} \
+    {Description} {描述} \
+    {Visibility} {可见性} \
+    {Username} {用户名} \
+    {Repositories} {仓库} \
+    {Repository} {仓库} \
+    {Created} {创建时间} \
+    {Updated} {更新时间} \
+    {Status} {状态} \
+    {State} {状态} \
+    {Outcome} {结果} \
+    {Actor} {操作者} \
+    {Date} {日期} \
+    {Sessions} {会话} \
+    {Search} {搜索} \
+    {Filter} {筛选} \
+    {Remove} {移除} \
+    {Manage} {管理} \
+    {Open} {打开} \
+    {Profile} {资料} \
+    {Public} {公开} \
+    {Private} {私有} \
+    {Owner} {所有者} \
+    {Maintainer} {维护者} \
+    {Writer} {写入者} \
+    {Triage} {分诊者} \
+    {Reader} {只读者} \
+    {Role} {角色}]
   variable phrases [dict create zh-CN [dict create \
     Dashboard 工作台 \
     {Field workspace} {现场工作区} \
@@ -224,7 +431,76 @@ namespace eval ::fossilhub::i18n {
     {Administrator verification} {管理员验证} \
     {Confirm administrator custody} {确认管理员身份} \
     {Your password is verified locally and is never retained in the audit ledger.} \
-      {密码只在本地验证，绝不会保留在审计账本中。}]]
+      {密码只在本地验证，绝不会保留在审计账本中。} \
+    owner 所有者 \
+    maintainer 维护者 \
+    writer 写入者 \
+    triage 分诊者 \
+    reader 只读者 \
+    public 公开 \
+    private 私有 \
+    active 活跃 \
+    archived 已归档 \
+    quarantined 已隔离 \
+    success 成功 \
+    failure 失败 \
+    administrator 管理员 \
+    user 用户 \
+    disabled 已禁用 \
+    deactivated 已停用 \
+    open 开放 \
+    closed 关闭 \
+    ok 正常 \
+    missing 缺失 \
+    {Current session} {当前会话} \
+    {Signed-in session} {已登录会话} \
+    Revoke 撤销 \
+    {created an account} {创建了账户} \
+    {updated their profile} {更新了个人资料} \
+    {created a repository} {创建了仓库} \
+    {updated repository settings} {更新了仓库设置} \
+    {added a collaborator} {添加了协作者} \
+    {removed a collaborator} {移除了协作者} \
+    {transferred a repository} {转移了仓库} \
+    {archived a repository} {归档了仓库} \
+    {restored a repository} {恢复了仓库} \
+    {created a file} {创建了文件} \
+    {updated a file} {更新了文件} \
+    {deleted a file} {删除了文件} \
+    {created a Wiki page} {创建了 Wiki 页面} \
+    {updated a Wiki page} {更新了 Wiki 页面} \
+    {opened a Ticket} {创建了 Ticket} \
+    {updated a Ticket} {更新了 Ticket} \
+    {opened a discussion} {发起了讨论} \
+    {replied to a discussion} {回复了讨论} \
+    {You do not own a repository yet.} {你还没有自己的仓库。} \
+    {No collaboration invitations yet.} {暂无协作邀请。} \
+    {Your activity ledger is empty.} {你的活动账本还是空的。} \
+    {No public repositories yet.} {暂无公开仓库。} \
+    {No public repository activity yet.} {暂无公开仓库活动。} \
+    {No biography recorded.} {尚未填写个人简介。} \
+    Users 用户 \
+    Active 活跃 \
+    {Active repositories} {活跃仓库} \
+    {Activity · 24h} {24 小时活动} \
+    {Failures · 24h} {24 小时失败} \
+    {registered identities} {已注册身份} \
+    {able to sign in} {可正常登录} \
+    {registry records} {注册记录} \
+    {published strata} {已发布地层} \
+    {audited events} {审计事件} \
+    {review required} {需要检查} \
+    All 全部 \
+    User 用户 \
+    Administrator 管理员 \
+    Disabled 已禁用 \
+    Deactivated 已停用 \
+    Archived 已归档 \
+    Quarantined 已隔离 \
+    {Restore access} {恢复访问} \
+    {Disable access} {禁用访问} \
+    Unassigned 未分配 \
+    {No recorded activity.} {暂无活动记录。}]]
 }
 
 proc ::fossilhub::i18n::normalize {value} {
@@ -315,6 +591,15 @@ proc ::fossilhub::i18n::phrase {value} {
     return [dict get $phrases $activeLocale $value]
   }
   return $value
+}
+
+proc ::fossilhub::i18n::template {value} {
+  variable activeLocale
+  variable templateTranslations
+  if {$activeLocale ne "zh-CN"} {
+    return $value
+  }
+  return [string map $templateTranslations $value]
 }
 
 proc ::fossilhub::i18n::validReturnTo {value} {
