@@ -48,11 +48,11 @@ for (const pathname of [
   `${mount}/admin/repositories/bedrock/integrity`,
   `${mount}/manual`,
   `${mount}/status`,
-  `${mount}/repo/bedrock.fossil/timeline`,
+  `${mount}/repo/bedrock/timeline`,
 ]) {
   verify(pathname, mount);
 }
 verify("/dashboard", "");
-verify("/repo/bedrock.fossil/files", "");
+verify("/repo/bedrock/files", "");
 
 console.log("live script tests passed");

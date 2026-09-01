@@ -301,11 +301,11 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
       <img src="fossilhub-hub-lockup-v1.png?v=20260829-1" width="137" height="50" alt="FossilHub">
     </a>
     <nav class="topnav" aria-label="@@REPOSITORY_NAV_LABEL@@">
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/timeline">@@NAV_TIMELINE@@</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">@@NAV_FILES@@</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/wiki">@@NAV_WIKI@@</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/tickets">@@NAV_TICKETS@@</a>
-      <a href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/forum">@@NAV_FORUM@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/timeline">@@NAV_TIMELINE@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/files">@@NAV_FILES@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/wiki">@@NAV_WIKI@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/tickets">@@NAV_TICKETS@@</a>
+      <a href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/forum">@@NAV_FORUM@@</a>
     </nav>
     @@SITE_TOOLS@@
     <button class="theme-btn" id="themeBtn" type="button" aria-label="@@THEME_LABEL@@">
@@ -335,7 +335,7 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
           </div>
           <div class="clone-row">
             @@MAIN_TRANSPORT@@
-            <a class="btn btn-ghost btn-sm" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">Survey trunk files</a>
+            <a class="btn btn-ghost btn-sm" href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/files">Survey trunk files</a>
           </div>
         </div>
         <aside class="label-card reveal" aria-label="Specimen label">
@@ -362,12 +362,12 @@ a.artifact-row:hover{background:var(--paper-2);text-decoration:none}
   <section class="repo-body" id="tl">
     <div class="tabbar">
       <div class="wrap" style="display:flex;gap:26px">
-        <a class="tab @@TAB_TIMELINE@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/timeline">Timeline</a>
-        <a class="tab @@TAB_FILES@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/files">Files</a>
-        <a class="tab @@TAB_DOCS@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/docs">Docs</a>
-        <a class="tab @@TAB_WIKI@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/wiki">Wiki <span class="n">@@WIKI_EVENTS@@</span></a>
-        <a class="tab @@TAB_TICKETS@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/tickets">Tickets <span class="n">@@OPEN_TICKETS@@ open</span></a>
-        <a class="tab @@TAB_FORUM@@" href="#" data-hub-path="/repo/@@REPOSITORY_NAME@@/forum">Forum <span class="n">@@FORUM_EVENTS@@</span></a>
+        <a class="tab @@TAB_TIMELINE@@" href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/timeline">Timeline</a>
+        <a class="tab @@TAB_FILES@@" href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/files">Files</a>
+        <a class="tab @@TAB_DOCS@@" href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/docs">Docs</a>
+        <a class="tab @@TAB_WIKI@@" href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/wiki">Wiki <span class="n">@@WIKI_EVENTS@@</span></a>
+        <a class="tab @@TAB_TICKETS@@" href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/tickets">Tickets <span class="n">@@OPEN_TICKETS@@ open</span></a>
+        <a class="tab @@TAB_FORUM@@" href="#" data-hub-path="/repo/@@REPOSITORY_SLUG@@/forum">Forum <span class="n">@@FORUM_EVENTS@@</span></a>
       </div>
     </div>
 
@@ -476,12 +476,13 @@ proc ::fossilhub::views::repositoryTransport {visibility} {
 
 proc ::fossilhub::views::repositoryFacts {repository} {
   set repositoryName [dict get $repository name]
+  set repositorySlug [::fossilhub::view::repositorySlug $repository]
   set visibility [expr {[dict exists $repository visibility] ?
     [dict get $repository visibility] : "public"}]
   set transportNote [expr {$visibility eq "private" ?
     "Private transport is disabled; authorized members use first-party browser workflows." :
     "Browser navigation stays in FossilHub. Fossil's endpoint is retained only for clone and sync clients."}]
-  return [format {
+  return [::fossilhub::views::localizedFormat {
         <div class="panel reveal">
           <div class="panel-head"><span class="fname">Repository facts</span></div>
           <div class="panel-body">
@@ -504,7 +505,7 @@ proc ::fossilhub::views::repositoryFacts {repository} {
       [dict get $repository bytes]]] \
     [::fossilhub::view::escape [::fossilhub::view::relativeTime \
       [dict get $repository latest_epoch]]] \
-    $repositoryName $repositoryName $repositoryName \
+    $repositorySlug $repositorySlug $repositorySlug \
     [::fossilhub::view::escape $transportNote]]
 }
 

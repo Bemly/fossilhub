@@ -1,5 +1,16 @@
 namespace eval ::fossilhub::view {}
 
+proc ::fossilhub::view::repositorySlug {repository} {
+  if {[dict exists $repository slug] && [dict get $repository slug] ne ""} {
+    return [dict get $repository slug]
+  }
+  set name [dict get $repository name]
+  if {[string match *.fossil $name]} {
+    return [string range $name 0 end-7]
+  }
+  return $name
+}
+
 proc ::fossilhub::view::replaceRegion {document startMarker endMarker content} {
   set start [string first $startMarker $document]
   if {$start < 0} {
@@ -328,7 +339,7 @@ proc ::fossilhub::view::repositoryCard {repository index} {
           <div class="counts"><span>%s artifacts</span><span>%s wiki</span><span>%s tickets</span><span>%s</span></div>
           <div class="foot"><span class="avatar avatar-sm" aria-hidden="true">%s</span>%s<span class="peers">%s</span></div>
         </a>} \
-    [dict get $repository name] \
+    [::fossilhub::view::repositorySlug $repository] \
     $name \
     $index \
     $description \
@@ -381,7 +392,7 @@ proc ::fossilhub::view::featuredRepository {repository} {
         <p class="last-find">● last find — %s</p>
       </div>
     </a>} \
-    [dict get $repository name] \
+    [::fossilhub::view::repositorySlug $repository] \
     $name \
     $description \
     [::fossilhub::view::formatCount [dict get $repository artifacts]] \
@@ -409,7 +420,7 @@ proc ::fossilhub::view::surfaceFeed {repositories} {
     lassign [::fossilhub::view::eventPresentation [dict get $event type]] label dotClass
     append html [format {
         <a class="pill" href="repo/%s"><span class="t">%s</span><i class="dot %s"></i><b>%s</b>&nbsp;%s · %s</a>} \
-      [dict get $repository name] \
+      [::fossilhub::view::repositorySlug $repository] \
       [::fossilhub::view::escape [::fossilhub::view::formatTime [dict get $event epoch]]] \
       $dotClass \
       [::fossilhub::view::escape [dict get $repository name]] \

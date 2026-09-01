@@ -30,8 +30,8 @@ assertEqual [::fossilhub::i18n::fromSources {} {fr-FR}] en \
   "English final fallback"
 
 assertEqual [::fossilhub::i18n::returnTo \
-  {/bemly-moe/app/fossilhub/repo/bedrock.fossil?tab=files#top}] \
-  {/bemly-moe/app/fossilhub/repo/bedrock.fossil?tab=files#top} \
+  {/bemly-moe/app/fossilhub/repo/bedrock?tab=files#top}] \
+  {/bemly-moe/app/fossilhub/repo/bedrock?tab=files#top} \
   "mounted return path accepted"
 foreach unsafe [list {//example.test/path} {/safe\path} \
     {https://example.test/} "/safe\nSet-Cookie: bad=1"] {

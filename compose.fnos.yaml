@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile
       args:
         FOSSILHUB_REVISION: ${FOSSILHUB_REVISION:-unknown}
-        FOSSILHUB_VERSION: ${FOSSILHUB_VERSION:-2026.08.29-beta.1}
-    image: fossilhub:2026.08.29-beta.1
+        FOSSILHUB_VERSION: ${FOSSILHUB_VERSION:-2026.08.30-beta.2}
+    image: fossilhub:2026.08.30-beta.2
     container_name: fossilhub
     restart: unless-stopped
     ports:

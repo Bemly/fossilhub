@@ -172,7 +172,7 @@ proc ::fossilhub::views::renderWorkspaceRepositories {repositories emptyText} {
         <p>%s</p><small>%s · %s · updated %s</small></div>
         <a class="btn btn-ghost btn-compact" href="#" data-hub-path="/repo/%s">Open</a>
       </article>} \
-      [::fossilhub::view::escape [dict get $repository name]] \
+      [::fossilhub::view::escape [dict get $repository slug]] \
       [::fossilhub::view::escape [dict get $repository title]] \
       [::fossilhub::view::escape [dict get $repository visibility]] \
       [::fossilhub::view::escape [dict get $repository visibility]] \
@@ -182,7 +182,7 @@ proc ::fossilhub::views::renderWorkspaceRepositories {repositories emptyText} {
         [dict get $repository state]]] \
       [::fossilhub::view::escape [::fossilhub::view::formatDate \
         [dict get $repository updated_epoch]]] \
-      [::fossilhub::view::escape [dict get $repository name]]]
+      [::fossilhub::view::escape [dict get $repository slug]]]
   }
   append html {</div>}
   return $html
@@ -199,7 +199,7 @@ proc ::fossilhub::views::renderActivity {activity emptyText} {
     set context ""
     if {$repository ne ""} {
       set context [::fossilhub::views::localizedFormat { in <a href="#" data-hub-path="/repo/%s">%s</a>} \
-        [::fossilhub::view::escape "${repository}.fossil"] \
+        [::fossilhub::view::escape $repository] \
         [::fossilhub::view::escape [dict get $event repository_title]]]
     }
     append html [::fossilhub::views::localizedFormat {
@@ -223,7 +223,7 @@ proc ::fossilhub::views::renderDashboard {context data} {
     set ticketHtml {<div class="dashboard-tickets">}
     foreach ticket $tickets {
       append ticketHtml [::fossilhub::views::localizedFormat {
-        <a href="#" data-hub-path="/repo/%s.fossil/ticket/%s"><span>%s</span><b>%s</b><small>%s · %s</small></a>} \
+        <a href="#" data-hub-path="/repo/%s/ticket/%s"><span>%s</span><b>%s</b><small>%s · %s</small></a>} \
         [::fossilhub::view::escape [dict get $ticket repository_slug]] \
         [::fossilhub::view::escape [dict get $ticket uuid]] \
         [::fossilhub::view::escape [dict get $ticket repository_title]] \

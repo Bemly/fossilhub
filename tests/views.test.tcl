@@ -77,7 +77,7 @@ assertContains $explore {SHOWING 1 — INDEXED IN SQLITE} \
   "Explore SQLite source"
 assertContains $explore {A live &amp; durable repository} \
   "Explore description escaped"
-assertContains $explore {repo/dig.fossil} "Explore repository route"
+assertContains $explore {repo/dig} "Explore repository route"
 assertNotContains $explore {12,408} "Explore prototype count removed"
 assertNotContains $explore {amber.fossil} "Explore prototype repository removed"
 assertNotContains $explore {@@} "Explore placeholders resolved"
@@ -106,7 +106,7 @@ assertContains $page {Ship &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;} \
 assertContains $page {<b>1,284</b><span>artifacts in one file</span>} \
   "repository artifact count"
 assertContains $page {Fossil read-only SQL} "repository source label"
-assertContains $page {data-hub-path="/repo/dig.fossil/files"} \
+assertContains $page {data-hub-path="/repo/dig/files"} \
   "repository internal file navigation"
 assertNotContains $page {data-fossil-path} \
   "repository browser navigation avoids native Fossil"
@@ -147,7 +147,7 @@ set richTimeline [::fossilhub::views::renderRepository $repository timeline \
       epoch 1787788800 user alice comment release]]]]
 assertContains $richTimeline {name="q" value="&lt;query&gt;"} \
   "timeline search escaped"
-assertContains $richTimeline {/repo/dig.fossil/checkin/aaaaaaaa} \
+assertContains $richTimeline {/repo/dig/checkin/aaaaaaaa} \
   "timeline check-in link"
 
 set checkinFixture [dict create rid 7 uuid [string repeat a 64] \
@@ -163,10 +163,10 @@ set treePage [::fossilhub::views::renderRepository $repository tree \
         [dict create type file name README.md path README.md \
           uuid [string repeat c 64] size 12]]] \
     branches {} can_write 1]]
-assertContains $treePage {/repo/dig.fossil/tree/aaaaaaaa} \
+assertContains $treePage {/repo/dig/tree/aaaaaaaa} \
   "versioned tree route rendered"
 assertContains $treePage {Download ZIP} "tree archive action"
-assertContains $treePage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/files"} \
+assertContains $treePage {class="tab active" href="#" data-hub-path="/repo/dig/files"} \
   "tree keeps Files tab active"
 
 set checkinPage [::fossilhub::views::renderRepository $repository checkin \
@@ -190,11 +190,11 @@ set files [list [dict create \
 set filesPage [::fossilhub::views::renderRepository $repository files \
   [dict create files $files can_write 1]]
 assertContains $filesPage {docs/&lt;guide&gt;.md} "file name escaped"
-assertContains $filesPage {/repo/dig.fossil/file/abcdef1234567890} \
+assertContains $filesPage {/repo/dig/file/abcdef1234567890} \
   "file artifact route"
-assertContains $filesPage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/files"} \
+assertContains $filesPage {class="tab active" href="#" data-hub-path="/repo/dig/files"} \
   "files tab active"
-assertContains $filesPage {data-hub-path="/repo/dig.fossil/files/new"} \
+assertContains $filesPage {data-hub-path="/repo/dig/files/new"} \
   "file write action"
 
 set wikiPage [::fossilhub::views::renderRepository $repository wiki-page \
@@ -204,10 +204,10 @@ set wikiPage [::fossilhub::views::renderRepository $repository wiki-page \
 assertContains $wikiPage {Welcome &lt;all&gt;} "wiki title escaped"
 assertContains $wikiPage {&lt;script&gt;alert(1)&lt;/script&gt;} \
   "wiki content escaped"
-assertContains $wikiPage {class="tab active" href="#" data-hub-path="/repo/dig.fossil/wiki"} \
+assertContains $wikiPage {class="tab active" href="#" data-hub-path="/repo/dig/wiki"} \
   "wiki tab active"
 assertContains $wikiPage \
-  {data-hub-path="/repo/dig.fossil/wiki-page/abcdef1234567890/edit"} \
+  {data-hub-path="/repo/dig/wiki-page/abcdef1234567890/edit"} \
   "Wiki edit action"
 
 set fileCompose [::fossilhub::views::renderRepository $repository \
@@ -227,7 +227,7 @@ assertContains $fileCompose {name="expected" value="aaaaaaaa} \
 assertContains $fileCompose {<option value="trunk" selected>trunk</option>} \
   "file workbench branch selection"
 assertContains $fileCompose \
-  {class="tab active" href="#" data-hub-path="/repo/dig.fossil/files"} \
+  {class="tab active" href="#" data-hub-path="/repo/dig/files"} \
   "file workbench tab active"
 
 set binaryCompose [::fossilhub::views::renderRepository $repository \
@@ -483,6 +483,25 @@ assertContains $chineseAdmin {data-hub-path="/admin">管理</a>} \
 assertContains $chineseAdmin \
   {data-hub-path="/account/repositories">我的仓库</a>} \
   "Chinese repository management entry"
+set chineseOverview [::fossilhub::views::renderAdminOverview $adminContext \
+  [dict create users 2 active_users 2 inactive_users 0 repositories 10 \
+    active_repositories 9 inactive_repositories 1 activity_24h 4 \
+    failures_24h 0 storage_bytes 4096 readable_repositories 9] {}]
+assertContains $chineseOverview {运行概览} \
+  "Chinese administrator overview content"
+assertContains $chineseOverview {>健康</a>} \
+  "Chinese administrator navigation"
+
+set translationBoundaryRepository [dict replace $managedRepository \
+  title {Repository facts} description {Public}]
+set chineseWorkspace [::fossilhub::views::renderRepositoryWorkspace \
+  $ownerContext [list $translationBoundaryRepository]]
+assertContains $chineseWorkspace {你的仓库} \
+  "Chinese repository workspace content"
+assertContains $chineseWorkspace {Repository facts} \
+  "repository title is not translated"
+assertContains $chineseWorkspace {<p>Public</p>} \
+  "repository description is not translated"
 ::fossilhub::i18n::use en
 
 puts "view tests passed"

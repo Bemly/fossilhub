@@ -4,7 +4,7 @@ proc ::fossilhub::views::mutationNotice {message} {
   if {$message eq ""} {
     return ""
   }
-  return [format {<p class="form-notice" role="alert">%s</p>} \
+  return [::fossilhub::views::localizedFormat {<p class="form-notice" role="alert">%s</p>} \
     [::fossilhub::view::escape $message]]
 }
 
@@ -14,12 +14,13 @@ proc ::fossilhub::views::hiddenField {name value} {
 }
 
 proc ::fossilhub::views::mutationHeader {repository eyebrow title backSuffix} {
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede mutation-lede">
       <a class="back-link" href="#" data-hub-path="/repo/%s/%s">← back to repository</a>
       <p class="eyebrow">%s</p><h2>%s</h2>
     </div>} \
-    [::fossilhub::view::escape [dict get $repository name]] \
+    [::fossilhub::view::escape \
+      [::fossilhub::view::repositorySlug $repository]] \
     [::fossilhub::view::escape $backSuffix] \
     [::fossilhub::view::escape $eyebrow] \
     [::fossilhub::view::escape $title]]
@@ -35,13 +36,13 @@ proc ::fossilhub::views::renderFileCompose {repository data} {
     set branchOptions ""
     foreach candidate [dict get $data branches] {
       set selected [expr {$candidate eq $branch ? " selected" : ""}]
-      append branchOptions [format {<option value="%s"%s>%s</option>} \
+      append branchOptions [::fossilhub::views::localizedFormat {<option value="%s"%s>%s</option>} \
         [::fossilhub::view::escape $candidate] $selected \
         [::fossilhub::view::escape $candidate]]
     }
     set heading [::fossilhub::views::mutationHeader $repository \
       {Trunk workbench} {Add a file} files]
-    return [format {%s%s
+    return [::fossilhub::views::localizedFormat {%s%s
       <form class="panel panel-body field-form mutation-form" action="" method="post">
         %s%s
         <label>Target branch <select name="branch">%s</select></label>
@@ -74,7 +75,7 @@ proc ::fossilhub::views::renderFileCompose {repository data} {
     {Trunk workbench} "Edit $filename" "file/[dict get $record uuid]"]
   set saveForm ""
   if {[dict get $record text]} {
-    set saveForm [format {
+    set saveForm [::fossilhub::views::localizedFormat {
       <section class="mutation-stack">
         <h3>Edit content</h3>
         <form class="panel panel-body field-form mutation-form" action="" method="post">
@@ -98,7 +99,7 @@ proc ::fossilhub::views::renderFileCompose {repository data} {
     set saveForm {
       <p class="private-transport">Binary content cannot be edited in the browser, but it can be renamed or deleted.</p>}
   }
-  return [format {%s%s%s
+  return [::fossilhub::views::localizedFormat {%s%s%s
     <section class="mutation-stack"><h3>Rename artifact</h3>
       <form class="panel panel-body field-form compact-form" action="" method="post">
         %s%s%s%s
@@ -140,7 +141,7 @@ proc ::fossilhub::views::renderWikiCompose {repository data} {
   set label [expr {$operation eq "create" ? "Create Wiki page" : "Edit $title"}]
   set heading [::fossilhub::views::mutationHeader $repository \
     {Wiki workbench} $label wiki]
-  set titleField [expr {$operation eq "create" ? [format {
+  set titleField [expr {$operation eq "create" ? [::fossilhub::views::localizedFormat {
     <label>Page title
       <input name="title" value="%s" maxlength="160" required autocomplete="off">
     </label>} [::fossilhub::view::escape $title]] :
@@ -150,10 +151,10 @@ proc ::fossilhub::views::renderWikiCompose {repository data} {
     markdown Markdown fossil {Fossil Wiki} plain {Plain text}
   } {
     set selected [expr {$value eq [dict get $values mimetype] ? " selected" : ""}]
-    append options [format {<option value="%s"%s>%s</option>} \
+    append options [::fossilhub::views::localizedFormat {<option value="%s"%s>%s</option>} \
       $value $selected $label]
   }
-  return [format {%s%s
+  return [::fossilhub::views::localizedFormat {%s%s
     <form class="panel panel-body field-form mutation-form" action="" method="post">
       %s%s%s
       %s
@@ -180,10 +181,10 @@ proc ::fossilhub::views::renderTicketCompose {repository data} {
     Incident Incident Task Task
   } {
     set selected [expr {$value eq [dict get $values type] ? " selected" : ""}]
-    append options [format {<option value="%s"%s>%s</option>} \
+    append options [::fossilhub::views::localizedFormat {<option value="%s"%s>%s</option>} \
       $value $selected $label]
   }
-  return [format {%s%s
+  return [::fossilhub::views::localizedFormat {%s%s
     <form class="panel panel-body field-form mutation-form" action="" method="post">
       %s
       <label>Title
@@ -217,10 +218,10 @@ proc ::fossilhub::views::renderTicketWorkbench {repository data} {
     Incident Incident Task Task
   } {
     set selected [expr {$value eq [dict get $ticket type] ? " selected" : ""}]
-    append typeOptions [format {<option value="%s"%s>%s</option>} \
+    append typeOptions [::fossilhub::views::localizedFormat {<option value="%s"%s>%s</option>} \
       $value $selected $label]
   }
-  set fieldForm [format {
+  set fieldForm [::fossilhub::views::localizedFormat {
     <section class="mutation-stack"><h3>Edit Ticket fields</h3>
       <form class="panel panel-body field-form" action="" method="post">
         %s%s%s
@@ -235,7 +236,7 @@ proc ::fossilhub::views::renderTicketWorkbench {repository data} {
     [::fossilhub::views::hiddenField action update] \
     [::fossilhub::views::hiddenField expected [dict get $data revision]] \
     [::fossilhub::view::escape [dict get $ticket title]] $typeOptions]
-  return [format {%s%s
+  return [::fossilhub::views::localizedFormat {%s%s
     <article class="panel panel-body ticket-detail">
       <p class="mono-label">%s · %s</p><p>%s</p>
     </article>
@@ -282,7 +283,7 @@ proc ::fossilhub::views::renderForumCompose {repository data} {
     {Forum borehole} $title forum]
   set titleField ""
   if {$isThread} {
-    set titleField [format {
+    set titleField [::fossilhub::views::localizedFormat {
       <label>Discussion title
         <input name="title" value="%s" maxlength="125" required autocomplete="off">
       </label>} [::fossilhub::view::escape [dict get $values title]]]
@@ -292,10 +293,10 @@ proc ::fossilhub::views::renderForumCompose {repository data} {
     markdown Markdown fossil {Fossil Wiki} plain {Plain text}
   } {
     set selected [expr {$value eq [dict get $values mimetype] ? " selected" : ""}]
-    append options [format {<option value="%s"%s>%s</option>} \
+    append options [::fossilhub::views::localizedFormat {<option value="%s"%s>%s</option>} \
       $value $selected $label]
   }
-  return [format {%s%s
+  return [::fossilhub::views::localizedFormat {%s%s
     <form class="panel panel-body field-form mutation-form" action="" method="post">
       %s%s%s
       %s

@@ -1,7 +1,7 @@
 namespace eval ::fossilhub::views {}
 
 proc ::fossilhub::views::repositoryPath {repository suffix} {
-  set base "/repo/[dict get $repository name]"
+  set base "/repo/[::fossilhub::view::repositorySlug $repository]"
   if {$suffix eq ""} {
     return $base
   }
@@ -9,7 +9,7 @@ proc ::fossilhub::views::repositoryPath {repository suffix} {
 }
 
 proc ::fossilhub::views::emptySection {title message} {
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede">
       <p class="eyebrow">%s</p>
     </div>
@@ -19,7 +19,7 @@ proc ::fossilhub::views::emptySection {title message} {
 }
 
 proc ::fossilhub::views::repositoryAction {repository suffix label} {
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <a class="btn btn-sm" href="#" data-hub-path="%s">%s</a>} \
     [::fossilhub::views::repositoryPath $repository $suffix] \
     [::fossilhub::view::escape $label]]
@@ -27,7 +27,7 @@ proc ::fossilhub::views::repositoryAction {repository suffix label} {
 
 proc ::fossilhub::views::renderTimelineSection {repository data} {
   if {![dict exists $data timeline]} {
-    return [format {<div class="filters"></div><div class="panel rv-panel">%s</div>} \
+    return [::fossilhub::views::localizedFormat {<div class="filters"></div><div class="panel rv-panel">%s</div>} \
       [::fossilhub::view::repositoryTimeline [dict get $data repository]]]
   }
   set request [dict get $data request_options]
@@ -49,7 +49,7 @@ proc ::fossilhub::views::renderTimelineSection {repository data} {
     if {$value ne "all"} {
       append path "?event=$value"
     }
-    append buttons [format {
+    append buttons [::fossilhub::views::localizedFormat {
       <a class="%s" href="#" data-hub-path="%s">%s</a>} \
       $class $path $label]
   }
@@ -57,7 +57,7 @@ proc ::fossilhub::views::renderTimelineSection {repository data} {
   foreach branch [dict get $data branches] {
     set value [dict get $branch name]
     set selected [expr {$value eq [dict get $request branch] ? " selected" : ""}]
-    append branchOptions [format {<option value="%s"%s>%s</option>} \
+    append branchOptions [::fossilhub::views::localizedFormat {<option value="%s"%s>%s</option>} \
       [::fossilhub::view::escape $value] $selected \
       [::fossilhub::view::escape $value]]
   }
@@ -65,11 +65,11 @@ proc ::fossilhub::views::renderTimelineSection {repository data} {
   foreach tag [dict get $data tags] {
     set value [dict get $tag name]
     set selected [expr {$value eq [dict get $request tag] ? " selected" : ""}]
-    append tagOptions [format {<option value="%s"%s>%s</option>} \
+    append tagOptions [::fossilhub::views::localizedFormat {<option value="%s"%s>%s</option>} \
       [::fossilhub::view::escape $value] $selected \
       [::fossilhub::view::escape $value]]
   }
-  set form [format {
+  set form [::fossilhub::views::localizedFormat {
     <form class="timeline-filter-form" method="get" action="" data-hub-action="%s">
       <input type="hidden" name="event" value="%s">
       <label>Search<input name="q" value="%s" maxlength="200" placeholder="message, author, or hash"></label>
@@ -113,7 +113,7 @@ proc ::fossilhub::views::renderTimelineSection {repository data} {
       if {$branch ne ""} {
         set branch " · $branch"
       }
-      append eventRows [format {
+      append eventRows [::fossilhub::views::localizedFormat {
         <a class="artifact-row" href="#" data-hub-path="%s">
           <span class="artifact-mark">%s</span>
           <span class="artifact-main"><b>%s</b><small>%s · %s%s</small></span>
@@ -143,11 +143,11 @@ proc ::fossilhub::views::renderTimelineSection {repository data} {
       }
     }
     lappend query "cursor=[::fossilhub::view::queryEncode $cursor]"
-    set deeper [format {
+    set deeper [::fossilhub::views::localizedFormat {
       <a class="deeper" href="#" data-hub-path="%s?%s">Load deeper strata ↓</a>} \
       [::fossilhub::views::repositoryPath $repository timeline] [join $query &]]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="filters">%s
       <div class="tl-legend" aria-hidden="true">
         <span><i class="dot dot-azu"></i>check-in</span>
@@ -171,7 +171,7 @@ proc ::fossilhub::views::renderFileRows {repository files emptyMessage} {
     if {$directory eq "."} {
       set directory {root stratum}
     }
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <a class="artifact-row" href="#" data-hub-path="%s">
         <span class="artifact-mark">%s</span>
         <span class="artifact-main"><b>%s</b><small>%s</small></span>
@@ -207,7 +207,7 @@ proc ::fossilhub::views::renderFilesSection {repository data docsOnly} {
     set action [::fossilhub::views::repositoryAction \
       $repository files/new {Add file}]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede section-lede-actions"><div><p class="eyebrow">%s</p><p>%s</p></div>%s</div>%s} \
     $title [::fossilhub::view::escape $note] $action \
     [::fossilhub::views::renderFileRows $repository $files $empty]]
@@ -218,19 +218,19 @@ proc ::fossilhub::views::renderTreeSection {repository data} {
   set checkin [dict get $tree checkin]
   set revision [dict get $checkin uuid]
   set directory [dict get $tree directory]
-  set crumbs [format {
+  set crumbs [::fossilhub::views::localizedFormat {
     <a href="#" data-hub-path="%s">root</a>} \
     [::fossilhub::views::repositoryPath $repository "tree/$revision"]]
   set accumulated ""
   foreach segment [split $directory /] {
     if {$segment eq ""} continue
     set accumulated [expr {$accumulated eq "" ? $segment : "$accumulated/$segment"}]
-    append crumbs [format {<span>/</span><a href="#" data-hub-path="%s?path=%s">%s</a>} \
+    append crumbs [::fossilhub::views::localizedFormat {<span>/</span><a href="#" data-hub-path="%s?path=%s">%s</a>} \
       [::fossilhub::views::repositoryPath $repository "tree/$revision"] \
       [::fossilhub::view::queryEncode $accumulated] \
       [::fossilhub::view::escape $segment]]
   }
-  set actions [format {
+  set actions [::fossilhub::views::localizedFormat {
     <a class="btn btn-ghost btn-sm" href="#" data-hub-path="%s">Branches</a>
     <a class="btn btn-ghost btn-sm" href="#" data-hub-path="%s">Tags</a>
     <a class="btn btn-ghost btn-sm" href="#" data-hub-path="%s">Statistics</a>
@@ -252,7 +252,7 @@ proc ::fossilhub::views::renderTreeSection {repository data} {
       if {[dict get $entry type] eq "directory"} {
         set mark DIR
         set detail {deeper stratum}
-        set path [format {%s?path=%s} \
+        set path [::fossilhub::views::localizedFormat {%s?path=%s} \
           [::fossilhub::views::repositoryPath $repository "tree/$revision"] \
           [::fossilhub::view::queryEncode [dict get $entry path]]]
         set size —
@@ -266,7 +266,7 @@ proc ::fossilhub::views::renderTreeSection {repository data} {
         set size [::fossilhub::view::formatBytes [dict get $entry size]]
         set hash [string range [dict get $entry uuid] 0 9]
       }
-      append rows [format {
+      append rows [::fossilhub::views::localizedFormat {
         <a class="artifact-row" href="#" data-hub-path="%s">
           <span class="artifact-mark">%s</span>
           <span class="artifact-main"><b>%s</b><small>%s</small></span>
@@ -278,7 +278,7 @@ proc ::fossilhub::views::renderTreeSection {repository data} {
     }
     append rows </div>
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede section-lede-actions"><div>
       <p class="eyebrow">Versioned source survey</p>
       <div class="tree-crumbs">%s</div>
@@ -297,12 +297,12 @@ proc ::fossilhub::views::renderDocsAtRevision {repository data} {
   foreach branch [dict get $data branches] {
     set selected [expr {[string equal -nocase [dict get $branch uuid] $revision] ?
       " selected" : ""}]
-    append options [format {<option value="%s"%s>%s · %s</option>} \
+    append options [::fossilhub::views::localizedFormat {<option value="%s"%s>%s · %s</option>} \
       [::fossilhub::view::escape [dict get $branch uuid]] $selected \
       [::fossilhub::view::escape [dict get $branch name]] \
       [::fossilhub::view::escape [string range [dict get $branch uuid] 0 9]]]
   }
-  set selector [format {
+  set selector [::fossilhub::views::localizedFormat {
     <form class="revision-selector" method="get" action="" data-hub-action="%s">
       <label>Check-in<select name="revision">%s</select></label>
       <button class="btn btn-sm" type="submit">Open</button>
@@ -313,7 +313,7 @@ proc ::fossilhub::views::renderDocsAtRevision {repository data} {
   } else {
     set rows {<div class="panel artifact-list">}
     foreach file $files {
-      append rows [format {
+      append rows [::fossilhub::views::localizedFormat {
         <a class="artifact-row" href="#" data-hub-path="%s">
           <span class="artifact-mark">DOC</span>
           <span class="artifact-main"><b>%s</b><small>rendered with strict safe markup</small></span>
@@ -328,7 +328,7 @@ proc ::fossilhub::views::renderDocsAtRevision {repository data} {
     }
     append rows </div>
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede section-lede-actions"><div><p class="eyebrow">Documentation strata</p>
     <p>%d guides at check-in %s.</p></div>%s</div>%s} \
     [llength $files] [::fossilhub::view::escape [string range $revision 0 11]] \
@@ -345,7 +345,7 @@ proc ::fossilhub::views::renderVersionedFile {repository data rendered} {
   if {$directory ne "."} {
     append back "?path=[::fossilhub::view::queryEncode $directory]"
   }
-  set actions [format {
+  set actions [::fossilhub::views::localizedFormat {
     <a class="btn btn-ghost btn-sm" href="#" data-hub-path="%s">History</a>
     <a class="btn btn-ghost btn-sm" href="#" data-hub-path="%s">Blame</a>
     <a class="btn btn-sm" href="#" data-hub-path="%s">Raw download</a>} \
@@ -358,15 +358,15 @@ proc ::fossilhub::views::renderVersionedFile {repository data rendered} {
     set extension [string tolower [file extension [dict get $file filename]]]
     set mimetype [expr {$extension eq ".wiki" ? "text/x-fossil-wiki" :
       ($extension in {.txt .html .htm} ? "text/plain" : "text/x-markdown")}]
-    set body [format {<article class="panel prose-artifact">%s</article>} \
+    set body [::fossilhub::views::localizedFormat {<article class="panel prose-artifact">%s</article>} \
       [::fossilhub::markup::render [dict get $file content] $mimetype]]
   } else {
     set notice [expr {[dict get $file truncated] ?
       {<p class="content-note">Preview capped at the safe rendering limit.</p>} : ""}]
-    set body [format {%s<div class="panel source-panel"><pre><code>%s</code></pre></div>} \
+    set body [::fossilhub::views::localizedFormat {%s<div class="panel source-panel"><pre><code>%s</code></pre></div>} \
       $notice [::fossilhub::view::escape [dict get $file content]]]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← versioned tree</a>
       <p class="eyebrow">%s · %s · %s</p>
       <div class="section-title-actions"><h2>%s</h2><div class="section-actions">%s</div></div>
@@ -391,7 +391,7 @@ proc ::fossilhub::views::renderFileHistory {repository data} {
       set path [::fossilhub::views::repositoryPath $repository \
         "blob/[dict get $item checkin]/$target"]
     }
-    append rows [format {
+    append rows [::fossilhub::views::localizedFormat {
       <a class="artifact-row" href="#" data-hub-path="%s">
         <span class="artifact-mark">%s</span><span class="artifact-main"><b>%s</b>
         <small>%s · %s</small></span><span class="artifact-size">%s</span>
@@ -405,7 +405,7 @@ proc ::fossilhub::views::renderFileHistory {repository data} {
       [::fossilhub::view::escape [string range [dict get $item checkin] 0 9]]]
   }
   append rows </div>
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← file</a>
     <p class="eyebrow">File lineage</p><h2>%s</h2></div>%s} \
     [::fossilhub::views::repositoryPath $repository "blob/$revision/$artifact"] \
@@ -415,7 +415,7 @@ proc ::fossilhub::views::renderFileHistory {repository data} {
 proc ::fossilhub::views::renderBlame {repository data} {
   set file [dict get $data file]
   set revision [dict get $file checkin uuid]
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← file</a>
     <p class="eyebrow">Line attribution · capped at 200 revisions</p><h2>%s</h2></div>
     <div class="panel source-panel"><pre><code>%s</code></pre></div>} \
@@ -432,7 +432,7 @@ proc ::fossilhub::views::renderCheckin {repository data} {
   foreach relation {parents children} {
     set links ""
     foreach item [dict get $checkin $relation] {
-      append links [format {
+      append links [::fossilhub::views::localizedFormat {
         <a class="relation-chip" href="#" data-hub-path="%s">%s · %s</a>} \
         [::fossilhub::views::repositoryPath $repository \
           "checkin/[dict get $item uuid]"] \
@@ -442,16 +442,16 @@ proc ::fossilhub::views::renderCheckin {repository data} {
     if {$links eq ""} {
       set links {<span class="muted-value">none</span>}
     }
-    append relations [format {<div class="relation-row"><b>%s</b><div>%s</div></div>} \
+    append relations [::fossilhub::views::localizedFormat {<div class="relation-row"><b>%s</b><div>%s</div></div>} \
       [string totitle $relation] $links]
   }
   set labels ""
   if {[dict get $checkin branch] ne ""} {
-    append labels [format {<span class="chip chip-azu">branch · %s</span>} \
+    append labels [::fossilhub::views::localizedFormat {<span class="chip chip-azu">branch · %s</span>} \
       [::fossilhub::view::escape [dict get $checkin branch]]]
   }
   foreach tag [dict get $checkin tags] {
-    append labels [format {<span class="chip chip-verdi">tag · %s</span>} \
+    append labels [::fossilhub::views::localizedFormat {<span class="chip chip-verdi">tag · %s</span>} \
       [::fossilhub::view::escape $tag]]
   }
   set changes {<div class="panel artifact-list">}
@@ -473,7 +473,7 @@ proc ::fossilhub::views::renderCheckin {repository data} {
     } else {
       set prior ""
     }
-    append changes [format {
+    append changes [::fossilhub::views::localizedFormat {
       <a class="artifact-row" href="#" data-hub-path="%s">
         <span class="artifact-mark">%s</span><span class="artifact-main"><b>%s%s</b>
         <small>%s</small></span><span class="artifact-size">%s</span>
@@ -492,13 +492,13 @@ proc ::fossilhub::views::renderCheckin {repository data} {
   append changes </div>
   set diff [dict get $data diff]
   if {[dict get $diff content] eq ""} {
-    set diffHtml [format {<div class="panel"><div class="panel-body empty-stratum">%s</div></div>} \
+    set diffHtml [::fossilhub::views::localizedFormat {<div class="panel"><div class="panel-body empty-stratum">%s</div></div>} \
       [::fossilhub::view::escape [dict get $diff reason]]]
   } else {
-    set diffHtml [format {<div class="panel source-panel diff-panel"><pre><code>%s</code></pre></div>} \
+    set diffHtml [::fossilhub::views::localizedFormat {<div class="panel source-panel diff-panel"><pre><code>%s</code></pre></div>} \
       [::fossilhub::view::escape [dict get $diff content]]]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← timeline</a>
       <p class="eyebrow">Check-in · %s · %s</p><h2>%s</h2>
       <div class="chip-row">%s</div>
@@ -520,12 +520,12 @@ proc ::fossilhub::views::renderCheckin {repository data} {
 proc ::fossilhub::views::renderBranchIndex {repository data} {
   set rows {<div class="panel artifact-list">}
   foreach branch [dict get $data branches] {
-    append rows [format {
+    append rows [::fossilhub::views::localizedFormat {
       <div class="artifact-row">
         <span class="artifact-mark">BR</span><span class="artifact-main"><b><a href="#" data-hub-path="%s">%s</a></b>
         <small>%s check-ins · updated %s</small></span><a class="artifact-size" href="#" data-hub-path="%s">tree</a>
         <span class="artifact-hash">%s</span></div>} \
-      [format {%s?branch=%s} \
+      [::fossilhub::views::localizedFormat {%s?branch=%s} \
         [::fossilhub::views::repositoryPath $repository timeline] \
         [::fossilhub::view::queryEncode [dict get $branch name]]] \
       [::fossilhub::view::escape [dict get $branch name]] \
@@ -537,7 +537,7 @@ proc ::fossilhub::views::renderBranchIndex {repository data} {
       [::fossilhub::view::escape [string range [dict get $branch uuid] 0 9]]]
   }
   append rows </div>
-  return [format {<div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← files</a>
+  return [::fossilhub::views::localizedFormat {<div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← files</a>
     <p class="eyebrow">Branch index</p><h2>Parallel strata</h2></div>%s} \
     [::fossilhub::views::repositoryPath $repository files] $rows]
 }
@@ -549,7 +549,7 @@ proc ::fossilhub::views::renderTagIndex {repository data} {
   } else {
     set rows {<div class="panel artifact-list">}
     foreach tag $tags {
-      append rows [format {
+      append rows [::fossilhub::views::localizedFormat {
         <a class="artifact-row" href="#" data-hub-path="%s">
           <span class="artifact-mark">TAG</span><span class="artifact-main"><b>%s</b>
           <small>%s · %s</small></span><span class="artifact-size">check-in</span>
@@ -563,7 +563,7 @@ proc ::fossilhub::views::renderTagIndex {repository data} {
     }
     append rows </div>
   }
-  return [format {<div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← files</a>
+  return [::fossilhub::views::localizedFormat {<div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← files</a>
     <p class="eyebrow">Tag index</p><h2>Named horizons</h2></div>%s} \
     [::fossilhub::views::repositoryPath $repository files] $rows]
 }
@@ -581,11 +581,11 @@ proc ::fossilhub::views::renderStatistics {repository data} {
     } else {
       set value [::fossilhub::view::formatCount $value]
     }
-    append rows [format {<div class="stat-card"><span>%s</span><b>%s</b></div>} \
+    append rows [::fossilhub::views::localizedFormat {<div class="stat-card"><span>%s</span><b>%s</b></div>} \
       [::fossilhub::view::escape $label] [::fossilhub::view::escape $value]]
   }
   set revision [dict get $data checkin uuid]
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← files</a>
     <p class="eyebrow">Repository statistics</p><h2>Measured strata</h2></div>
     <div class="statistics-grid">%s</div>
@@ -599,14 +599,14 @@ proc ::fossilhub::views::renderFileSection {repository data} {
   set filename [dict get $record filename]
   set back [::fossilhub::views::repositoryPath $repository files]
   if {![dict get $record text]} {
-    set body [format {
+    set body [::fossilhub::views::localizedFormat {
       <div class="panel"><div class="panel-body empty-stratum">This artifact is binary. FossilHub preserves it but does not render it as text.</div></div>}]
   } else {
     set truncation ""
     if {[dict get $record truncated]} {
       set truncation {<p class="content-note">Preview capped at 256 KiB.</p>}
     }
-    set body [format {
+    set body [::fossilhub::views::localizedFormat {
       %s<div class="panel source-panel"><pre><code>%s</code></pre></div>} \
       $truncation [::fossilhub::view::escape [dict get $record content]]]
   }
@@ -615,7 +615,7 @@ proc ::fossilhub::views::renderFileSection {repository data} {
     set editAction [::fossilhub::views::repositoryAction $repository \
       "file/[dict get $record uuid]/edit" {Edit artifact}]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede">
       <a class="back-link" href="#" data-hub-path="%s">← trunk files</a>
       <p class="eyebrow">Artifact %s · %s</p>
@@ -636,18 +636,18 @@ proc ::fossilhub::views::renderWikiSection {repository data} {
       $repository wiki/new {New Wiki page}]
   }
   if {[llength $pages] == 0} {
-    return [format {
+    return [::fossilhub::views::localizedFormat {
       <div class="section-lede section-lede-actions"><p class="eyebrow">Wiki field notes</p>%s</div>
       <div class="panel"><div class="panel-body empty-stratum">No Wiki pages have been recorded in this repository.</div></div>} \
       $action]
   }
-  set html [format {
+  set html [::fossilhub::views::localizedFormat {
     <div class="section-lede section-lede-actions"><div><p class="eyebrow">Wiki field notes</p><p>%d current pages, read from their latest Fossil artifacts.</p></div>%s</div>
     <div class="panel artifact-list">} [llength $pages] $action]
   foreach page $pages {
     set path [::fossilhub::views::repositoryPath $repository \
       "wiki-revision/[dict get $page uuid]"]
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <a class="artifact-row" href="#" data-hub-path="%s">
         <span class="artifact-mark wiki-mark">W</span>
         <span class="artifact-main"><b>%s</b><small>%s · %s</small></span>
@@ -677,7 +677,7 @@ proc ::fossilhub::views::renderWikiPage {repository data} {
   }
   set historyAction [::fossilhub::views::repositoryAction $repository \
     "wiki-revision/[dict get $page uuid]/history" {Revision history}]
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede">
       <a class="back-link" href="#" data-hub-path="%s">← wiki field notes</a>
       <p class="eyebrow">Wiki artifact %s · %s</p>
@@ -702,11 +702,11 @@ proc ::fossilhub::views::renderWikiHistory {repository data} {
   foreach revision $history {
     set compare ""
     if {$newer ne ""} {
-      set compare [format { · <a href="#" data-hub-path="%s">compare with newer</a>} \
+      set compare [::fossilhub::views::localizedFormat { · <a href="#" data-hub-path="%s">compare with newer</a>} \
         [::fossilhub::views::repositoryPath $repository \
           "wiki-compare/[dict get $revision uuid]/$newer"]]
     }
-    append rows [format {
+    append rows [::fossilhub::views::localizedFormat {
       <div class="artifact-row">
         <span class="artifact-mark">W</span><span class="artifact-main"><b><a href="#" data-hub-path="%s">%s</a></b>
         <small>%s · %s%s</small></span><span class="artifact-size">%s</span>
@@ -722,7 +722,7 @@ proc ::fossilhub::views::renderWikiHistory {repository data} {
     set newer [dict get $revision uuid]
   }
   append rows </div>
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← Wiki page</a>
     <p class="eyebrow">Wiki revision history</p><h2>%s</h2></div>%s} \
     [::fossilhub::views::repositoryPath $repository \
@@ -741,12 +741,12 @@ proc ::fossilhub::views::renderWikiComparison {repository data} {
     foreach line [dict get $comparison lines] {
       set kind [dict get $line kind]
       set prefix [dict get [dict create equal { } added + deleted −] $kind]
-      append lines [format {<span class="diff-line diff-%s"><i>%s</i>%s</span>} \
+      append lines [::fossilhub::views::localizedFormat {<span class="diff-line diff-%s"><i>%s</i>%s</span>} \
         $kind $prefix [::fossilhub::view::escape [dict get $line content]]]
     }
-    set body [format {<div class="panel source-panel wiki-diff"><pre><code>%s</code></pre></div>} $lines]
+    set body [::fossilhub::views::localizedFormat {<div class="panel source-panel wiki-diff"><pre><code>%s</code></pre></div>} $lines]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← revision history</a>
     <p class="eyebrow">Wiki comparison</p><h2>%s</h2><p>%s → %s</p></div>%s} \
     [::fossilhub::views::repositoryPath $repository \
@@ -764,12 +764,12 @@ proc ::fossilhub::views::renderTicketsSection {repository data} {
       $repository tickets/new {Open ticket}]
   }
   if {[llength $tickets] == 0} {
-    return [format {
+    return [::fossilhub::views::localizedFormat {
       <div class="section-lede section-lede-actions"><p class="eyebrow">Ticket cabinet</p>%s</div>
       <div class="panel"><div class="panel-body empty-stratum">No tickets have been recorded in this repository.</div></div>} \
       $action]
   }
-  set html [format {
+  set html [::fossilhub::views::localizedFormat {
     <div class="section-lede section-lede-actions"><div><p class="eyebrow">Ticket cabinet</p><p>%d tickets from Fossil's current ticket state.</p></div>%s</div>
     <div class="panel artifact-list">} [llength $tickets] $action]
   foreach ticket $tickets {
@@ -778,7 +778,7 @@ proc ::fossilhub::views::renderTicketsSection {repository data} {
     if {[string tolower $status] in {closed fixed resolved}} {
       set statusClass ticket-closed
     }
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <a class="artifact-row ticket-row" href="#" data-hub-path="%s">
         <span class="ticket-state %s">%s</span>
         <span class="artifact-main"><b>%s</b><small>%s · %s · %s</small></span>
@@ -816,7 +816,7 @@ proc ::fossilhub::views::renderTicketDetail {repository data} {
       resolution Resolution} {
     set value [dict get $ticket $key]
     if {$value eq ""} { set value — }
-    append fields [format {<div><span>%s</span><b>%s</b></div>} \
+    append fields [::fossilhub::views::localizedFormat {<div><span>%s</span><b>%s</b></div>} \
       $label [::fossilhub::view::escape $value]]
   }
   set history ""
@@ -828,20 +828,20 @@ proc ::fossilhub::views::renderTicketDetail {repository data} {
       if {$field in {comment +comment}} {
         set rendered [::fossilhub::markup::render $value text/x-fossil-wiki]
       } else {
-        set rendered [format {<p><b>%s</b> → %s</p>} \
+        set rendered [::fossilhub::views::localizedFormat {<p><b>%s</b> → %s</p>} \
           [::fossilhub::view::escape [string trimleft $field +]] \
           [::fossilhub::view::escape $value]]
       }
-      append changes [format {<div class="ticket-change">%s</div>} $rendered]
+      append changes [::fossilhub::views::localizedFormat {<div class="ticket-change">%s</div>} $rendered]
     }
-    append history [format {
+    append history [::fossilhub::views::localizedFormat {
       <article class="history-event"><header><b>%s</b><span>%s · %s</span></header>%s</article>} \
       [::fossilhub::view::escape [dict get $event user]] \
       [::fossilhub::view::escape \
         [::fossilhub::view::formatDate [dict get $event epoch]]] \
       [::fossilhub::view::escape [string range [dict get $event uuid] 0 9]] $changes]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← tickets</a>
       <p class="eyebrow">Ticket %s</p><div class="section-title-actions"><h2>%s</h2>%s</div>
       <span class="ticket-state %s">%s</span>
@@ -865,16 +865,16 @@ proc ::fossilhub::views::renderForumSection {repository data} {
       $repository forum/new {New discussion}]
   }
   if {[llength $threads] == 0} {
-    return [format {
+    return [::fossilhub::views::localizedFormat {
       <div class="section-lede section-lede-actions"><p class="eyebrow">Forum boreholes</p>%s</div>
       <div class="panel"><div class="panel-body empty-stratum">No forum posts have been recorded in this repository.</div></div>} \
       $action]
   }
-  set html [format {
+  set html [::fossilhub::views::localizedFormat {
     <div class="section-lede section-lede-actions"><div><p class="eyebrow">Forum boreholes</p><p>%d threaded discussions preserved as Fossil artifacts.</p></div>%s</div>
     <div class="panel forum-list">} [llength $threads] $action]
   foreach thread $threads {
-    append html [format {
+    append html [::fossilhub::views::localizedFormat {
       <a class="forum-post" href="#" data-hub-path="%s">
         <div class="avatar" aria-hidden="true">%s</div>
         <div><h3>%s</h3><p>%s · %s posts · <span class="hash">%s</span></p></div>
@@ -901,11 +901,11 @@ proc ::fossilhub::views::renderDiscussion {repository data} {
   foreach post [dict get $thread posts] {
     set reply ""
     if {[dict exists $data can_triage] && [dict get $data can_triage]} {
-      set reply [format {<a class="back-link forum-reply" href="#" data-hub-path="%s">Reply</a>} \
+      set reply [::fossilhub::views::localizedFormat {<a class="back-link forum-reply" href="#" data-hub-path="%s">Reply</a>} \
         [::fossilhub::views::repositoryPath $repository \
           "forum/[dict get $post uuid]/reply"]]
     }
-    append posts [format {
+    append posts [::fossilhub::views::localizedFormat {
       <article class="forum-thread-post"><header><div class="avatar" aria-hidden="true">%s</div>
         <div><b>%s</b><span>%s · %s</span></div>%s</header>
         %s</article>} \
@@ -918,7 +918,7 @@ proc ::fossilhub::views::renderDiscussion {repository data} {
       $reply [::fossilhub::markup::render [dict get $post content] \
         [dict get $post mimetype]]]
   }
-  return [format {
+  return [::fossilhub::views::localizedFormat {
     <div class="section-lede"><a class="back-link" href="#" data-hub-path="%s">← forum</a>
       <p class="eyebrow">Thread %s</p><h2>%s</h2></div>
     <div class="panel forum-thread">%s</div>} \

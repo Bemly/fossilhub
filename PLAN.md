@@ -166,8 +166,8 @@ navigation, user and administrator workspaces, and real public information
 pages.
 
 The deployed collaboration foundation release is `2026.08.28-beta.1`; the
-current production maintenance release is `2026.08.29-beta.1` at revision
-`3b88c20`.
+current production maintenance release is `2026.08.30-beta.1` at revision
+`fe7824f`.
 
 The dependency-ordered, auditable checklist and acceptance gates are maintained
 in [docs/platform-roadmap.md](docs/platform-roadmap.md).
@@ -185,4 +185,5 @@ permanently deleted with explicit user authorization; the stopped smoke
 container and data remain available for diagnosis. See
 `docs/validation-2026.08.28-beta.1.md`. The later FossilHub logo maintenance
 release and its direct-production acceptance are recorded in
-`docs/validation-2026.08.29-beta.1.md`.
+`docs/validation-2026.08.29-beta.1.md`. The server-rendered bilingual account
+navigation release is recorded in `docs/validation-2026.08.30-beta.1.md`.

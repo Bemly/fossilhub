@@ -445,7 +445,7 @@ proc ::fossilhub::views::renderExploreResults {repositories} {
   set count [llength $repositories]
   set featuredHtml ""
   if {$count == 0} {
-    set featuredHtml [format {<div class="panel"><div class="panel-body">%s</div></div>} \
+    set featuredHtml [::fossilhub::views::localizedFormat {<div class="panel"><div class="panel-body">%s</div></div>} \
       [::fossilhub::view::escape [::fossilhub::i18n::t no_matches]]]
   } else {
     set featuredHtml [::fossilhub::view::featuredRepository \
@@ -459,11 +459,11 @@ proc ::fossilhub::views::renderExploreResults {repositories} {
     append cards [::fossilhub::view::repositoryCard $repository $index]
   }
   if {$cards eq ""} {
-    set cards [format {<div class="panel"><div class="panel-body">%s</div></div>} \
+    set cards [::fossilhub::views::localizedFormat {<div class="panel"><div class="panel-body">%s</div></div>} \
       [::fossilhub::view::escape [::fossilhub::i18n::t broader_search]]]
   }
 
-  return [format {
+  return [::fossilhub::views::localizedFormat {
   <div data-catalog-results data-result-count="%d">
     <section class="featured wrap" id="featured">
       <p class="sec-tag">%s</p>

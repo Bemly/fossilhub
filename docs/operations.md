@@ -1,18 +1,19 @@
 # FossilHub 生产运维手册
 
-部署复验日期：2026-08-29
+部署复验日期：2026-08-30
 
 ## 当前生产
 
 - 站点：`http://192.168.1.162:6080/`
 - 健康检查：`http://192.168.1.162:6080/healthz`
 - 容器：`fossilhub`
-- 镜像：`fossilhub:2026.08.29-beta.1`
-- 镜像 ID：`sha256:24cbe0cf7c50dd6fda05d30d6134c98b53bdf66b8af1ae394ec0eff1528934e8`
-- 源码修订标签：`3b88c20`
+- 镜像：`fossilhub:2026.08.30-beta.1`
+- 镜像 ID：`sha256:b8500950d43d8d094d7321d4fa7f9cd47a0efa296a2e18439f4e16411be0e06d`
+- 源码修订标签：`fe7824f`
 - 端口：`6080:8080`
 - 持久化数据：`/vol1/1000/fossilhub:/data`
 - 重启策略：`unless-stopped`
+- 直接回滚容器：`fossilhub-rollback-3b88c20-20260830-i18n`（停止）
 
 容器以 UID/GID `10001:10001` 运行，根文件系统只读；`/tmp` 为 16 MB 且带 `nosuid,nodev,noexec` 的 tmpfs；全部 Linux capability 已丢弃；启用 `no-new-privileges`；PID 上限 128。容器不使用主机网络、Docker socket 或 fnOS 系统路径。
 

@@ -25,7 +25,24 @@ assertEqual [::fossilhub::routeForPath /] home "root route"
 assertEqual [::fossilhub::routeForPath /explore] explore "explore route"
 assertEqual [::fossilhub::routeForPath /explore.html] explore "legacy explore route"
 assertEqual [::fossilhub::routeForPath /repo/dig.fossil] \
-  {repository dig.fossil timeline} "repository route"
+  {repository dig.fossil timeline} "legacy repository route"
+assertEqual [::fossilhub::routeForPath /repo/dig] \
+  {repository dig.fossil timeline} "canonical repository route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite/files] \
+  {repository sqlite.fossil files} "canonical repository files route"
+assertEqual [::fossilhub::routeForPath /repo/sqlite/files/new] \
+  {repository-mutation sqlite.fossil file-new} \
+  "canonical repository mutation route"
+assertEqual [::fossilhub::canonicalRepositoryUri \
+  /repo/obsidian.fossil?event=ci] \
+  {/repo/obsidian?event=ci} "legacy repository URL canonicalization"
+assertEqual [::fossilhub::canonicalRepositoryUri \
+  /bemly-moe/app/fossilhub/repo/obsidian.fossil/files] \
+  {/bemly-moe/app/fossilhub/repo/obsidian/files} \
+  "mounted legacy repository URL canonicalization"
+assertEqual [::fossilhub::canonicalRepositoryUri \
+  /fossil/obsidian] /fossil/obsidian \
+  "native transport URL remains unchanged"
 assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/files] \
   {repository sqlite.fossil files} "repository files route"
 assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/docs] \

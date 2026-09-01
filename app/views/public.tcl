@@ -6,7 +6,7 @@ proc ::fossilhub::views::publicNavigation {active} {
     manual Manual hosting Hosting upstream Upstream releases Releases
     rules Rules status Status privacy Privacy security Security contact Contact
   } {
-    append html [format {<a%s href="#" data-hub-path="/%s">%s</a>} \
+    append html [::fossilhub::views::localizedFormat {<a%s href="#" data-hub-path="/%s">%s</a>} \
       [expr {$slug eq $active ? { aria-current="page"} : ""}] $slug $label]
   }
   append html {</nav>}
@@ -57,7 +57,7 @@ proc ::fossilhub::views::publicDefinition {slug} {
 }
 
 proc ::fossilhub::views::renderPublicInformation {context slug page} {
-  set content [format {%s<div class="public-document">%s</div>} \
+  set content [::fossilhub::views::localizedFormat {%s<div class="public-document">%s</div>} \
     [::fossilhub::views::publicNavigation $slug] [dict get $page body]]
   return [::fossilhub::views::accountFrame [dict get $page title] \
     {FossilHub information} [dict get $page heading] [dict get $page lede] \
@@ -84,7 +84,7 @@ proc ::fossilhub::views::renderPublicStatus {context health version banner} {
   }
   set notice [expr {$banner eq "" ?
     "No maintenance notice is active." : $banner}]
-  set body [format {
+  set body [::fossilhub::views::localizedFormat {
     <div class="public-status-summary"><span>Current state</span>%s<p>%s</p></div>
     <div class="health-grid public-health"><article><span>Platform data</span>%s</article><article><span>Catalogue</span>%s</article><article><span>Repository availability</span><b>%s / %s</b></article><article><span>Catalogue freshness</span><b>%s</b></article><article><span>Storage threshold</span>%s</article><article><span>Version</span><b>%s</b></article></div>
     <p class="public-safety-note">This board deliberately omits filesystem paths, private repository names, credentials, logs, and internal revision identifiers.</p>} \

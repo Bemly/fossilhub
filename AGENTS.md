@@ -98,15 +98,18 @@ production change.
 - Reference repository UI: `http://192.168.1.162:6080/repo/bedrock.fossil`
 - Native Fossil transport: `http://192.168.1.162:6080/fossil/bedrock`
 - Container: `fossilhub`
-- Image tag: `fossilhub:2026.08.29-beta.1`
-- Image ID: `sha256:24cbe0cf7c50dd6fda05d30d6134c98b53bdf66b8af1ae394ec0eff1528934e8`
-- Deployed code revision: `3b88c20`
+- Image tag: `fossilhub:2026.08.30-beta.1`
+- Image ID: `sha256:b8500950d43d8d094d7321d4fa7f9cd47a0efa296a2e18439f4e16411be0e06d`
+- Deployed code revision: `fe7824f`
 - Mount: `/vol1/1000/fossilhub:/data`
 - Port: `6080:8080`
 - Restart policy: `unless-stopped`
 - Runtime user: `fossilhub:fossilhub` (UID/GID 10001:10001)
 - Security profile: read-only root, 16 MB `/tmp` tmpfs, all capabilities
   dropped, `no-new-privileges`, and PID limit 128.
+- Immediate bilingual-release rollback: stopped container
+  `fossilhub-rollback-3b88c20-20260830-i18n`, containing the preceding
+  `2026.08.29-beta.1` image. Preserve it.
 - Historical rollback: stopped container `fossilhub-rollback-188b918`.
 - Stable rollback: stopped container `fossilhub-rollback-8c9726d` (0.1.2).
 - Older stopped rollback containers `fossilhub-rollback-94f8097` and
@@ -127,6 +130,15 @@ Container names are operational facts, not a license to mutate them. Inspect
 before acting because another operator may have changed the NAS since this file
 was last updated. `docs/operations.md` is the detailed runbook and must be kept
 in sync with production.
+
+Release `2026.08.30-beta.1` was transactionally deployed on 2026-08-30 from
+revision `fe7824f`. It adds server-rendered Simplified Chinese/English
+selection and exposes login, registration, user repository management, and
+administrator navigation across the public surfaces. The full image suite,
+70-route production matrix, direct and mounted-prefix routes, clone/sync,
+permissions, and responsive browser checks passed. The immediate predecessor
+is retained as `fossilhub-rollback-3b88c20-20260830-i18n`; see
+`docs/validation-2026.08.30-beta.1.md`.
 
 Release `2026.08.29-beta.1` was transactionally deployed on 2026-08-29 from
 revision `3b88c20` after the user explicitly requested direct production

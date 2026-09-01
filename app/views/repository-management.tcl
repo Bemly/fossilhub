@@ -25,8 +25,8 @@ proc ::fossilhub::views::renderRepositoryWorkspace {context repositories} {
         </div>
         <a class="btn btn-ghost btn-compact" href="%s/settings" data-hub-path="/account/repositories/%s/settings">Manage</a>
       </article>} \
-      [::fossilhub::view::escape [dict get $repository name]] \
-      [::fossilhub::view::escape [dict get $repository name]] \
+      [::fossilhub::view::escape [dict get $repository slug]] \
+      [::fossilhub::view::escape [dict get $repository slug]] \
       [::fossilhub::view::escape [dict get $repository title]] \
       [::fossilhub::views::repositoryStateChip $repository] \
       [::fossilhub::view::escape [dict get $repository description]] \

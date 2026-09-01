@@ -62,6 +62,21 @@ proc ::fossilhub::requestPath {} {
   return $uri
 }
 
+proc ::fossilhub::repositoryFileName {routeName} {
+  if {[string match *.fossil $routeName]} {
+    return $routeName
+  }
+  return "${routeName}.fossil"
+}
+
+proc ::fossilhub::canonicalRepositoryUri {uri} {
+  if {![regexp {^(.*?/repo/)([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)\.fossil((?:/[^?]*)?)(\?.*)?$} \
+      $uri -> prefix slug suffix query]} {
+    return $uri
+  }
+  return "${prefix}${slug}${suffix}${query}"
+}
+
 proc ::fossilhub::routeForPath {path} {
   variable mountName
   set clean [string trim $path /]
@@ -201,78 +216,97 @@ proc ::fossilhub::routeForPath {path} {
   }
   if {[regexp {(^|/)repo/([^/]+)/files/new/?$} \
       $clean -> _ repository]} {
-    return [list repository-mutation $repository file-new]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] file-new]
   }
   if {[regexp {(^|/)repo/([^/]+)/file/([[:xdigit:]]{10,64})/edit/?$} \
       $clean -> _ repository artifactId]} {
-    return [list repository-mutation $repository file-edit $artifactId]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] file-edit $artifactId]
   }
   if {[regexp {(^|/)repo/([^/]+)/wiki/new/?$} \
       $clean -> _ repository]} {
-    return [list repository-mutation $repository wiki-new]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] wiki-new]
   }
   if {[regexp {(^|/)repo/([^/]+)/wiki-page/([[:xdigit:]]{10,64})/edit/?$} \
       $clean -> _ repository artifactId]} {
-    return [list repository-mutation $repository wiki-edit $artifactId]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] wiki-edit $artifactId]
   }
   if {[regexp {(^|/)repo/([^/]+)/tickets/new/?$} \
       $clean -> _ repository]} {
-    return [list repository-mutation $repository ticket-new]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] ticket-new]
   }
   if {[regexp {(^|/)repo/([^/]+)/ticket/([[:xdigit:]]{40,64})/manage/?$} \
       $clean -> _ repository ticketId]} {
-    return [list repository-mutation $repository ticket $ticketId]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] ticket $ticketId]
   }
   if {[regexp {(^|/)repo/([^/]+)/ticket/([[:xdigit:]]{40,64})/?$} \
       $clean -> _ repository ticketId]} {
-    return [list repository-ticket $repository $ticketId]
+    return [list repository-ticket \
+      [::fossilhub::repositoryFileName $repository] $ticketId]
   }
   if {[regexp {(^|/)repo/([^/]+)/forum/new/?$} \
       $clean -> _ repository]} {
-    return [list repository-mutation $repository forum-new]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] forum-new]
   }
   if {[regexp {(^|/)repo/([^/]+)/forum/([[:xdigit:]]{10,64})/reply/?$} \
       $clean -> _ repository postId]} {
-    return [list repository-mutation $repository forum-reply $postId]
+    return [list repository-mutation \
+      [::fossilhub::repositoryFileName $repository] forum-reply $postId]
   }
   if {[regexp {(^|/)repo/([^/]+)/archive/([[:xdigit:]]{10,64})\.zip$} \
       $clean -> _ repository revision]} {
-    return [list repository $repository archive $revision]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      archive $revision]
   }
   if {[regexp {(^|/)repo/([^/]+)/(tree|checkin)/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository section revision]} {
-    return [list repository $repository $section $revision]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      $section $revision]
   }
   if {[regexp {(^|/)repo/([^/]+)/(blob|raw|history|blame|doc)/([[:xdigit:]]{10,64})/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository section revision artifactId]} {
-    return [list repository $repository $section $revision $artifactId]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      $section $revision $artifactId]
   }
   if {[regexp {(^|/)repo/([^/]+)/wiki-revision/([[:xdigit:]]{10,64})/(history)/?$} \
       $clean -> _ repository revision section]} {
-    return [list repository $repository wiki-history $revision]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      wiki-history $revision]
   }
   if {[regexp {(^|/)repo/([^/]+)/wiki-revision/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository revision]} {
-    return [list repository $repository wiki-revision $revision]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      wiki-revision $revision]
   }
   if {[regexp {(^|/)repo/([^/]+)/wiki-compare/([[:xdigit:]]{10,64})/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository before after]} {
-    return [list repository $repository wiki-compare $before $after]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      wiki-compare $before $after]
   }
   if {[regexp {(^|/)repo/([^/]+)/discussion/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository revision]} {
-    return [list repository $repository discussion $revision]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      discussion $revision]
   }
   if {[regexp {(^|/)repo/([^/]+)/(file|wiki-page)/([[:xdigit:]]{10,64})/?$} \
       $clean -> _ repository section artifactId]} {
-    return [list repository $repository $section $artifactId]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      $section $artifactId]
   }
   if {[regexp {(^|/)repo/([^/]+)/(timeline|files|docs|wiki|tickets|forum|branches|tags|stats)/?$} \
       $clean -> _ repository section]} {
-    return [list repository $repository $section]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      $section]
   }
   if {[regexp {(^|/)repo/([^/]+)/?$} $clean -> _ repository]} {
-    return [list repository $repository timeline]
+    return [list repository [::fossilhub::repositoryFileName $repository] \
+      timeline]
   }
   return not-found
 }
@@ -767,6 +801,13 @@ proc ::fossilhub::handleRepositoryRead {accountContext route} {
 
 proc wapp-default {} {
   set locale [::fossilhub::i18n::useRequest]
+  set requestUri [wapp-param REQUEST_URI /]
+  set canonicalUri [::fossilhub::canonicalRepositoryUri $requestUri]
+  if {$canonicalUri ne $requestUri &&
+      [string toupper [wapp-param REQUEST_METHOD GET]] in {GET HEAD}} {
+    wapp-redirect $canonicalUri
+    return
+  }
   set route [::fossilhub::routeForPath [::fossilhub::requestPath]]
   set accountContext [::fossilhub::account::requestContext]
   dict set accountContext locale $locale
