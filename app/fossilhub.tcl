@@ -70,20 +70,23 @@ proc ::fossilhub::repositoryFileName {routeName} {
 }
 
 proc ::fossilhub::canonicalRepositoryUri {uri} {
-  if {![regexp {^(.*?/repo/)([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)\.fossil((?:/[^?]*)?)(\?.*)?$} \
-      $uri -> prefix slug suffix query]} {
-    return $uri
+  set canonical $uri
+  if {[regexp {^(.*?/repo/)([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)\.fossil((?:/[^?]*)?)(\?.*)?$} \
+      $canonical -> prefix slug suffix query]} {
+    set canonical "${prefix}${slug}${suffix}${query}"
   }
-  return "${prefix}${slug}${suffix}${query}"
+  if {[regexp {^(.*?/repo)/repo/([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)((?:/[^?]*)?)(\?.*)?$} \
+      $canonical -> prefix slug suffix query]} {
+    set canonical "${prefix}/${slug}${suffix}${query}"
+  }
+  return $canonical
 }
 
 proc ::fossilhub::routeForPath {path} {
   variable mountName
   set clean [string trim $path /]
 
-  if {$clean eq "" || $clean eq $mountName ||
-      [regexp [format {(^|/)%s$} $mountName] $clean] ||
-      $clean eq "index" ||
+  if {$clean eq "" || $clean eq $mountName || $clean eq "index" ||
       [regexp {(^|/)index\.html$} $clean]} {
     return home
   }
@@ -307,6 +310,9 @@ proc ::fossilhub::routeForPath {path} {
   if {[regexp {(^|/)repo/([^/]+)/?$} $clean -> _ repository]} {
     return [list repository [::fossilhub::repositoryFileName $repository] \
       timeline]
+  }
+  if {[regexp [format {(^|/)%s$} $mountName] $clean]} {
+    return home
   }
   return not-found
 }

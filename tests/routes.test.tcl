@@ -28,6 +28,9 @@ assertEqual [::fossilhub::routeForPath /repo/dig.fossil] \
   {repository dig.fossil timeline} "legacy repository route"
 assertEqual [::fossilhub::routeForPath /repo/dig] \
   {repository dig.fossil timeline} "canonical repository route"
+assertEqual [::fossilhub::routeForPath /repo/fossilhub] \
+  {repository fossilhub.fossil timeline} \
+  "repository slug may equal application mount name"
 assertEqual [::fossilhub::routeForPath /repo/sqlite/files] \
   {repository sqlite.fossil files} "canonical repository files route"
 assertEqual [::fossilhub::routeForPath /repo/sqlite/files/new] \
@@ -43,6 +46,17 @@ assertEqual [::fossilhub::canonicalRepositoryUri \
 assertEqual [::fossilhub::canonicalRepositoryUri \
   /fossil/obsidian] /fossil/obsidian \
   "native transport URL remains unchanged"
+assertEqual [::fossilhub::canonicalRepositoryUri \
+  /repo/repo/fossilhub] /repo/fossilhub \
+  "duplicated direct repository prefix canonicalization"
+assertEqual [::fossilhub::canonicalRepositoryUri \
+  /bemly-moe/app/fossilhub/repo/repo/fossilhub/files] \
+  {/bemly-moe/app/fossilhub/repo/fossilhub/files} \
+  "duplicated mounted repository prefix canonicalization"
+assertEqual [::fossilhub::canonicalRepositoryUri \
+  /repo/repo/fossilhub.fossil/files?name=README.md] \
+  {/repo/fossilhub/files?name=README.md} \
+  "combined legacy repository URL canonicalization"
 assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/files] \
   {repository sqlite.fossil files} "repository files route"
 assertEqual [::fossilhub::routeForPath /repo/sqlite.fossil/docs] \
